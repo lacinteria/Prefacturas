@@ -103,19 +103,101 @@ input:focus,select:focus,textarea:focus{outline:2px solid rgba(14,107,82,.15);bo
 </div>
 
 <div class="section-title" style="margin-top:15px">Agregar Productos / Ítems</div>
-<div class="item-grid" style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1.2fr auto;gap:8px;align-items:end">
-<div class="field" style="margin:0"><label>Descripción / Detalle <span class="req">*</span></label><input type="text" id="itemDesc" placeholder="Descripción del producto o servicio"></div>
-<div class="field" style="margin:0"><label>Cantidad <span class="req">*</span></label><input type="number" id="itemCant" min="0.01" step="any" placeholder="1"></div>
-<div class="field" style="margin:0"><label>Precio Unitario ($) <span class="req">*</span></label><input type="number" id="itemPrecio" min="0" step="any" placeholder="0"></div>
-<div class="field" style="margin:0"><label>Descuento (%)</label><input type="number" id="itemDescMonto" min="0" max="100" step="0.01" value="0" placeholder="0"></div>
-<div class="field" style="margin:0">
-  <label>IVA</label>
-  <label style="display:flex;align-items:center;gap:8px;padding:9px 12px;border:1px solid var(--line);border-radius:6px;background:#fff;cursor:pointer;height:38px">
-    <input type="checkbox" id="itemAplicarIva" style="width:auto;margin:0">
-    <span>Sumar IVA 19%</span>
-  </label>
-</div>
-<button type="button" class="btn primary" onclick="agregarItem()">+ Agregar Ítem</button>
+
+<div class="item-grid" style="display:grid;grid-template-columns:1.4fr 2fr 1fr 1fr 1fr 1.2fr auto;gap:8px;align-items:end">
+
+  <!-- PRODUCTO -->
+  <div class="field" style="margin:0">
+    <label>Producto <span class="req">*</span></label>
+    <select id="itemTipoProducto" onchange="actualizarCamposProducto()">
+      <option value="">Seleccionar producto...</option>
+      <option value="Moños">Moños</option>
+      <option value="Bordados">Bordados</option>
+      <option value="DTF">DTF</option>
+      <option value="Camisas">Camisas</option>
+      <option value="Cinta">Cinta</option>
+      <option value="Aplique">Aplique</option>
+      <option value="Piro">Piro</option>
+      <option value="Elástico">Elástico</option>
+      <option value="Reata">Reata</option>
+      <option value="Herraje">Herraje</option>
+      <option value="Personalizado">Personalizado</option>
+    </select>
+  </div>
+
+  <!-- CAMPOS DINÁMICOS -->
+  <div id="camposProducto" style="margin:0">
+    <div class="field" style="margin:0">
+      <label>Detalle <span class="req">*</span></label>
+      <input
+        type="text"
+        id="itemDescripcion"
+        placeholder="Selecciona primero un producto"
+        disabled
+      >
+    </div>
+  </div>
+
+  <!-- CANTIDAD -->
+  <div class="field" style="margin:0">
+    <label>Cantidad <span class="req">*</span></label>
+    <input
+      type="number"
+      id="itemCant"
+      min="0.01"
+      step="any"
+      placeholder="1"
+    >
+  </div>
+
+  <!-- PRECIO -->
+  <div class="field" style="margin:0">
+    <label>Precio Unitario ($) <span class="req">*</span></label>
+    <input
+      type="number"
+      id="itemPrecio"
+      min="0"
+      step="any"
+      placeholder="0"
+    >
+  </div>
+
+  <!-- DESCUENTO -->
+  <div class="field" style="margin:0">
+    <label>Descuento (%)</label>
+    <input
+      type="number"
+      id="itemDescMonto"
+      min="0"
+      max="100"
+      step="0.01"
+      value="0"
+      placeholder="0"
+    >
+  </div>
+
+  <!-- IVA -->
+  <div class="field" style="margin:0">
+    <label>IVA</label>
+    <label style="display:flex;align-items:center;gap:8px;padding:9px 12px;border:1px solid var(--line);border-radius:6px;background:#fff;cursor:pointer;height:38px">
+      <input
+        type="checkbox"
+        id="itemAplicarIva"
+        style="width:auto;margin:0"
+      >
+      <span>Sumar IVA 19%</span>
+    </label>
+  </div>
+
+  <!-- AGREGAR -->
+  <button
+    type="button"
+    class="btn primary"
+    onclick="agregarItem()"
+  >
+    + Agregar
+  </button>
+
 </div>
 
 <div class="table-wrap"><table style="margin-top:15px"><thead><tr><th>Descripción</th><th class="num">Cant.</th><th class="num">Precio Unit.</th><th class="num">IVA</th><th class="num">Desc.</th><th class="num">Subtotal</th><th style="width:40px"></th></tr></thead>
@@ -401,25 +483,152 @@ function actualizarEtiquetasPersona(){
   document.getElementById("lblDocIdentidad").innerHTML=(juridica?"NIT / Identificación":"Cédula / Identificación")+' <span class="req">*</span>';
   document.getElementById("lblNombreCliente").innerHTML=(juridica?"Razón Social":"Nombre Completo")+' <span class="req">*</span>';
 }
+function actualizarCamposProducto(){
+
+  const tipo=document.getElementById("itemTipoProducto").value;
+
+  const contenedor=document.getElementById("camposProducto");
+
+  if(!tipo){
+
+    contenedor.innerHTML=`
+      <div class="field" style="margin:0">
+        <label>Detalle <span class="req">*</span></label>
+        <input
+          type="text"
+          id="itemDescripcion"
+          placeholder="Selecciona primero un producto"
+          disabled
+        >
+      </div>
+    `;
+
+    return;
+  }
+
+  /*
+   * ======================================================
+   * MOÑOS
+   * ======================================================
+   */
+
+  if(tipo==="Moños"){
+
+    contenedor.innerHTML=`
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+
+        <div class="field" style="margin:0">
+          <label>Color <span class="req">*</span></label>
+          <input
+            type="text"
+            id="itemColor"
+            placeholder="Ej. Rojo"
+          >
+        </div>
+
+        <div class="field" style="margin:0">
+          <label>Tamaño <span class="req">*</span></label>
+          <select id="itemTamano">
+            <option value="">Seleccionar...</option>
+            <option value="6MM">6MM</option>
+            <option value="9MM">9MM</option>
+            <option value="16MM">16MM</option>
+            <option value="22MM">22MM</option>
+          </select>
+        </div>
+
+      </div>
+    `;
+
+    return;
+  }
+
+  /*
+   * ======================================================
+   * CAMISAS
+   * ======================================================
+   */
+
+  if(tipo==="Camisas"){
+
+    contenedor.innerHTML=`
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+
+        <div class="field" style="margin:0">
+          <label>Material <span class="req">*</span></label>
+          <select id="itemMaterial">
+            <option value="">Seleccionar...</option>
+            <option value="Qatar">Qatar</option>
+            <option value="Tela fría">Tela fría</option>
+            <option value="Manga Doblada">Manga Doblada</option>
+            <option value="Niño">Niño</option>
+          </select>
+        </div>
+
+        <div class="field" style="margin:0">
+          <label>Talla <span class="req">*</span></label>
+          <select id="itemTalla">
+            <option value="">Seleccionar...</option>
+            <option value="XS">XS</option>
+            <option value="S">S</option>
+            <option value="M">M</option>
+            <option value="L">L</option>
+            <option value="XL">XL</option>
+            <option value="XXL">XXL</option>
+          </select>
+        </div>
+
+      </div>
+    `;
+
+    return;
+  }
+
+  /*
+   * ======================================================
+   * RESTO DE PRODUCTOS
+   * ======================================================
+   */
+
+  contenedor.innerHTML=`
+    <div class="field" style="margin:0">
+      <label>Descripción <span class="req">*</span></label>
+      <input
+        type="text"
+        id="itemDescripcion"
+        placeholder="Describe el ${tipo.toLowerCase()}"
+      >
+    </div>
+  `;
+}
 function agregarItem(){
-  const desc=document.getElementById("itemDesc").value.trim();
+
+  const tipoProducto=document.getElementById("itemTipoProducto").value;
   const cant=Number(document.getElementById("itemCant").value);
   const precioBase=Number(document.getElementById("itemPrecio").value);
+
   const descuentoPct=Math.max(
     0,
-    Math.min(100,Number(document.getElementById("itemDescMonto").value)||0)
+    Math.min(
+      100,
+      Number(document.getElementById("itemDescMonto").value)||0
+    )
   );
 
   const aplicarIva=document.getElementById("itemAplicarIva").checked;
 
+  if(!tipoProducto){
+    alert("Selecciona el tipo de producto.");
+    return;
+  }
+
   if(
-    !desc ||
     !Number.isFinite(cant) ||
     cant<=0 ||
     !Number.isFinite(precioBase) ||
     precioBase<0
   ){
-    alert("Completa correctamente descripción, cantidad y precio.");
+    alert("Completa correctamente cantidad y precio.");
     return;
   }
 
@@ -429,15 +638,79 @@ function agregarItem(){
   }
 
   /*
-   * Si se selecciona IVA:
-   * precioBase + 19%
-   *
-   * Si NO se selecciona:
-   * se mantiene el precio ingresado.
+   * ======================================================
+   * CONSTRUIR DESCRIPCIÓN ESTANDARIZADA
+   * ======================================================
    */
+
+  let descripcion="";
+  let datosProducto={};
+
+  if(tipoProducto==="Moños"){
+
+    const color=document.getElementById("itemColor")?.value.trim();
+    const tamano=document.getElementById("itemTamano")?.value;
+
+    if(!color || !tamano){
+      alert("Completa el color y tamaño del moño.");
+      return;
+    }
+
+    descripcion=`Moño ${color} ${tamano}`;
+
+    datosProducto={
+      color,
+      tamano
+    };
+
+  }else if(tipoProducto==="Camisas"){
+
+    const material=document.getElementById("itemMaterial")?.value;
+    const talla=document.getElementById("itemTalla")?.value;
+
+    if(!material || !talla){
+      alert("Selecciona el material y la talla de la camisa.");
+      return;
+    }
+
+    descripcion=`Camisa ${material} Talla ${talla}`;
+
+    datosProducto={
+      material,
+      talla
+    };
+
+  }else{
+
+    const detalle=document.getElementById("itemDescripcion")?.value.trim();
+
+    if(!detalle){
+      alert("Escribe la descripción del producto.");
+      return;
+    }
+
+    descripcion=`${tipoProducto} - ${detalle}`;
+
+    datosProducto={
+      descripcionDetalle:detalle
+    };
+  }
+
+  /*
+   * ======================================================
+   * IVA
+   * ======================================================
+   */
+
   const precioUnitario=aplicarIva
     ? precioBase*1.19
     : precioBase;
+
+  /*
+   * ======================================================
+   * DESCUENTO
+   * ======================================================
+   */
 
   const brutoItem=cant*precioUnitario;
 
@@ -445,49 +718,96 @@ function agregarItem(){
 
   const subtotal=brutoItem-descuento;
 
+  /*
+   * ======================================================
+   * GUARDAR ÍTEM
+   * ======================================================
+   */
+
   itemsActuales.push({
-    descripcion:desc,
+
+    // Categoría estandarizada
+    tipoProducto,
+
+    // Nombre/descripción que verá el usuario
+    descripcion,
+
+    // Datos específicos del producto
+    ...datosProducto,
+
     cantidad:cant,
 
-    // Precio que el usuario escribió
+    // Precio ingresado originalmente
     precioBase,
 
-    // Precio después de aplicar IVA si corresponde
+    // Precio después del IVA
     precioUnitario,
 
-    // Indicador para reportes
+    // IVA
     ivaIncluido:!aplicarIva,
     ivaAplicado:aplicarIva,
     ivaPct:aplicarIva?19:0,
 
+    // Descuento
     descuentoPct,
     descuento,
 
+    // Total del ítem
     subtotal
   });
 
-  document.getElementById("itemDesc").value="";
+  /*
+   * ======================================================
+   * LIMPIAR CAMPOS
+   * ======================================================
+   */
+
+  document.getElementById("itemTipoProducto").value="";
+
   document.getElementById("itemCant").value="1";
+
   document.getElementById("itemPrecio").value="";
+
   document.getElementById("itemDescMonto").value="0";
+
   document.getElementById("itemAplicarIva").checked=false;
 
+  actualizarCamposProducto();
+
   renderItems();
+
   calcularTotales();
 }
 function eliminarItem(index){ itemsActuales.splice(index,1); renderItems(); calcularTotales(); }
 
 function renderItems(){
+
   const tbody=document.getElementById("tablaItemsBody");
 
   if(!itemsActuales.length){
-    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--ink-soft)">No se han agregado ítems.</td></tr>';
+
+    tbody.innerHTML=`
+      <tr>
+        <td colspan="7" style="text-align:center;color:var(--ink-soft)">
+          No se han agregado ítems.
+        </td>
+      </tr>
+    `;
+
     return;
   }
 
   tbody.innerHTML=itemsActuales.map((it,i)=>`
+
     <tr>
-      <td>${escapeHtml(it.descripcion)}</td>
+
+      <td>
+        <strong>${escapeHtml(it.descripcion)}</strong>
+        <br>
+        <small style="color:var(--ink-soft)">
+          ${escapeHtml(it.tipoProducto||"")}
+        </small>
+      </td>
 
       <td class="num">
         ${formatNumber(it.cantidad)}
@@ -498,11 +818,13 @@ function renderItems(){
       </td>
 
       <td class="num">
+
         ${
           it.ivaAplicado
             ? '<span class="badge success">+19%</span>'
             : '<span class="badge info">Sin IVA</span>'
         }
+
       </td>
 
       <td class="num">
@@ -514,6 +836,7 @@ function renderItems(){
       </td>
 
       <td>
+
         <button
           type="button"
           class="btn small danger"
@@ -521,8 +844,11 @@ function renderItems(){
         >
           ×
         </button>
+
       </td>
+
     </tr>
+
   `).join("");
 }
 function calcularTotales(){
@@ -1189,10 +1515,13 @@ window.addEventListener("DOMContentLoaded",async()=>{
   document.getElementById("remClienteDoc").addEventListener("blur",buscarCliente);
   document.getElementById("remFecha").value=fechaHoy();
   document.getElementById("itemCant").value="1";
-  document.getElementById("itemDescMonto").value="0";
-  document.getElementById("itemAplicarIva").checked=false;
-  toggleFacturaOptions();actualizarEtiquetasPersona();
-  const acceso=await verificarLicencia();if(acceso)await checkSession();
+document.getElementById("itemDescMonto").value="0";
+document.getElementById("itemAplicarIva").checked=false;
+
+actualizarCamposProducto();
+
+toggleFacturaOptions();
+actualizarEtiquetasPersona();
 });
 </script>
 </body>
