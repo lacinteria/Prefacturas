@@ -9,6 +9,9 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
+<!-- Librería para exportar reportes a Excel -->
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+
 <style>
 :root{
   --bg:#F4F5F0;--surface:#FFF;--surface-alt:#EBEDE5;--ink:#1E251F;
@@ -135,7 +138,14 @@ input:focus,select:focus,textarea:focus{outline:2px solid rgba(14,107,82,.15);bo
 <div class="field" style="margin:0"><label>Área</label><select id="repFiltroArea"><option value="TODAS">-- Todas las Áreas --</option></select></div>
 <div class="field" style="margin:0"><label>Tipo de Documento</label><select id="repFiltroTipoDoc"><option value="TODOS">-- Todos --</option><option value="Remisión">REM</option><option value="Factura Electrónica">FE</option></select></div>
 </div>
-<div style="margin-top:12px;text-align:right"><button class="btn primary" onclick="procesarReportes()">Filtrar y Actualizar Consolidado</button></div>
+<div style="margin-top:12px;text-align:right;display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap">
+  <button class="btn primary" onclick="procesarReportes()">
+    Filtrar y Actualizar Consolidado
+  </button>
+
+  <button class="btn secondary" onclick="exportarReporteExcel()">
+    📊 Descargar Excel
+  </button>
 </div>
 <div class="grid-3" style="margin-bottom:16px">
 <div class="kpi-card"><div class="kpi-title">Total Facturado</div><div class="kpi-value" id="kpiTotalVentas">$0</div></div>
@@ -546,6 +556,349 @@ async function procesarReportes(){
     renderConsolidadoAsesores(filtrados); renderConsolidadoAreas(filtrados); renderTablaDetalleRemisiones(filtrados);
   }catch(e){ console.error(e); document.getElementById("tablaReportesBody").innerHTML=`<tr><td colspan="8">Error cargando reportes: ${escapeHtml(e.message)}</td></tr>`; }
 }
+function exportarReporteExcel(){
+  if(!currentUser || !["admin","lider"].includes(currentUser.role)){
+    alert("No tienes permisos para exportar reportes.");
+    return;
+  }
+
+  if(typeof XLSX === "undefined"){
+    alert("No se pudo cargar la herramienta de Excel. Verifica tu conexión a internet y vuelve a intentarlo.");
+    return;
+  }
+
+  if(!datosRemisiones.length){
+    alert("No hay documentos para exportar con los filtros actuales.");
+    return;
+  }
+
+  try{
+    /* =====================================================
+       HOJA 1: RESUMEN
+       ===================================================== */
+
+    const totalVentas=datosRemisiones.reduce(
+      (s,r)=>s+Number(r.total||0),0
+    );
+
+    const resumen=[
+      ["REPORTE DE REMISIONES Y FACTURACIÓN"],
+      [],
+      ["Fecha de generación",new Date().toLocaleString("es-CO")],
+      ["Desde",document.getElementById("repFechaInicio").value||"Todas"],
+      ["Hasta",document.getElementById("repFechaFin").value||"Todas"],
+      ["Asesor",document.getElementById("repFiltroAsesor").selectedOptions[0]?.text||"Todos"],
+      ["Área",document.getElementById("repFiltroArea").selectedOptions[0]?.text||"Todas"],
+      ["Tipo de documento",document.getElementById("repFiltroTipoDoc").selectedOptions[0]?.text||"Todos"],
+      [],
+      ["INDICADORES"],
+      ["Total facturado",totalVentas],
+      ["Cantidad de documentos",datosRemisiones.length],
+      ["Promedio por venta",datosRemisiones.length?totalVentas/datosRemisiones.length:0]
+    ];
+
+    /* =====================================================
+       HOJA 2: DETALLE DE DOCUMENTOS
+       ===================================================== */
+
+    const detalle=[
+      [
+        "Documento",
+        "Fecha",
+        "Tipo",
+        "Cliente",
+        "Tipo Persona",
+        "Documento Cliente",
+        "Ciudad",
+        "Teléfono",
+        "Correo",
+        "Asesor",
+        "Área",
+        "Forma de Pago",
+        "Descuento Global %",
+        "Subtotal",
+        "Descuento Global",
+        "Total",
+        "Cliente Nuevo",
+        "Observaciones"
+      ]
+    ];
+
+    datosRemisiones.forEach(r=>{
+      detalle.push([
+        r.idDocumento||"",
+        r.fecha||"",
+        r.tipoDoc||"",
+        r.nomCliente||"",
+        r.tipoPersona||"",
+        r.docCliente||"",
+        r.ciudadCliente||"",
+        r.telCliente||"",
+        r.emailCliente||"",
+        r.asesor||"",
+        r.area||"",
+        r.formaPago||"",
+        Number(r.descGlobalPct||0),
+        Number(r.subtotal||0),
+        Number(r.descGlobal||0),
+        Number(r.total||0),
+        r.esClienteNuevo?"Sí":"No",
+        r.observaciones||""
+      ]);
+    });
+
+    /* =====================================================
+       HOJA 3: PRODUCTOS / ÍTEMS
+       ===================================================== */
+
+    const productos=[
+      [
+        "Documento",
+        "Fecha",
+        "Cliente",
+        "Asesor",
+        "Área",
+        "Descripción",
+        "Cantidad",
+        "Precio Base",
+        "IVA Incluido",
+        "IVA %",
+        "Precio Unitario",
+        "Descuento %",
+        "Descuento",
+        "Subtotal"
+      ]
+    ];
+
+    datosRemisiones.forEach(r=>{
+      const items=Array.isArray(r.items)?r.items:[];
+
+      items.forEach(item=>{
+        productos.push([
+          r.idDocumento||"",
+          r.fecha||"",
+          r.nomCliente||"",
+          r.asesor||"",
+          r.area||"",
+          item.descripcion||"",
+          Number(item.cantidad||0),
+          Number(item.precioBase||0),
+          item.ivaIncluido===false?"No":"Sí",
+          Number(item.ivaPct||19),
+          Number(item.precioUnitario||0),
+          Number(item.descuentoPct||0),
+          Number(item.descuento||0),
+          Number(item.subtotal||0)
+        ]);
+      });
+    });
+
+    /* =====================================================
+       HOJA 4: CONSOLIDADO POR ASESOR
+       ===================================================== */
+
+    const asesoresMap={};
+
+    datosRemisiones.forEach(r=>{
+      const clave=(r.asesor||"N/A")+"|"+(r.area||"N/A");
+
+      if(!asesoresMap[clave]){
+        asesoresMap[clave]={
+          asesor:r.asesor||"N/A",
+          area:r.area||"N/A",
+          cantidad:0,
+          total:0
+        };
+      }
+
+      asesoresMap[clave].cantidad++;
+      asesoresMap[clave].total+=Number(r.total||0);
+    });
+
+    const consolidadoAsesores=[
+      ["Asesor","Área","Cantidad Documentos","Total"]
+    ];
+
+    Object.values(asesoresMap)
+      .sort((a,b)=>b.total-a.total)
+      .forEach(x=>{
+        consolidadoAsesores.push([
+          x.asesor,
+          x.area,
+          x.cantidad,
+          x.total
+        ]);
+      });
+
+    /* =====================================================
+       HOJA 5: CONSOLIDADO POR ÁREA
+       ===================================================== */
+
+    const areasMap={};
+
+    datosRemisiones.forEach(r=>{
+      const area=r.area||"N/A";
+
+      if(!areasMap[area]){
+        areasMap[area]={
+          area,
+          cantidad:0,
+          total:0
+        };
+      }
+
+      areasMap[area].cantidad++;
+      areasMap[area].total+=Number(r.total||0);
+    });
+
+    const consolidadoAreas=[
+      ["Área","Cantidad Documentos","Total"]
+    ];
+
+    Object.values(areasMap)
+      .sort((a,b)=>b.total-a.total)
+      .forEach(x=>{
+        consolidadoAreas.push([
+          x.area,
+          x.cantidad,
+          x.total
+        ]);
+      });
+
+    /* =====================================================
+       CREAR LIBRO DE EXCEL
+       ===================================================== */
+
+    const libro=XLSX.utils.book_new();
+
+    const hojaResumen=XLSX.utils.aoa_to_sheet(resumen);
+    const hojaDetalle=XLSX.utils.aoa_to_sheet(detalle);
+    const hojaProductos=XLSX.utils.aoa_to_sheet(productos);
+    const hojaAsesores=XLSX.utils.aoa_to_sheet(consolidadoAsesores);
+    const hojaAreas=XLSX.utils.aoa_to_sheet(consolidadoAreas);
+
+    XLSX.utils.book_append_sheet(libro,hojaResumen,"Resumen");
+    XLSX.utils.book_append_sheet(libro,hojaDetalle,"Documentos");
+    XLSX.utils.book_append_sheet(libro,hojaProductos,"Productos");
+    XLSX.utils.book_append_sheet(libro,hojaAsesores,"Por Asesor");
+    XLSX.utils.book_append_sheet(libro,hojaAreas,"Por Área");
+
+    /* =====================================================
+       FORMATO DE COLUMNAS
+       ===================================================== */
+
+    hojaResumen["!cols"]=[
+      {wch:28},
+      {wch:35}
+    ];
+
+    hojaDetalle["!cols"]=[
+      {wch:15},
+      {wch:12},
+      {wch:22},
+      {wch:28},
+      {wch:15},
+      {wch:20},
+      {wch:20},
+      {wch:16},
+      {wch:30},
+      {wch:25},
+      {wch:20},
+      {wch:30},
+      {wch:18},
+      {wch:16},
+      {wch:18},
+      {wch:16},
+      {wch:16},
+      {wch:40}
+    ];
+
+    hojaProductos["!cols"]=[
+      {wch:15},
+      {wch:12},
+      {wch:28},
+      {wch:25},
+      {wch:20},
+      {wch:40},
+      {wch:12},
+      {wch:16},
+      {wch:16},
+      {wch:10},
+      {wch:18},
+      {wch:16},
+      {wch:16},
+      {wch:16}
+    ];
+
+    hojaAsesores["!cols"]=[
+      {wch:28},
+      {wch:20},
+      {wch:20},
+      {wch:18}
+    ];
+
+    hojaAreas["!cols"]=[
+      {wch:25},
+      {wch:20},
+      {wch:18}
+    ];
+
+    /* =====================================================
+       FORMATO MONEDA
+       ===================================================== */
+
+    function aplicarFormatoMoneda(hoja,columnas){
+      columnas.forEach(col=>{
+        for(let fila=2;fila<=hoja["!ref"].split(":")[1].replace(/[A-Z]/g,"");fila++){
+          const celda=XLSX.utils.encode_cell({
+            r:fila-1,
+            c:col
+          });
+
+          if(hoja[celda]){
+            hoja[celda].z='$#,##0';
+          }
+        }
+      });
+    }
+
+    aplicarFormatoMoneda(hojaResumen,[1]);
+    aplicarFormatoMoneda(hojaDetalle,[13,14,15]);
+    aplicarFormatoMoneda(hojaProductos,[7,10,12,13]);
+    aplicarFormatoMoneda(hojaAsesores,[3]);
+    aplicarFormatoMoneda(hojaAreas,[2]);
+
+    /* =====================================================
+       NOMBRE DEL ARCHIVO
+       ===================================================== */
+
+    const hoy=fechaHoy();
+
+    const inicio=document.getElementById("repFechaInicio").value;
+    const fin=document.getElementById("repFechaFin").value;
+
+    let periodo=hoy;
+
+    if(inicio&&fin){
+      periodo=`${inicio}_a_${fin}`;
+    }else if(inicio){
+      periodo=`desde_${inicio}`;
+    }else if(fin){
+      periodo=`hasta_${fin}`;
+    }
+
+    const nombreArchivo=`Reporte_Remisionario_${periodo}.xlsx`;
+
+    XLSX.writeFile(libro,nombreArchivo);
+
+    alert(`Reporte Excel generado correctamente.\n\n${datosRemisiones.length} documento(s) exportado(s).`);
+
+  }catch(error){
+    console.error("Error generando Excel:",error);
+    alert("No se pudo generar el archivo Excel: "+error.message);
+  }
+}
+
 function renderConsolidadoAsesores(datos){
   const map={};
   datos.forEach(r=>{const k=(r.asesor||"N/A")+"|"+(r.area||"N/A");if(!map[k])map[k]={asesor:r.asesor||"N/A",area:r.area||"N/A",cantidad:0,total:0};map[k].cantidad++;map[k].total+=Number(r.total||0);});
