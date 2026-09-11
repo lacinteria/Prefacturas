@@ -108,7 +108,13 @@ input:focus,select:focus,textarea:focus{outline:2px solid rgba(14,107,82,.15);bo
 <div class="field" style="margin:0"><label>Cantidad <span class="req">*</span></label><input type="number" id="itemCant" min="0.01" step="any" placeholder="1"></div>
 <div class="field" style="margin:0"><label>Precio Unitario ($) <span class="req">*</span></label><input type="number" id="itemPrecio" min="0" step="any" placeholder="0"></div>
 <div class="field" style="margin:0"><label>Descuento (%)</label><input type="number" id="itemDescMonto" min="0" max="100" step="0.01" value="0" placeholder="0"></div>
-<div class="field" style="margin:0"><label>IVA incluido <span class="req">*</span></label><select id="itemIvaIncluido" required><option value="si">Sí, incluido</option><option value="no">No, sumar 19%</option></select></div>
+<div class="field" style="margin:0">
+  <label>IVA</label>
+  <label style="display:flex;align-items:center;gap:8px;padding:9px 12px;border:1px solid var(--line);border-radius:6px;background:#fff;cursor:pointer;height:38px">
+    <input type="checkbox" id="itemAplicarIva" style="width:auto;margin:0">
+    <span>Sumar IVA 19%</span>
+  </label>
+</div>
 <button type="button" class="btn primary" onclick="agregarItem()">+ Agregar Ítem</button>
 </div>
 
@@ -399,24 +405,125 @@ function agregarItem(){
   const desc=document.getElementById("itemDesc").value.trim();
   const cant=Number(document.getElementById("itemCant").value);
   const precioBase=Number(document.getElementById("itemPrecio").value);
-  const descuentoPct=Math.max(0,Math.min(100,Number(document.getElementById("itemDescMonto").value)||0));
-  const ivaIncluido=document.getElementById("itemIvaIncluido").value;
-  if(!desc || !Number.isFinite(cant) || cant<=0 || !Number.isFinite(precioBase) || precioBase<0){ alert("Completa correctamente descripción, cantidad y precio."); return; }
-  if(!ivaIncluido){ alert("Debes seleccionar si el precio tiene el IVA incluido."); return; }
-  if(descuentoPct<0 || descuentoPct>100){ alert("El descuento del ítem debe estar entre 0% y 100%."); return; }
-  const precioUnitario=ivaIncluido==="no" ? precioBase*1.19 : precioBase;
+  const descuentoPct=Math.max(
+    0,
+    Math.min(100,Number(document.getElementById("itemDescMonto").value)||0)
+  );
+
+  const aplicarIva=document.getElementById("itemAplicarIva").checked;
+
+  if(
+    !desc ||
+    !Number.isFinite(cant) ||
+    cant<=0 ||
+    !Number.isFinite(precioBase) ||
+    precioBase<0
+  ){
+    alert("Completa correctamente descripción, cantidad y precio.");
+    return;
+  }
+
+  if(descuentoPct<0 || descuentoPct>100){
+    alert("El descuento del ítem debe estar entre 0% y 100%.");
+    return;
+  }
+
+  /*
+   * Si se selecciona IVA:
+   * precioBase + 19%
+   *
+   * Si NO se selecciona:
+   * se mantiene el precio ingresado.
+   */
+  const precioUnitario=aplicarIva
+    ? precioBase*1.19
+    : precioBase;
+
   const brutoItem=cant*precioUnitario;
+
   const descuento=brutoItem*(descuentoPct/100);
-  itemsActuales.push({descripcion:desc,cantidad:cant,precioUnitario,precioBase,ivaIncluido:ivaIncluido==="si",ivaPct:19,descuentoPct,descuento,subtotal:brutoItem-descuento});
-  ["itemDesc","itemCant","itemPrecio","itemDescMonto"].forEach(id=>document.getElementById(id).value="");
-  document.getElementById("itemCant").value="1"; document.getElementById("itemDescMonto").value="0"; document.getElementById("itemIvaIncluido").value="si";
-  renderItems(); calcularTotales();
+
+  const subtotal=brutoItem-descuento;
+
+  itemsActuales.push({
+    descripcion:desc,
+    cantidad:cant,
+
+    // Precio que el usuario escribió
+    precioBase,
+
+    // Precio después de aplicar IVA si corresponde
+    precioUnitario,
+
+    // Indicador para reportes
+    ivaIncluido:!aplicarIva,
+    ivaAplicado:aplicarIva,
+    ivaPct:aplicarIva?19:0,
+
+    descuentoPct,
+    descuento,
+
+    subtotal
+  });
+
+  document.getElementById("itemDesc").value="";
+  document.getElementById("itemCant").value="1";
+  document.getElementById("itemPrecio").value="";
+  document.getElementById("itemDescMonto").value="0";
+  document.getElementById("itemAplicarIva").checked=false;
+
+  renderItems();
+  calcularTotales();
 }
 function eliminarItem(index){ itemsActuales.splice(index,1); renderItems(); calcularTotales(); }
+
 function renderItems(){
   const tbody=document.getElementById("tablaItemsBody");
-  if(!itemsActuales.length){ tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--ink-soft)">No se han agregado ítems.</td></tr>'; return; }
-  tbody.innerHTML=itemsActuales.map((it,i)=>`<tr><td>${escapeHtml(it.descripcion)}</td><td class="num">${formatNumber(it.cantidad)}</td><td class="num">${money(it.precioUnitario)}</td><td class="num">${it.ivaIncluido===false?"+19%":"Incl."}</td><td class="num">${formatNumber(it.descuentoPct||0)}%</td><td class="num"><strong>${money(it.subtotal)}</strong></td><td><button class="btn small danger" onclick="eliminarItem(${i})">×</button></td></tr>`).join("");
+
+  if(!itemsActuales.length){
+    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--ink-soft)">No se han agregado ítems.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML=itemsActuales.map((it,i)=>`
+    <tr>
+      <td>${escapeHtml(it.descripcion)}</td>
+
+      <td class="num">
+        ${formatNumber(it.cantidad)}
+      </td>
+
+      <td class="num">
+        ${money(it.precioUnitario)}
+      </td>
+
+      <td class="num">
+        ${
+          it.ivaAplicado
+            ? '<span class="badge success">+19%</span>'
+            : '<span class="badge info">Sin IVA</span>'
+        }
+      </td>
+
+      <td class="num">
+        ${formatNumber(it.descuentoPct||0)}%
+      </td>
+
+      <td class="num">
+        <strong>${money(it.subtotal)}</strong>
+      </td>
+
+      <td>
+        <button
+          type="button"
+          class="btn small danger"
+          onclick="eliminarItem(${i})"
+        >
+          ×
+        </button>
+      </td>
+    </tr>
+  `).join("");
 }
 function calcularTotales(){
   const bruto=itemsActuales.reduce((s,i)=>s+Number(i.subtotal||0),0);
@@ -436,7 +543,7 @@ function limpiarFormulario(){
   document.getElementById("remClienteTel").value="";
   document.getElementById("remClienteEmail").value="";
   document.getElementById("remDescGlobal").value="0";
-  document.getElementById("itemIvaIncluido").value="si";
+  document.getElementById("itemAplicarIva").checked=false;
   document.getElementById("remObs").value="";
   itemsActuales=[]; renderItems(); calcularTotales(); toggleFacturaOptions(); actualizarEtiquetasPersona();
   const badge=document.getElementById("infoClienteBadge"); badge.className="status hidden"; badge.textContent="";
@@ -683,8 +790,8 @@ function exportarReporteExcel(){
           item.descripcion||"",
           Number(item.cantidad||0),
           Number(item.precioBase||0),
-          item.ivaIncluido===false?"No":"Sí",
-          Number(item.ivaPct||19),
+          item.ivaAplicado?"Sí":"No",
+          Number(item.ivaPct||0),
           Number(item.precioUnitario||0),
           Number(item.descuentoPct||0),
           Number(item.descuento||0),
@@ -1083,7 +1190,7 @@ window.addEventListener("DOMContentLoaded",async()=>{
   document.getElementById("remFecha").value=fechaHoy();
   document.getElementById("itemCant").value="1";
   document.getElementById("itemDescMonto").value="0";
-  document.getElementById("itemIvaIncluido").value="si";
+  document.getElementById("itemAplicarIva").checked=false;
   toggleFacturaOptions();actualizarEtiquetasPersona();
   const acceso=await verificarLicencia();if(acceso)await checkSession();
 });
