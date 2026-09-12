@@ -63,7 +63,6 @@ input:focus,select:focus,textarea:focus{outline:2px solid rgba(14,107,82,.15);bo
       <button type="submit" class="btn primary" style="width:100%;margin-top:10px">Iniciar Sesión</button>
     </form>
     <p id="loginError" class="hidden" style="color:var(--required);font-size:12px;margin-top:10px;text-align:center"></p>
-    <p style="font-size:11px;color:var(--ink-soft);text-align:center;margin:16px 0 0">Primer acceso local: <strong>admin / admin123</strong></p>
   </div>
 </div>
 
@@ -86,7 +85,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid rgba(14,107,82,.15);bo
 <div class="card">
 <div class="section-title">Datos Documento y Tipo de Operación</div>
 <div class="grid-4">
-<div class="field"><label>Fecha <span class="req">*</span></label><input type="date" id="remFecha" required></div>
+<input type="date" id="remFecha" required readonly style="background:#f0f0f0;cursor:not-allowed">
 <div class="field"><label>Tipo Documento <span class="req">*</span></label><select id="remTipoDoc" onchange="toggleFacturaOptions()"><option value="Remisión">Remisión Simple (REM)</option><option value="Factura Electrónica">Factura Electrónica (FE)</option></select></div>
 <div class="field"><label>Tipo Persona <span class="req">*</span></label><select id="remTipoPersona" onchange="actualizarEtiquetasPersona()"><option value="Natural">Persona Natural</option><option value="Jurídica">Persona Jurídica</option></select></div>
 <div class="field"><label>Asesor / Vendedor</label><input type="text" id="remAsesor" readonly style="background:#f0f0f0"></div>
@@ -121,7 +120,10 @@ input:focus,select:focus,textarea:focus{outline:2px solid rgba(14,107,82,.15);bo
       <option value="Elástico">Elástico</option>
       <option value="Reata">Reata</option>
       <option value="Herraje">Herraje</option>
+      <option value="Placa">Placa</option>
+      <option value="Pedreria">Pedreria</option>
       <option value="Personalizado">Personalizado</option>
+      <option value="otro">Otro</option>
     </select>
   </div>
 
@@ -778,7 +780,233 @@ function agregarItem(){
 
   calcularTotales();
 }
-function eliminarItem(index){ itemsActuales.splice(index,1); renderItems(); calcularTotales(); }
+function editarItem(index){
+
+  const item = itemsActuales[index];
+
+  if(!item) return;
+
+  // Guardar el índice que estamos editando
+  window.itemEditandoIndex = index;
+
+  // Cargar tipo de producto
+  document.getElementById("itemTipoProducto").value = item.tipoProducto || "";
+
+  // Generar nuevamente los campos del producto
+  actualizarCamposProducto();
+
+  // Restaurar datos específicos
+  if(item.tipoProducto === "Moños"){
+
+    document.getElementById("itemColor").value = item.color || "";
+    document.getElementById("itemTamano").value = item.tamano || "";
+
+  }else if(item.tipoProducto === "Camisas"){
+
+    document.getElementById("itemMaterial").value = item.material || "";
+    document.getElementById("itemTalla").value = item.talla || "";
+
+  }else{
+
+    document.getElementById("itemDescripcion").value =
+      item.descripcionDetalle || "";
+  }
+
+  // Restaurar valores que se pueden modificar
+  document.getElementById("itemCant").value = item.cantidad;
+  document.getElementById("itemPrecio").value = item.precioBase;
+  document.getElementById("itemDescMonto").value = item.descuentoPct || 0;
+  document.getElementById("itemAplicarIva").checked = !!item.ivaAplicado;
+
+  // Cambiar el botón Agregar por Actualizar
+  const boton = document.querySelector(
+    '.item-grid button[onclick="agregarItem()"]'
+  );
+
+  if(boton){
+    boton.textContent = "✓ Actualizar";
+    boton.setAttribute("onclick","actualizarItem()");
+  }
+
+  // Llevar al formulario
+  document.getElementById("itemTipoProducto").scrollIntoView({
+    behavior:"smooth",
+    block:"center"
+  });
+}
+function actualizarItem(){
+
+  const index = window.itemEditandoIndex;
+
+  if(index === undefined || !itemsActuales[index]){
+    alert("No se encontró el producto que deseas editar.");
+    return;
+  }
+
+  const tipoProducto =
+    document.getElementById("itemTipoProducto").value;
+
+  const cant =
+    Number(document.getElementById("itemCant").value);
+
+  const precioBase =
+    Number(document.getElementById("itemPrecio").value);
+
+  const descuentoPct = Math.max(
+    0,
+    Math.min(
+      100,
+      Number(document.getElementById("itemDescMonto").value) || 0
+    )
+  );
+
+  const aplicarIva =
+    document.getElementById("itemAplicarIva").checked;
+
+  if(!tipoProducto){
+    alert("Selecciona el tipo de producto.");
+    return;
+  }
+
+  if(
+    !Number.isFinite(cant) ||
+    cant <= 0 ||
+    !Number.isFinite(precioBase) ||
+    precioBase < 0
+  ){
+    alert("Completa correctamente cantidad y precio.");
+    return;
+  }
+
+  // Reconstruir descripción
+  let descripcion = "";
+  let datosProducto = {};
+
+  if(tipoProducto === "Moños"){
+
+    const color =
+      document.getElementById("itemColor")?.value.trim();
+
+    const tamano =
+      document.getElementById("itemTamano")?.value;
+
+    if(!color || !tamano){
+      alert("Completa el color y tamaño del moño.");
+      return;
+    }
+
+    descripcion = `Moño ${color} ${tamano}`;
+
+    datosProducto = {
+      color,
+      tamano
+    };
+
+  }else if(tipoProducto === "Camisas"){
+
+    const material =
+      document.getElementById("itemMaterial")?.value;
+
+    const talla =
+      document.getElementById("itemTalla")?.value;
+
+    if(!material || !talla){
+      alert("Selecciona el material y la talla de la camisa.");
+      return;
+    }
+
+    descripcion = `Camisa ${material} Talla ${talla}`;
+
+    datosProducto = {
+      material,
+      talla
+    };
+
+  }else{
+
+    const detalle =
+      document.getElementById("itemDescripcion")?.value.trim();
+
+    if(!detalle){
+      alert("Escribe la descripción del producto.");
+      return;
+    }
+
+    descripcion = `${tipoProducto} - ${detalle}`;
+
+    datosProducto = {
+      descripcionDetalle: detalle
+    };
+  }
+
+  // Recalcular IVA
+  const precioUnitario = aplicarIva
+    ? precioBase * 1.19
+    : precioBase;
+
+  // Recalcular descuento
+  const brutoItem = cant * precioUnitario;
+
+  const descuento =
+    brutoItem * (descuentoPct / 100);
+
+  // Recalcular valor final del producto
+  const subtotal =
+    brutoItem - descuento;
+
+  // Reemplazar el producto anterior
+  itemsActuales[index] = {
+
+    tipoProducto,
+
+    descripcion,
+
+    ...datosProducto,
+
+    cantidad: cant,
+
+    precioBase,
+
+    precioUnitario,
+
+    ivaIncluido: !aplicarIva,
+    ivaAplicado: aplicarIva,
+    ivaPct: aplicarIva ? 19 : 0,
+
+    descuentoPct,
+    descuento,
+
+    subtotal
+  };
+
+  // Salir del modo edición
+  window.itemEditandoIndex = undefined;
+
+  // Restaurar botón Agregar
+  const boton = document.querySelector(
+    '.item-grid button[onclick="actualizarItem()"]'
+  );
+
+  if(boton){
+    boton.textContent = "+ Agregar";
+    boton.setAttribute("onclick","agregarItem()");
+  }
+
+  // Limpiar formulario
+  document.getElementById("itemTipoProducto").value = "";
+  document.getElementById("itemCant").value = "1";
+  document.getElementById("itemPrecio").value = "";
+  document.getElementById("itemDescMonto").value = "0";
+  document.getElementById("itemAplicarIva").checked = false;
+
+  actualizarCamposProducto();
+
+  // Volver a mostrar los productos actualizados
+  renderItems();
+
+  // Recalcular total general
+  calcularTotales();
+}
 
 function renderItems(){
 
@@ -835,17 +1063,25 @@ function renderItems(){
         <strong>${money(it.subtotal)}</strong>
       </td>
 
-      <td>
+     <td style="white-space:nowrap">
 
-        <button
-          type="button"
-          class="btn small danger"
-          onclick="eliminarItem(${i})"
-        >
-          ×
-        </button>
+  <button
+    type="button"
+    class="btn small secondary"
+    onclick="editarItem(${i})"
+  >
+    Editar
+  </button>
 
-      </td>
+  <button
+    type="button"
+    class="btn small danger"
+    onclick="eliminarItem(${i})"
+  >
+    ×
+  </button>
+
+</td>
 
     </tr>
 
@@ -905,7 +1141,8 @@ async function buscarCliente(){
    ========================================================= */
 async function guardarRemisionCompleta(){
   if(!currentUser){ alert("La sesión no está activa."); return; }
-  const fecha=document.getElementById("remFecha").value;
+  const fecha=fechaHoy();
+    document.getElementById("remFecha").value=fecha;
   const tipoDoc=document.getElementById("remTipoDoc").value;
   const tipoPersona=document.getElementById("remTipoPersona").value;
   const docCliente=document.getElementById("remClienteDoc").value.trim();
