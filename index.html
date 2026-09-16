@@ -246,20 +246,6 @@ input:focus,select:focus,textarea:focus{outline:2px solid rgba(14,107,82,.15);bo
     >
   </div>
 
-  <!-- DESCUENTO -->
-  <div class="field" style="margin:0">
-    <label>Descuento (%)</label>
-    <input
-      type="number"
-      id="itemDescMonto"
-      min="0"
-      max="100"
-      step="0.01"
-      value="0"
-      placeholder="0"
-    >
-  </div>
-
   <!-- IVA -->
   <div class="field" style="margin:0">
     <label>IVA</label>
@@ -726,14 +712,6 @@ function agregarItem(){
   const cant=Number(document.getElementById("itemCant").value);
   const precioBase=Number(document.getElementById("itemPrecio").value);
 
-  const descuentoPct=Math.max(
-    0,
-    Math.min(
-      100,
-      Number(document.getElementById("itemDescMonto").value)||0
-    )
-  );
-
   const aplicarIva=document.getElementById("itemAplicarIva").checked;
 
   if(!tipoProducto){
@@ -748,11 +726,6 @@ function agregarItem(){
     precioBase<0
   ){
     alert("Completa correctamente cantidad y precio.");
-    return;
-  }
-
-  if(descuentoPct<0 || descuentoPct>100){
-    alert("El descuento del ítem debe estar entre 0% y 100%.");
     return;
   }
 
@@ -827,15 +800,11 @@ function agregarItem(){
 
   /*
    * ======================================================
-   * DESCUENTO
+   * SUBTOTAL
    * ======================================================
    */
 
-  const brutoItem=cant*precioUnitario;
-
-  const descuento=brutoItem*(descuentoPct/100);
-
-  const subtotal=brutoItem-descuento;
+  const subtotal=cant*precioUnitario;
 
   /*
    * ======================================================
@@ -861,9 +830,6 @@ function agregarItem(){
     ivaAplicado:aplicarIva,
     ivaPct:aplicarIva?19:0,
 
-    descuentoPct,
-    descuento,
-
     subtotal
   });
 
@@ -876,7 +842,6 @@ function agregarItem(){
   document.getElementById("itemTipoProducto").value="";
   document.getElementById("itemCant").value="1";
   document.getElementById("itemPrecio").value="";
-  document.getElementById("itemDescMonto").value="0";
   document.getElementById("itemAplicarIva").checked=false;
 
   actualizarCamposProducto();
@@ -914,7 +879,6 @@ function editarItem(index){
 
   document.getElementById("itemCant").value = item.cantidad;
   document.getElementById("itemPrecio").value = item.precioBase;
-  document.getElementById("itemDescMonto").value = item.descuentoPct || 0;
   document.getElementById("itemAplicarIva").checked = !!item.ivaAplicado;
 
   const boton = document.querySelector(
@@ -949,14 +913,6 @@ function actualizarItem(){
 
   const precioBase =
     Number(document.getElementById("itemPrecio").value);
-
-  const descuentoPct = Math.max(
-    0,
-    Math.min(
-      100,
-      Number(document.getElementById("itemDescMonto").value) || 0
-    )
-  );
 
   const aplicarIva =
     document.getElementById("itemAplicarIva").checked;
@@ -1086,10 +1042,32 @@ function actualizarItem(){
   document.getElementById("itemTipoProducto").value = "";
   document.getElementById("itemCant").value = "1";
   document.getElementById("itemPrecio").value = "";
-  document.getElementById("itemDescMonto").value = "0";
   document.getElementById("itemAplicarIva").checked = false;
 
   actualizarCamposProducto();
+  renderItems();
+  calcularTotales();
+}
+
+function eliminarItem(index){
+
+    console.log("ELIMINAR EJECUTADO. ÍNDICE:", index);
+
+  if(index === undefined || !itemsActuales[index]){
+    alert("No se encontró el producto que deseas eliminar.");
+    return;
+  }
+
+  const producto = itemsActuales[index];
+
+  const confirmar = confirm(
+    `¿Deseas eliminar el producto "${producto.descripcion}"?`
+  );
+
+  if(!confirmar) return;
+
+  itemsActuales.splice(index, 1);
+
   renderItems();
   calcularTotales();
 }
@@ -1136,7 +1114,7 @@ function renderItems(){
         ${
           it.ivaAplicado
             ? '<span class="badge success">+19%</span>'
-            : '<span class="badge info">Sin IVA</span>'
+            : '<span class="badge info">IVA INCLUIDO</span>'
         }
 
       </td>
@@ -2664,8 +2642,6 @@ window.addEventListener("DOMContentLoaded",async()=>{
   document.getElementById("remFecha").value=fechaHoy();
 
   document.getElementById("itemCant").value="1";
-
-  document.getElementById("itemDescMonto").value="0";
 
   document.getElementById("itemAplicarIva").checked=false;
 
