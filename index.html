@@ -47,6 +47,54 @@ input:focus,select:focus,textarea:focus{outline:2px solid rgba(14,107,82,.15);bo
 .badge{display:inline-block;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:700}.badge.info{background:#DDEAF7;color:#24527A}.badge.success{background:#DDF1E7;color:#1C6B45}
 .status{padding:8px 10px;border-radius:6px;font-size:12px;margin-bottom:12px}.status.ok{background:#E4F4EA;color:#17613C}.status.warn{background:#FFF4D6;color:#765A00}.status.error{background:#FCE5E5;color:#8B2020}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:8000;padding:20px}.modal-card{background:#fff;border-radius:10px;max-width:800px;width:100%;max-height:90vh;overflow:auto;padding:20px}
+
+/* =========================================================
+   SUGERENCIAS DE CLIENTES
+   ========================================================= */
+.cliente-nombre-wrap{
+  position:relative;
+}
+
+.cliente-sugerencias{
+  position:absolute;
+  top:100%;
+  left:0;
+  right:0;
+  background:#fff;
+  border:1px solid var(--line);
+  border-top:none;
+  border-radius:0 0 6px 6px;
+  box-shadow:0 5px 12px rgba(0,0,0,.12);
+  z-index:3000;
+  max-height:220px;
+  overflow-y:auto;
+}
+
+.cliente-sugerencia{
+  padding:9px 12px;
+  cursor:pointer;
+  border-bottom:1px solid var(--line);
+  font-size:13px;
+}
+
+.cliente-sugerencia:last-child{
+  border-bottom:none;
+}
+
+.cliente-sugerencia:hover{
+  background:var(--surface-alt);
+}
+
+.cliente-sugerencia strong{
+  color:var(--brand-dark);
+}
+
+.cliente-sugerencia small{
+  display:block;
+  color:var(--ink-soft);
+  margin-top:2px;
+}
+
 @media(max-width:900px){.grid-5,.grid-4,.grid-3,.grid-2{grid-template-columns:1fr}.item-grid{grid-template-columns:1fr!important}.topbar{align-items:flex-start}.tabs{width:100%}}
 @media print{.no-print,.topbar,#loginModal{display:none!important}body{background:#fff}.card{border:none}}
 </style>
@@ -93,9 +141,43 @@ input:focus,select:focus,textarea:focus{outline:2px solid rgba(14,107,82,.15);bo
 
 <div class="section-title" style="margin-top:15px">Información del Cliente</div>
 <div id="infoClienteBadge" class="status hidden"></div>
+
 <div class="grid-5">
-<div class="field"><label id="lblDocIdentidad">Cédula / Identificación <span class="req">*</span></label><input type="text" id="remClienteDoc" placeholder="Número de documento" required></div>
-<div class="field"><label id="lblNombreCliente">Nombre Completo <span class="req">*</span></label><input type="text" id="remClienteNombre" placeholder="Nombre o Razón Social" required></div>
+
+<div class="field">
+  <label id="lblDocIdentidad">Cédula / Identificación <span class="req">*</span></label>
+  <input
+    type="text"
+    id="remClienteDoc"
+    placeholder="Número de documento"
+    required
+    inputmode="numeric"
+    pattern="[0-9]+"
+    oninput="this.value=this.value.replace(/[^0-9]/g,'')"
+  >
+</div>
+
+<div class="field">
+  <label id="lblNombreCliente">Nombre Completo <span class="req">*</span></label>
+
+  <div class="cliente-nombre-wrap">
+
+    <input
+      type="text"
+      id="remClienteNombre"
+      placeholder="Nombre o Razón Social"
+      required
+      autocomplete="off"
+    >
+
+    <div
+      id="clienteSugerencias"
+      class="cliente-sugerencias hidden"
+    ></div>
+
+  </div>
+</div>
+
 <div class="field"><label>Ciudad / Municipio <span class="req">*</span></label><input type="text" id="remClienteCiudad" placeholder="ej. Medellín, Bogotá, Bello..." required></div>
 <div class="field"><label>Teléfono / WhatsApp <span class="req">*</span></label><input type="tel" id="remClienteTel" placeholder="ej. 3001234567" required></div>
 <div class="field"><label>Correo Electrónico <span id="reqEmail" class="req" style="display:none">*</span></label><input type="email" id="remClienteEmail" placeholder="correo@ejemplo.com"></div>
@@ -307,6 +389,12 @@ let itemsActuales = [];
 let datosRemisiones = [];
 let logoBase64Temporal = "";
 
+/* =========================================================
+   CONTROL DE BÚSQUEDA DE CLIENTES
+   ========================================================= */
+let clientesCacheBusqueda = null;
+let temporizadorBusquedaCliente = null;
+
 const LS = {
   session: "remisionario_session_v2"
 };
@@ -351,11 +439,13 @@ async function obtenerUsuarios(){
   }
   return snap.docs.map(d=>({id:d.id,...d.data()}));
 }
+
 async function obtenerRemisiones(){
   exigirFirebase();
   const snap=await db.collection("remisiones").get();
   return snap.docs.map(d=>({id:d.id,...d.data()}));
 }
+
 async function guardarUsuarioDB(user){
   exigirFirebase();
   const id=user.id || db.collection("usuarios").doc().id;
@@ -363,24 +453,29 @@ async function guardarUsuarioDB(user){
   await db.collection("usuarios").doc(id).set(data,{merge:true});
   return {id,...data};
 }
+
 async function eliminarUsuarioDB(id){
   exigirFirebase();
   await db.collection("usuarios").doc(id).delete();
 }
+
 async function guardarRemisionDB(doc){
   exigirFirebase();
   await db.collection("remisiones").doc(doc.idDocumento).set(doc);
 }
+
 async function obtenerClientes(){
   exigirFirebase();
   const snap=await db.collection("clientes").get();
   return snap.docs.map(d=>({id:d.id,...d.data()}));
 }
+
 async function obtenerCliente(doc){
   exigirFirebase();
   const s=await db.collection("clientes").doc(doc).get();
   return s.exists ? s.data() : null;
 }
+
 async function guardarCliente(doc,data){
   exigirFirebase();
   await db.collection("clientes").doc(doc).set(data,{merge:true});
@@ -404,6 +499,7 @@ async function verificarLicencia(){
     return true;
   }
 }
+
 function mostrarPantallaBloqueo(mensaje){
   document.body.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:#121613;color:#fff;font-family:sans-serif;text-align:center;padding:20px"><div style="font-size:64px">🔒</div><h1 style="color:#E53E3E">Licencia Inactiva / Servicio Suspendido</h1><p style="max-width:480px;color:#A0AEC0">${escapeHtml(mensaje||"El acceso a la plataforma ha sido inhabilitado.")}</p><div style="padding:12px 20px;background:#1E251F;border-radius:8px;font-size:13px">Para reactivar el servicio, contacte al proveedor del software.</div></div>`;
 }
@@ -432,6 +528,7 @@ async function handleLogin(event){
     error.classList.remove("hidden");
   }
 }
+
 async function checkSession(){
   const raw=sessionStorage.getItem(LS.session);
   if(!raw){ mostrarLogin(); return; }
@@ -442,13 +539,19 @@ async function checkSession(){
     if(currentUser) aplicarSesion(); else mostrarLogin();
   }catch(e){ mostrarLogin(); }
 }
+
 function mostrarLogin(){ document.getElementById("loginModal").classList.remove("hidden"); }
+
 function ocultarLogin(){ document.getElementById("loginModal").classList.add("hidden"); }
+
 function logout(){
-  currentUser=null; sessionStorage.removeItem(LS.session); mostrarLogin();
+  currentUser=null;
+  sessionStorage.removeItem(LS.session);
+  mostrarLogin();
   document.getElementById("sessionUsername").textContent="Invitado";
   document.getElementById("sessionRole").textContent="ROL";
 }
+
 async function aplicarSesion(){
   ocultarLogin();
   document.getElementById("sessionUsername").textContent=currentUser.nombre||currentUser.username;
@@ -469,22 +572,35 @@ async function aplicarSesion(){
 function showView(view){
   if(!currentUser) return;
   const permisos={reporte:["admin","lider"],usuarios:["admin"],ajustes:["admin"]};
-  if(permisos[view] && !permisos[view].includes(currentUser.role)){ alert("No tienes permisos para acceder a esta sección."); return; }
-  ["venta","reporte","usuarios","ajustes"].forEach(v=>document.getElementById("view-"+v).classList.toggle("hidden",v!==view));
-  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===view));
+  if(permisos[view] && !permisos[view].includes(currentUser.role)){
+    alert("No tienes permisos para acceder a esta sección.");
+    return;
+  }
+
+  ["venta","reporte","usuarios","ajustes"].forEach(v=>
+    document.getElementById("view-"+v).classList.toggle("hidden",v!==view)
+  );
+
+  document.querySelectorAll(".tab-btn").forEach(b=>
+    b.classList.toggle("active",b.dataset.view===view)
+  );
+
   if(view==="reporte") procesarReportes();
   if(view==="usuarios") renderUsuarios();
 }
+
 function toggleFacturaOptions(){
   const factura=document.getElementById("remTipoDoc").value==="Factura Electrónica";
   document.getElementById("reqEmail").style.display=factura?"inline":"none";
   document.getElementById("remClienteEmail").required=factura;
 }
+
 function actualizarEtiquetasPersona(){
   const juridica=document.getElementById("remTipoPersona").value==="Jurídica";
   document.getElementById("lblDocIdentidad").innerHTML=(juridica?"NIT / Identificación":"Cédula / Identificación")+' <span class="req">*</span>';
   document.getElementById("lblNombreCliente").innerHTML=(juridica?"Razón Social":"Nombre Completo")+' <span class="req">*</span>';
 }
+
 function actualizarCamposProducto(){
 
   const tipo=document.getElementById("itemTipoProducto").value;
@@ -603,6 +719,7 @@ function actualizarCamposProducto(){
     </div>
   `;
 }
+
 function agregarItem(){
 
   const tipoProducto=document.getElementById("itemTipoProducto").value;
@@ -728,33 +845,25 @@ function agregarItem(){
 
   itemsActuales.push({
 
-    // Categoría estandarizada
     tipoProducto,
 
-    // Nombre/descripción que verá el usuario
     descripcion,
 
-    // Datos específicos del producto
     ...datosProducto,
 
     cantidad:cant,
 
-    // Precio ingresado originalmente
     precioBase,
 
-    // Precio después del IVA
     precioUnitario,
 
-    // IVA
     ivaIncluido:!aplicarIva,
     ivaAplicado:aplicarIva,
     ivaPct:aplicarIva?19:0,
 
-    // Descuento
     descuentoPct,
     descuento,
 
-    // Total del ítem
     subtotal
   });
 
@@ -765,37 +874,28 @@ function agregarItem(){
    */
 
   document.getElementById("itemTipoProducto").value="";
-
   document.getElementById("itemCant").value="1";
-
   document.getElementById("itemPrecio").value="";
-
   document.getElementById("itemDescMonto").value="0";
-
   document.getElementById("itemAplicarIva").checked=false;
 
   actualizarCamposProducto();
-
   renderItems();
-
   calcularTotales();
 }
+
 function editarItem(index){
 
   const item = itemsActuales[index];
 
   if(!item) return;
 
-  // Guardar el índice que estamos editando
   window.itemEditandoIndex = index;
 
-  // Cargar tipo de producto
   document.getElementById("itemTipoProducto").value = item.tipoProducto || "";
 
-  // Generar nuevamente los campos del producto
   actualizarCamposProducto();
 
-  // Restaurar datos específicos
   if(item.tipoProducto === "Moños"){
 
     document.getElementById("itemColor").value = item.color || "";
@@ -812,13 +912,11 @@ function editarItem(index){
       item.descripcionDetalle || "";
   }
 
-  // Restaurar valores que se pueden modificar
   document.getElementById("itemCant").value = item.cantidad;
   document.getElementById("itemPrecio").value = item.precioBase;
   document.getElementById("itemDescMonto").value = item.descuentoPct || 0;
   document.getElementById("itemAplicarIva").checked = !!item.ivaAplicado;
 
-  // Cambiar el botón Agregar por Actualizar
   const boton = document.querySelector(
     '.item-grid button[onclick="agregarItem()"]'
   );
@@ -828,12 +926,12 @@ function editarItem(index){
     boton.setAttribute("onclick","actualizarItem()");
   }
 
-  // Llevar al formulario
   document.getElementById("itemTipoProducto").scrollIntoView({
     behavior:"smooth",
     block:"center"
   });
 }
+
 function actualizarItem(){
 
   const index = window.itemEditandoIndex;
@@ -878,7 +976,6 @@ function actualizarItem(){
     return;
   }
 
-  // Reconstruir descripción
   let descripcion = "";
   let datosProducto = {};
 
@@ -939,22 +1036,18 @@ function actualizarItem(){
     };
   }
 
-  // Recalcular IVA
   const precioUnitario = aplicarIva
     ? precioBase * 1.19
     : precioBase;
 
-  // Recalcular descuento
   const brutoItem = cant * precioUnitario;
 
   const descuento =
     brutoItem * (descuentoPct / 100);
 
-  // Recalcular valor final del producto
   const subtotal =
     brutoItem - descuento;
 
-  // Reemplazar el producto anterior
   itemsActuales[index] = {
 
     tipoProducto,
@@ -979,10 +1072,8 @@ function actualizarItem(){
     subtotal
   };
 
-  // Salir del modo edición
   window.itemEditandoIndex = undefined;
 
-  // Restaurar botón Agregar
   const boton = document.querySelector(
     '.item-grid button[onclick="actualizarItem()"]'
   );
@@ -992,7 +1083,6 @@ function actualizarItem(){
     boton.setAttribute("onclick","agregarItem()");
   }
 
-  // Limpiar formulario
   document.getElementById("itemTipoProducto").value = "";
   document.getElementById("itemCant").value = "1";
   document.getElementById("itemPrecio").value = "";
@@ -1000,11 +1090,7 @@ function actualizarItem(){
   document.getElementById("itemAplicarIva").checked = false;
 
   actualizarCamposProducto();
-
-  // Volver a mostrar los productos actualizados
   renderItems();
-
-  // Recalcular total general
   calcularTotales();
 }
 
@@ -1087,6 +1173,7 @@ function renderItems(){
 
   `).join("");
 }
+
 function calcularTotales(){
   const bruto=itemsActuales.reduce((s,i)=>s+Number(i.subtotal||0),0);
   const globalPct=Math.max(0,Math.min(100,Number(document.getElementById("remDescGlobal").value)||0));
@@ -1095,7 +1182,9 @@ function calcularTotales(){
   document.getElementById("lblTotalRemision").textContent=money(total);
   return total;
 }
+
 function limpiarFormulario(){
+
   document.getElementById("remFecha").value=fechaHoy();
   document.getElementById("remTipoDoc").value="Remisión";
   document.getElementById("remTipoPersona").value="Natural";
@@ -1107,42 +1196,238 @@ function limpiarFormulario(){
   document.getElementById("remDescGlobal").value="0";
   document.getElementById("itemAplicarIva").checked=false;
   document.getElementById("remObs").value="";
-  itemsActuales=[]; renderItems(); calcularTotales(); toggleFacturaOptions(); actualizarEtiquetasPersona();
-  const badge=document.getElementById("infoClienteBadge"); badge.className="status hidden"; badge.textContent="";
-  if(currentUser) document.getElementById("remAsesor").value=currentUser.nombre||currentUser.username;
+
+  itemsActuales=[];
+  renderItems();
+  calcularTotales();
+  toggleFacturaOptions();
+  actualizarEtiquetasPersona();
+
+  const badge=document.getElementById("infoClienteBadge");
+  badge.className="status hidden";
+  badge.textContent="";
+
+  ocultarSugerenciasClientes();
+
+  if(currentUser)
+    document.getElementById("remAsesor").value=currentUser.nombre||currentUser.username;
 }
 
 /* =========================================================
    CLIENTES
    ========================================================= */
+
+/*
+ * Busca un cliente por documento.
+ * Esta función conserva la búsqueda que ya funcionaba.
+ */
 async function buscarCliente(){
+
   const doc=document.getElementById("remClienteDoc").value.trim();
+
   if(!doc) return;
+
   try{
-    const data=await obtenerCliente(doc), badge=document.getElementById("infoClienteBadge");
+
+    const data=await obtenerCliente(doc);
+    const badge=document.getElementById("infoClienteBadge");
+
     if(data){
+
       document.getElementById("remClienteNombre").value=data.nomCliente||"";
       document.getElementById("remClienteCiudad").value=data.ciudadCliente||"";
       document.getElementById("remClienteTel").value=data.telCliente||"";
       document.getElementById("remClienteEmail").value=data.emailCliente||"";
-      if(data.tipoPersona) document.getElementById("remTipoPersona").value=data.tipoPersona;
+
+      if(data.tipoPersona)
+        document.getElementById("remTipoPersona").value=data.tipoPersona;
+
       actualizarEtiquetasPersona();
+
       badge.innerHTML=`⭐ <strong>Cliente recurrente:</strong> ${Number(data.totalCompras||1)} compras · ${money(data.totalInvertido||0)} acumulado`;
       badge.className="status ok";
+
     }else{
+
       badge.innerHTML="🆕 <strong>Cliente nuevo</strong>";
       badge.className="status warn";
     }
-  }catch(e){ console.error("Error buscando cliente",e); }
+
+  }catch(e){
+
+    console.error("Error buscando cliente",e);
+
+  }
+}
+
+/*
+ * =========================================================
+ * BUSCAR CLIENTE POR NOMBRE
+ * =========================================================
+ */
+
+async function cargarClientesParaBusqueda(){
+
+  if(clientesCacheBusqueda)
+    return clientesCacheBusqueda;
+
+  try{
+
+    clientesCacheBusqueda=await obtenerClientes();
+
+    return clientesCacheBusqueda;
+
+  }catch(e){
+
+    console.error("Error cargando clientes para búsqueda:",e);
+
+    return [];
+
+  }
+}
+
+function normalizarTexto(texto){
+
+  return String(texto||"")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g,"")
+    .trim();
+}
+
+async function buscarClientesPorNombre(){
+
+  const input=document.getElementById("remClienteNombre");
+  const contenedor=document.getElementById("clienteSugerencias");
+
+  const texto=input.value.trim();
+
+  if(texto.length<2){
+
+    ocultarSugerenciasClientes();
+    return;
+  }
+
+  clearTimeout(temporizadorBusquedaCliente);
+
+  temporizadorBusquedaCliente=setTimeout(async()=>{
+
+    const clientes=await cargarClientesParaBusqueda();
+
+    const busqueda=normalizarTexto(texto);
+
+    const resultados=clientes
+      .filter(cliente=>{
+        const nombre=normalizarTexto(cliente.nomCliente);
+        return nombre.includes(busqueda);
+      })
+      .sort((a,b)=>
+        normalizarTexto(a.nomCliente)
+          .localeCompare(normalizarTexto(b.nomCliente))
+      )
+      .slice(0,10);
+
+    mostrarSugerenciasClientes(resultados);
+
+  },150);
+}
+
+function mostrarSugerenciasClientes(clientes){
+
+  const contenedor=document.getElementById("clienteSugerencias");
+
+  if(!clientes.length){
+
+    contenedor.innerHTML=`
+      <div style="padding:10px;color:var(--ink-soft);font-size:12px">
+        No se encontraron clientes con ese nombre.
+      </div>
+    `;
+
+    contenedor.classList.remove("hidden");
+
+    return;
+  }
+
+  contenedor.innerHTML=clientes.map((cliente,index)=>`
+
+    <div
+      class="cliente-sugerencia"
+      data-cliente-index="${index}"
+    >
+
+      <strong>${escapeHtml(cliente.nomCliente||"Sin nombre")}</strong>
+
+      <small>
+        Documento: ${escapeHtml(cliente.docCliente||"N/A")}
+        ${cliente.ciudadCliente
+          ? ` · ${escapeHtml(cliente.ciudadCliente)}`
+          : ""}
+      </small>
+
+    </div>
+
+  `).join("");
+
+  contenedor.querySelectorAll(".cliente-sugerencia").forEach((elemento,index)=>{
+
+    elemento.addEventListener("mousedown",(event)=>{
+
+      event.preventDefault();
+
+      seleccionarClientePorNombre(clientes[index]);
+
+    });
+
+  });
+
+  contenedor.classList.remove("hidden");
+}
+
+function seleccionarClientePorNombre(cliente){
+
+  if(!cliente) return;
+
+  document.getElementById("remClienteDoc").value=cliente.docCliente||"";
+  document.getElementById("remClienteNombre").value=cliente.nomCliente||"";
+  document.getElementById("remClienteCiudad").value=cliente.ciudadCliente||"";
+  document.getElementById("remClienteTel").value=cliente.telCliente||"";
+  document.getElementById("remClienteEmail").value=cliente.emailCliente||"";
+
+  if(cliente.tipoPersona)
+    document.getElementById("remTipoPersona").value=cliente.tipoPersona;
+
+  actualizarEtiquetasPersona();
+
+  const badge=document.getElementById("infoClienteBadge");
+
+  badge.innerHTML=`⭐ <strong>Cliente recurrente:</strong> ${Number(cliente.totalCompras||1)} compras · ${money(cliente.totalInvertido||0)} acumulado`;
+  badge.className="status ok";
+
+  ocultarSugerenciasClientes();
+}
+
+function ocultarSugerenciasClientes(){
+
+  const contenedor=document.getElementById("clienteSugerencias");
+
+  if(contenedor)
+    contenedor.classList.add("hidden");
 }
 
 /* =========================================================
    GUARDAR REMISIÓN
    ========================================================= */
 async function guardarRemisionCompleta(){
-  if(!currentUser){ alert("La sesión no está activa."); return; }
+
+  if(!currentUser){
+    alert("La sesión no está activa.");
+    return;
+  }
+
   const fecha=fechaHoy();
-    document.getElementById("remFecha").value=fecha;
+  document.getElementById("remFecha").value=fecha;
+
   const tipoDoc=document.getElementById("remTipoDoc").value;
   const tipoPersona=document.getElementById("remTipoPersona").value;
   const docCliente=document.getElementById("remClienteDoc").value.trim();
@@ -1154,27 +1439,59 @@ async function guardarRemisionCompleta(){
   const descGlobalPct=Math.max(0,Math.min(100,Number(document.getElementById("remDescGlobal").value)||0));
   const obs=document.getElementById("remObs").value.trim();
 
-  if(!fecha||!docCliente||!nomCliente||!ciudadCliente||!telCliente){ alert("Completa todos los campos obligatorios (*)."); return; }
-  if(tipoDoc==="Factura Electrónica"&&!emailCliente){ alert("El correo electrónico es obligatorio para Facturación Electrónica."); return; }
-  if(!itemsActuales.length){ alert("Debes agregar al menos un ítem."); return; }
+  if(!fecha||!docCliente||!nomCliente||!ciudadCliente||!telCliente){
+    alert("Completa todos los campos obligatorios (*).");
+    return;
+  }
+
+  if(tipoDoc==="Factura Electrónica"&&!emailCliente){
+    alert("El correo electrónico es obligatorio para Facturación Electrónica.");
+    return;
+  }
+
+  if(!itemsActuales.length){
+    alert("Debes agregar al menos un ítem.");
+    return;
+  }
 
   const bruto=itemsActuales.reduce((s,i)=>s+Number(i.subtotal||0),0);
   const descGlobal=bruto*(descGlobalPct/100);
-  if(descGlobalPct>100){ alert("El descuento global debe estar entre 0% y 100%."); return; }
+
+  if(descGlobalPct>100){
+    alert("El descuento global debe estar entre 0% y 100%.");
+    return;
+  }
+
   const total=calcularTotales();
 
   try{
+
     const existentes=await obtenerRemisiones();
+
     const prefijo=tipoDoc==="Factura Electrónica"?"FE":"REM";
+
     const usados=existentes.filter(r=>r.tipoDoc===tipoDoc);
-    const maxConsecutivo=usados.reduce((max,r)=>Math.max(max,Number(r.consecutivo)||0),0);
+
+    const maxConsecutivo=usados.reduce(
+      (max,r)=>Math.max(max,Number(r.consecutivo)||0),
+      0
+    );
+
     const consecutivo=maxConsecutivo+1;
+
     const customId=`${prefijo}-${String(consecutivo).padStart(4,"0")}`;
 
     const clienteAnterior=await obtenerCliente(docCliente);
+
     const esClienteNuevo=!clienteAnterior;
+
     const cliente={
-      docCliente,nomCliente,ciudadCliente,telCliente,emailCliente,tipoPersona,
+      docCliente,
+      nomCliente,
+      ciudadCliente,
+      telCliente,
+      emailCliente,
+      tipoPersona,
       totalInvertido:Number(clienteAnterior?.totalInvertido||0)+total,
       totalCompras:Number(clienteAnterior?.totalCompras||0)+1,
       primeraCompra:clienteAnterior?.primeraCompra||fecha,
@@ -1182,51 +1499,118 @@ async function guardarRemisionCompleta(){
       fechaRegistro:clienteAnterior?.fechaRegistro||new Date().toISOString(),
       ultimaActualizacion:new Date().toISOString()
     };
+
     await guardarCliente(docCliente,cliente);
 
+    /*
+     * Actualizar caché de clientes para que una nueva búsqueda
+     * por nombre lo encuentre inmediatamente.
+     */
+    clientesCacheBusqueda=null;
+
     const documento={
-      idDocumento:customId,consecutivo,fecha,tipoDoc,tipoPersona,docCliente,nomCliente,
-      ciudadCliente,telCliente,emailCliente,formaPago,descGlobalPct,descGlobal,observaciones:obs,
-      items:JSON.parse(JSON.stringify(itemsActuales)),subtotal:bruto,total,
-      esClienteNuevo,asesor:currentUser.nombre||currentUser.username,area:currentUser.area||"",
+      idDocumento:customId,
+      consecutivo,
+      fecha,
+      tipoDoc,
+      tipoPersona,
+      docCliente,
+      nomCliente,
+      ciudadCliente,
+      telCliente,
+      emailCliente,
+      formaPago,
+      descGlobalPct,
+      descGlobal,
+      observaciones:obs,
+      items:JSON.parse(JSON.stringify(itemsActuales)),
+      subtotal:bruto,
+      total,
+      esClienteNuevo,
+      asesor:currentUser.nombre||currentUser.username,
+      area:currentUser.area||"",
       fechaCreacion:new Date().toISOString()
     };
+
     await guardarRemisionDB(documento);
+
     alert(`¡Documento registrado con éxito!\nCódigo asignado: ${customId}`);
+
     limpiarFormulario();
-    if(document.getElementById("view-reporte").classList.contains("hidden")===false) procesarReportes();
-  }catch(e){ console.error(e); alert("Error guardando en la base de datos: "+e.message); }
+
+    if(document.getElementById("view-reporte").classList.contains("hidden")===false)
+      procesarReportes();
+
+  }catch(e){
+
+    console.error(e);
+
+    alert("Error guardando en la base de datos: "+e.message);
+
+  }
 }
 
 /* =========================================================
    REPORTES
    ========================================================= */
 async function procesarReportes(){
-  if(!currentUser || !["admin","lider"].includes(currentUser.role)) return;
+
+  if(!currentUser || !["admin","lider"].includes(currentUser.role))
+    return;
+
   try{
+
     const datos=await obtenerRemisiones();
+
     const inicio=document.getElementById("repFechaInicio").value;
     const fin=document.getElementById("repFechaFin").value;
     const asesor=document.getElementById("repFiltroAsesor").value;
     const area=document.getElementById("repFiltroArea").value;
     const tipoDocFiltro=document.getElementById("repFiltroTipoDoc").value;
+
     const filtrados=datos.filter(r=>{
+
       if(inicio&&String(r.fecha)<inicio)return false;
       if(fin&&String(r.fecha)>fin)return false;
       if(asesor!=="TODOS"&&(r.asesor||"")!==asesor)return false;
       if(area!=="TODAS"&&(r.area||"")!==area)return false;
       if(tipoDocFiltro!=="TODOS"&&(r.tipoDoc||"Remisión")!==tipoDocFiltro)return false;
+
       return true;
-    }).sort((a,b)=>String(b.fechaCreacion||b.fecha).localeCompare(String(a.fechaCreacion||a.fecha)));
+
+    }).sort((a,b)=>
+      String(b.fechaCreacion||b.fecha)
+        .localeCompare(String(a.fechaCreacion||a.fecha))
+    );
+
     datosRemisiones=filtrados;
-    const total=filtrados.reduce((s,r)=>s+Number(r.total||0),0);
+
+    const total=filtrados.reduce(
+      (s,r)=>s+Number(r.total||0),
+      0
+    );
+
     document.getElementById("kpiTotalVentas").textContent=money(total);
     document.getElementById("kpiCantRemisiones").textContent=filtrados.length;
-    document.getElementById("kpiTicketPromedio").textContent=money(filtrados.length?total/filtrados.length:0);
-    renderConsolidadoAsesores(filtrados); renderConsolidadoAreas(filtrados); renderTablaDetalleRemisiones(filtrados);
-  }catch(e){ console.error(e); document.getElementById("tablaReportesBody").innerHTML=`<tr><td colspan="8">Error cargando reportes: ${escapeHtml(e.message)}</td></tr>`; }
+    document.getElementById("kpiTicketPromedio").textContent=
+      money(filtrados.length?total/filtrados.length:0);
+
+    renderConsolidadoAsesores(filtrados);
+    renderConsolidadoAreas(filtrados);
+    renderTablaDetalleRemisiones(filtrados);
+
+  }catch(e){
+
+    console.error(e);
+
+    document.getElementById("tablaReportesBody").innerHTML=
+      `<tr><td colspan="8">Error cargando reportes: ${escapeHtml(e.message)}</td></tr>`;
+
+  }
 }
+
 function exportarReporteExcel(){
+
   if(!currentUser || !["admin","lider"].includes(currentUser.role)){
     alert("No tienes permisos para exportar reportes.");
     return;
@@ -1243,9 +1627,6 @@ function exportarReporteExcel(){
   }
 
   try{
-    /* =====================================================
-       HOJA 1: RESUMEN
-       ===================================================== */
 
     const totalVentas=datosRemisiones.reduce(
       (s,r)=>s+Number(r.total||0),0
@@ -1266,10 +1647,6 @@ function exportarReporteExcel(){
       ["Cantidad de documentos",datosRemisiones.length],
       ["Promedio por venta",datosRemisiones.length?totalVentas/datosRemisiones.length:0]
     ];
-
-    /* =====================================================
-       HOJA 2: DETALLE DE DOCUMENTOS
-       ===================================================== */
 
     const detalle=[
       [
@@ -1295,6 +1672,7 @@ function exportarReporteExcel(){
     ];
 
     datosRemisiones.forEach(r=>{
+
       detalle.push([
         r.idDocumento||"",
         r.fecha||"",
@@ -1315,11 +1693,8 @@ function exportarReporteExcel(){
         r.esClienteNuevo?"Sí":"No",
         r.observaciones||""
       ]);
-    });
 
-    /* =====================================================
-       HOJA 3: PRODUCTOS / ÍTEMS
-       ===================================================== */
+    });
 
     const productos=[
       [
@@ -1341,9 +1716,11 @@ function exportarReporteExcel(){
     ];
 
     datosRemisiones.forEach(r=>{
+
       const items=Array.isArray(r.items)?r.items:[];
 
       items.forEach(item=>{
+
         productos.push([
           r.idDocumento||"",
           r.fecha||"",
@@ -1360,29 +1737,31 @@ function exportarReporteExcel(){
           Number(item.descuento||0),
           Number(item.subtotal||0)
         ]);
-      });
-    });
 
-    /* =====================================================
-       HOJA 4: CONSOLIDADO POR ASESOR
-       ===================================================== */
+      });
+
+    });
 
     const asesoresMap={};
 
     datosRemisiones.forEach(r=>{
+
       const clave=(r.asesor||"N/A")+"|"+(r.area||"N/A");
 
       if(!asesoresMap[clave]){
+
         asesoresMap[clave]={
           asesor:r.asesor||"N/A",
           area:r.area||"N/A",
           cantidad:0,
           total:0
         };
+
       }
 
       asesoresMap[clave].cantidad++;
       asesoresMap[clave].total+=Number(r.total||0);
+
     });
 
     const consolidadoAsesores=[
@@ -1392,33 +1771,35 @@ function exportarReporteExcel(){
     Object.values(asesoresMap)
       .sort((a,b)=>b.total-a.total)
       .forEach(x=>{
+
         consolidadoAsesores.push([
           x.asesor,
           x.area,
           x.cantidad,
           x.total
         ]);
-      });
 
-    /* =====================================================
-       HOJA 5: CONSOLIDADO POR ÁREA
-       ===================================================== */
+      });
 
     const areasMap={};
 
     datosRemisiones.forEach(r=>{
+
       const area=r.area||"N/A";
 
       if(!areasMap[area]){
+
         areasMap[area]={
           area,
           cantidad:0,
           total:0
         };
+
       }
 
       areasMap[area].cantidad++;
       areasMap[area].total+=Number(r.total||0);
+
     });
 
     const consolidadoAreas=[
@@ -1428,16 +1809,14 @@ function exportarReporteExcel(){
     Object.values(areasMap)
       .sort((a,b)=>b.total-a.total)
       .forEach(x=>{
+
         consolidadoAreas.push([
           x.area,
           x.cantidad,
           x.total
         ]);
-      });
 
-    /* =====================================================
-       CREAR LIBRO DE EXCEL
-       ===================================================== */
+      });
 
     const libro=XLSX.utils.book_new();
 
@@ -1452,10 +1831,6 @@ function exportarReporteExcel(){
     XLSX.utils.book_append_sheet(libro,hojaProductos,"Productos");
     XLSX.utils.book_append_sheet(libro,hojaAsesores,"Por Asesor");
     XLSX.utils.book_append_sheet(libro,hojaAreas,"Por Área");
-
-    /* =====================================================
-       FORMATO DE COLUMNAS
-       ===================================================== */
 
     hojaResumen["!cols"]=[
       {wch:28},
@@ -1513,13 +1888,16 @@ function exportarReporteExcel(){
       {wch:18}
     ];
 
-    /* =====================================================
-       FORMATO MONEDA
-       ===================================================== */
-
     function aplicarFormatoMoneda(hoja,columnas){
+
       columnas.forEach(col=>{
-        for(let fila=2;fila<=hoja["!ref"].split(":")[1].replace(/[A-Z]/g,"");fila++){
+
+        for(
+          let fila=2;
+          fila<=hoja["!ref"].split(":")[1].replace(/[A-Z]/g,"");
+          fila++
+        ){
+
           const celda=XLSX.utils.encode_cell({
             r:fila-1,
             c:col
@@ -1528,8 +1906,11 @@ function exportarReporteExcel(){
           if(hoja[celda]){
             hoja[celda].z='$#,##0';
           }
+
         }
+
       });
+
     }
 
     aplicarFormatoMoneda(hojaResumen,[1]);
@@ -1537,10 +1918,6 @@ function exportarReporteExcel(){
     aplicarFormatoMoneda(hojaProductos,[7,10,12,13]);
     aplicarFormatoMoneda(hojaAsesores,[3]);
     aplicarFormatoMoneda(hojaAreas,[2]);
-
-    /* =====================================================
-       NOMBRE DEL ARCHIVO
-       ===================================================== */
 
     const hoy=fechaHoy();
 
@@ -1564,59 +1941,276 @@ function exportarReporteExcel(){
     alert(`Reporte Excel generado correctamente.\n\n${datosRemisiones.length} documento(s) exportado(s).`);
 
   }catch(error){
+
     console.error("Error generando Excel:",error);
+
     alert("No se pudo generar el archivo Excel: "+error.message);
+
   }
 }
 
 function renderConsolidadoAsesores(datos){
+
   const map={};
-  datos.forEach(r=>{const k=(r.asesor||"N/A")+"|"+(r.area||"N/A");if(!map[k])map[k]={asesor:r.asesor||"N/A",area:r.area||"N/A",cantidad:0,total:0};map[k].cantidad++;map[k].total+=Number(r.total||0);});
+
+  datos.forEach(r=>{
+
+    const k=(r.asesor||"N/A")+"|"+(r.area||"N/A");
+
+    if(!map[k])
+      map[k]={
+        asesor:r.asesor||"N/A",
+        area:r.area||"N/A",
+        cantidad:0,
+        total:0
+      };
+
+    map[k].cantidad++;
+    map[k].total+=Number(r.total||0);
+
+  });
+
   const rows=Object.values(map).sort((a,b)=>b.total-a.total);
-  document.getElementById("tblConsolidadoAsesoresBody").innerHTML=rows.length?rows.map(x=>`<tr><td>${escapeHtml(x.asesor)}</td><td>${escapeHtml(x.area)}</td><td class="num">${x.cantidad}</td><td class="num">${money(x.total)}</td></tr>`).join(""):'<tr><td colspan="4" style="text-align:center">No hay datos.</td></tr>';
+
+  document.getElementById("tblConsolidadoAsesoresBody").innerHTML=
+    rows.length
+      ? rows.map(x=>
+          `<tr>
+            <td>${escapeHtml(x.asesor)}</td>
+            <td>${escapeHtml(x.area)}</td>
+            <td class="num">${x.cantidad}</td>
+            <td class="num">${money(x.total)}</td>
+          </tr>`
+        ).join("")
+      : '<tr><td colspan="4" style="text-align:center">No hay datos.</td></tr>';
 }
+
 function renderConsolidadoAreas(datos){
+
   const map={};
-  datos.forEach(r=>{const k=r.area||"N/A";if(!map[k])map[k]={area:k,cantidad:0,total:0};map[k].cantidad++;map[k].total+=Number(r.total||0);});
+
+  datos.forEach(r=>{
+
+    const k=r.area||"N/A";
+
+    if(!map[k])
+      map[k]={
+        area:k,
+        cantidad:0,
+        total:0
+      };
+
+    map[k].cantidad++;
+    map[k].total+=Number(r.total||0);
+
+  });
+
   const rows=Object.values(map).sort((a,b)=>b.total-a.total);
-  document.getElementById("tblConsolidadoAreasBody").innerHTML=rows.length?rows.map(x=>`<tr><td>${escapeHtml(x.area)}</td><td class="num">${x.cantidad}</td><td class="num">${money(x.total)}</td></tr>`).join(""):'<tr><td colspan="3" style="text-align:center">No hay datos.</td></tr>';
+
+  document.getElementById("tblConsolidadoAreasBody").innerHTML=
+    rows.length
+      ? rows.map(x=>
+          `<tr>
+            <td>${escapeHtml(x.area)}</td>
+            <td class="num">${x.cantidad}</td>
+            <td class="num">${money(x.total)}</td>
+          </tr>`
+        ).join("")
+      : '<tr><td colspan="3" style="text-align:center">No hay datos.</td></tr>';
 }
+
 function renderTablaDetalleRemisiones(datos){
+
   const tbody=document.getElementById("tablaReportesBody");
-  if(!datos.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--ink-soft)">No se encontraron documentos para este filtro.</td></tr>';return;}
+
+  if(!datos.length){
+
+    tbody.innerHTML=
+      '<tr><td colspan="8" style="text-align:center;color:var(--ink-soft)">No se encontraron documentos para este filtro.</td></tr>';
+
+    return;
+  }
+
   tbody.innerHTML=datos.map(r=>`<tr>
 <td><strong>${escapeHtml(r.idDocumento||"Sin ID")}</strong><br><small>${escapeHtml(r.fecha||"")} · ${escapeHtml(r.tipoDoc||"Remisión")}</small></td>
 <td><strong>${escapeHtml(r.nomCliente||"Cliente")}</strong><br><small>${escapeHtml(r.tipoPersona||"Persona")}: ${escapeHtml(r.docCliente||"N/A")}</small></td>
-<td>${escapeHtml(r.ciudadCliente||"N/A")}</td><td>${escapeHtml(r.telCliente||"N/A")}<br><small>${escapeHtml(r.emailCliente||"")}</small></td>
-<td>${escapeHtml(r.asesor||"N/A")}<br><small>${escapeHtml(r.area||"N/A")}</small></td><td>${escapeHtml(r.formaPago||"N/A")}</td>
-<td class="num"><strong>${money(r.total||0)}</strong></td><td><button class="btn small secondary" onclick="verDetalleDoc('${escapeAttr(r.idDocumento||r.id||"")}')">Ver Detalle</button></td>
+<td>${escapeHtml(r.ciudadCliente||"N/A")}</td>
+<td>${escapeHtml(r.telCliente||"N/A")}<br><small>${escapeHtml(r.emailCliente||"")}</small></td>
+<td>${escapeHtml(r.asesor||"N/A")}<br><small>${escapeHtml(r.area||"N/A")}</small></td>
+<td>${escapeHtml(r.formaPago||"N/A")}</td>
+<td class="num"><strong>${money(r.total||0)}</strong></td>
+<td><button class="btn small secondary" onclick="verDetalleDoc('${escapeAttr(r.idDocumento||r.id||"")}')">Ver Detalle</button></td>
 </tr>`).join("");
 }
+
 async function verDetalleDoc(id){
-  const doc=datosRemisiones.find(r=>(r.idDocumento||r.id)===id) || (await obtenerRemisiones()).find(r=>(r.idDocumento||r.id)===id);
+
+  const doc=
+    datosRemisiones.find(r=>(r.idDocumento||r.id)===id) ||
+    (await obtenerRemisiones()).find(r=>(r.idDocumento||r.id)===id);
+
   if(!doc)return;
+
   const items=Array.isArray(doc.items)?doc.items:[];
+
   document.getElementById("detalleContenido").innerHTML=`
   <div class="grid-2">
-    <div><strong>Documento:</strong> ${escapeHtml(doc.idDocumento)}</div><div><strong>Fecha:</strong> ${escapeHtml(doc.fecha)}</div>
-    <div><strong>Cliente:</strong> ${escapeHtml(doc.nomCliente)}</div><div><strong>Documento cliente:</strong> ${escapeHtml(doc.docCliente)}</div>
-    <div><strong>Ciudad:</strong> ${escapeHtml(doc.ciudadCliente)}</div><div><strong>Teléfono:</strong> ${escapeHtml(doc.telCliente)}</div>
-    <div><strong>Asesor:</strong> ${escapeHtml(doc.asesor)}</div><div><strong>Área:</strong> ${escapeHtml(doc.area)}</div>
-    <div><strong>Forma de pago:</strong> ${escapeHtml(doc.formaPago)}</div><div><strong>Tipo:</strong> ${escapeHtml(doc.tipoDoc)}</div>
+    <div><strong>Documento:</strong> ${escapeHtml(doc.idDocumento)}</div>
+    <div><strong>Fecha:</strong> ${escapeHtml(doc.fecha)}</div>
+    <div><strong>Cliente:</strong> ${escapeHtml(doc.nomCliente)}</div>
+    <div><strong>Documento cliente:</strong> ${escapeHtml(doc.docCliente)}</div>
+    <div><strong>Ciudad:</strong> ${escapeHtml(doc.ciudadCliente)}</div>
+    <div><strong>Teléfono:</strong> ${escapeHtml(doc.telCliente)}</div>
+    <div><strong>Asesor:</strong> ${escapeHtml(doc.asesor)}</div>
+    <div><strong>Área:</strong> ${escapeHtml(doc.area)}</div>
+    <div><strong>Forma de pago:</strong> ${escapeHtml(doc.formaPago)}</div>
+    <div><strong>Tipo:</strong> ${escapeHtml(doc.tipoDoc)}</div>
   </div>
-  <div class="table-wrap"><table style="margin-top:15px"><thead><tr><th>Descripción</th><th class="num">Cantidad</th><th class="num">Precio</th><th class="num">Descuento</th><th class="num">Subtotal</th></tr></thead>
-  <tbody>${items.map(i=>`<tr><td>${escapeHtml(i.descripcion)}</td><td class="num">${formatNumber(i.cantidad)}</td><td class="num">${money(i.precioUnitario)}</td><td class="num">${money(i.descuento)}</td><td class="num">${money(i.subtotal)}</td></tr>`).join("")}</tbody></table></div>
+
+  <div class="table-wrap">
+    <table style="margin-top:15px">
+      <thead>
+        <tr>
+          <th>Descripción</th>
+          <th class="num">Cantidad</th>
+          <th class="num">Precio</th>
+          <th class="num">Descuento</th>
+          <th class="num">Subtotal</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        ${items.map(i=>`
+          <tr>
+            <td>${escapeHtml(i.descripcion)}</td>
+            <td class="num">${formatNumber(i.cantidad)}</td>
+            <td class="num">${money(i.precioUnitario)}</td>
+            <td class="num">${money(i.descuento)}</td>
+            <td class="num">${money(i.subtotal)}</td>
+          </tr>
+        `).join("")}
+      </tbody>
+    </table>
+  </div>
+
   <div class="total-box">Total: ${money(doc.total||0)}</div>
-  ${doc.observaciones?`<p><strong>Observaciones:</strong> ${escapeHtml(doc.observaciones)}</p>`:""}
-  <div style="text-align:right;margin-top:15px"><button class="btn primary" onclick="imprimirDocumento('${escapeAttr(doc.idDocumento)}')">Imprimir</button></div>`;
+
+  ${doc.observaciones
+    ? `<p><strong>Observaciones:</strong> ${escapeHtml(doc.observaciones)}</p>`
+    : ""}
+
+  <div style="text-align:right;margin-top:15px">
+    <button class="btn primary" onclick="imprimirDocumento('${escapeAttr(doc.idDocumento)}')">
+      Imprimir
+    </button>
+  </div>`;
+
   document.getElementById("detalleModal").classList.remove("hidden");
 }
-function cerrarDetalle(){document.getElementById("detalleModal").classList.add("hidden")}
+
+function cerrarDetalle(){
+  document.getElementById("detalleModal").classList.add("hidden");
+}
+
 async function imprimirDocumento(id){
-  const doc=(await obtenerRemisiones()).find(r=>r.idDocumento===id); if(!doc)return;
+
+  const doc=(await obtenerRemisiones()).find(r=>r.idDocumento===id);
+
+  if(!doc)return;
+
   const w=window.open("","_blank","width=900,height=700");
-  const items=(doc.items||[]).map(i=>`<tr><td>${escapeHtml(i.descripcion)}</td><td>${i.cantidad}</td><td>${money(i.precioUnitario)}</td><td>${money(i.descuento)}</td><td>${money(i.subtotal)}</td></tr>`).join("");
-  w.document.write(`<html><head><title>${escapeHtml(doc.idDocumento)}</title><style>body{font-family:Arial;padding:30px}table{width:100%;border-collapse:collapse;margin-top:20px}th,td{border-bottom:1px solid #ddd;padding:8px;text-align:left}.total{text-align:right;font-size:20px;font-weight:bold;margin-top:20px}</style></head><body><h1>${escapeHtml(document.getElementById("appBrandName").textContent)}</h1><h2>${escapeHtml(doc.idDocumento)}</h2><p><strong>Fecha:</strong> ${escapeHtml(doc.fecha)}</p><p><strong>Cliente:</strong> ${escapeHtml(doc.nomCliente)} · ${escapeHtml(doc.docCliente)}</p><p><strong>Ciudad:</strong> ${escapeHtml(doc.ciudadCliente)} · <strong>Tel:</strong> ${escapeHtml(doc.telCliente)}</p><p><strong>Asesor:</strong> ${escapeHtml(doc.asesor)} · <strong>Área:</strong> ${escapeHtml(doc.area)}</p><table><thead><tr><th>Descripción</th><th>Cant.</th><th>Precio</th><th>Desc.</th><th>Subtotal</th></tr></thead><tbody>${items}</tbody></table><div class="total">Total: ${money(doc.total)}</div><p>${escapeHtml(doc.observaciones||"")}</p><script>window.onload=()=>window.print();<\/script></body></html>`);
+
+  const items=(doc.items||[])
+    .map(i=>`
+      <tr>
+        <td>${escapeHtml(i.descripcion)}</td>
+        <td>${i.cantidad}</td>
+        <td>${money(i.precioUnitario)}</td>
+        <td>${money(i.descuento)}</td>
+        <td>${money(i.subtotal)}</td>
+      </tr>
+    `).join("");
+
+  w.document.write(`
+    <html>
+    <head>
+      <title>${escapeHtml(doc.idDocumento)}</title>
+
+      <style>
+        body{font-family:Arial;padding:30px}
+        table{width:100%;border-collapse:collapse;margin-top:20px}
+        th,td{border-bottom:1px solid #ddd;padding:8px;text-align:left}
+        .total{text-align:right;font-size:20px;font-weight:bold;margin-top:20px}
+      </style>
+
+    </head>
+
+    <body>
+
+      <h1>${escapeHtml(document.getElementById("appBrandName").textContent)}</h1>
+
+      <h2>${escapeHtml(doc.idDocumento)}</h2>
+
+      <p>
+        <strong>Fecha:</strong>
+        ${escapeHtml(doc.fecha)}
+      </p>
+
+      <p>
+        <strong>Cliente:</strong>
+        ${escapeHtml(doc.nomCliente)}
+        ·
+        ${escapeHtml(doc.docCliente)}
+      </p>
+
+      <p>
+        <strong>Ciudad:</strong>
+        ${escapeHtml(doc.ciudadCliente)}
+        ·
+        <strong>Tel:</strong>
+        ${escapeHtml(doc.telCliente)}
+      </p>
+
+      <p>
+        <strong>Asesor:</strong>
+        ${escapeHtml(doc.asesor)}
+        ·
+        <strong>Área:</strong>
+        ${escapeHtml(doc.area)}
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Descripción</th>
+            <th>Cant.</th>
+            <th>Precio</th>
+            <th>Desc.</th>
+            <th>Subtotal</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          ${items}
+        </tbody>
+      </table>
+
+      <div class="total">
+        Total: ${money(doc.total)}
+      </div>
+
+      <p>
+        ${escapeHtml(doc.observaciones||"")}
+      </p>
+
+      <script>
+        window.onload=()=>window.print();
+      <\/script>
+
+    </body>
+    </html>
+  `);
+
   w.document.close();
 }
 
@@ -1624,46 +2218,143 @@ async function imprimirDocumento(id){
    USUARIOS
    ========================================================= */
 async function renderUsuarios(){
+
   if(currentUser?.role!=="admin")return;
+
   const users=await obtenerUsuarios();
+
   const tbody=document.getElementById("tablaUsuariosBody");
-  tbody.innerHTML=users.map(u=>`<tr><td><strong>${escapeHtml(u.username)}</strong><br><small>${escapeHtml(u.nombre||"")}</small></td><td>${escapeHtml(u.pass||"")}</td><td>${escapeHtml(u.role||"")}<br><small>${escapeHtml(u.area||"")}</small></td><td><button class="btn small secondary" onclick="editarUsuario('${escapeAttr(u.id)}')">Editar</button> <button class="btn small danger" onclick="eliminarUsuario('${escapeAttr(u.id)}')">Eliminar</button></td></tr>`).join("");
+
+  tbody.innerHTML=users.map(u=>`
+    <tr>
+      <td>
+        <strong>${escapeHtml(u.username)}</strong>
+        <br>
+        <small>${escapeHtml(u.nombre||"")}</small>
+      </td>
+
+      <td>${escapeHtml(u.pass||"")}</td>
+
+      <td>
+        ${escapeHtml(u.role||"")}
+        <br>
+        <small>${escapeHtml(u.area||"")}</small>
+      </td>
+
+      <td>
+        <button
+          class="btn small secondary"
+          onclick="editarUsuario('${escapeAttr(u.id)}')"
+        >
+          Editar
+        </button>
+
+        <button
+          class="btn small danger"
+          onclick="eliminarUsuario('${escapeAttr(u.id)}')"
+        >
+          Eliminar
+        </button>
+      </td>
+    </tr>
+  `).join("");
 }
+
 async function guardarUsuario(event){
+
   event.preventDefault();
+
   if(currentUser?.role!=="admin")return;
+
   const id=document.getElementById("usrId").value.trim();
   const nombre=document.getElementById("usrNombre").value.trim();
   const username=document.getElementById("usrUsername").value.trim().toLowerCase();
   const pass=document.getElementById("usrPass").value;
   const role=document.getElementById("usrRole").value;
   const area=document.getElementById("usrArea").value.trim();
-  if(!nombre||!username||!area){alert("Completa los campos obligatorios.");return;}
+
+  if(!nombre||!username||!area){
+    alert("Completa los campos obligatorios.");
+    return;
+  }
+
   const users=await obtenerUsuarios();
-  const duplicado=users.find(u=>u.username===username&&u.id!==id);
-  if(duplicado){alert("Ese nombre de usuario ya existe.");return;}
-  if(!id&&!pass){alert("La contraseña es obligatoria para un usuario nuevo.");return;}
+
+  const duplicado=users.find(
+    u=>u.username===username&&u.id!==id
+  );
+
+  if(duplicado){
+    alert("Ese nombre de usuario ya existe.");
+    return;
+  }
+
+  if(!id&&!pass){
+    alert("La contraseña es obligatoria para un usuario nuevo.");
+    return;
+  }
+
   const anterior=users.find(u=>u.id===id);
-  const user={id:id||undefined,nombre,username,pass:pass||(anterior?.pass||""),role,area};
+
+  const user={
+    id:id||undefined,
+    nombre,
+    username,
+    pass:pass||(anterior?.pass||""),
+    role,
+    area
+  };
+
   const saved=await guardarUsuarioDB(user);
-  if(currentUser.id===saved.id) currentUser=saved;
+
+  if(currentUser.id===saved.id)
+    currentUser=saved;
+
   alert("Usuario guardado correctamente.");
-  cancelarEdicionUsuario(); renderUsuarios(); aplicarSesion();
+
+  cancelarEdicionUsuario();
+  renderUsuarios();
+  aplicarSesion();
 }
+
 async function editarUsuario(id){
-  const u=(await obtenerUsuarios()).find(x=>x.id===id);if(!u)return;
-  document.getElementById("usrId").value=u.id;document.getElementById("usrNombre").value=u.nombre||"";document.getElementById("usrUsername").value=u.username||"";
-  document.getElementById("usrPass").value="";document.getElementById("usrPass").placeholder="Dejar vacío para conservar";document.getElementById("usrRole").value=u.role||"asesor";document.getElementById("usrArea").value=u.area||"";
-  document.getElementById("formUserTitle").textContent="Editar Usuario";document.getElementById("btnCancelarEdicion").classList.remove("hidden");
+
+  const u=(await obtenerUsuarios()).find(x=>x.id===id);
+
+  if(!u)return;
+
+  document.getElementById("usrId").value=u.id;
+  document.getElementById("usrNombre").value=u.nombre||"";
+  document.getElementById("usrUsername").value=u.username||"";
+  document.getElementById("usrPass").value="";
+  document.getElementById("usrPass").placeholder="Dejar vacío para conservar";
+  document.getElementById("usrRole").value=u.role||"asesor";
+  document.getElementById("usrArea").value=u.area||"";
+
+  document.getElementById("formUserTitle").textContent="Editar Usuario";
+  document.getElementById("btnCancelarEdicion").classList.remove("hidden");
 }
+
 async function eliminarUsuario(id){
-  if(id===currentUser.id){alert("No puedes eliminar el usuario con el que estás conectado.");return;}
+
+  if(id===currentUser.id){
+    alert("No puedes eliminar el usuario con el que estás conectado.");
+    return;
+  }
+
   if(!confirm("¿Eliminar este usuario?"))return;
-  await eliminarUsuarioDB(id);renderUsuarios();
+
+  await eliminarUsuarioDB(id);
+
+  renderUsuarios();
 }
+
 function cancelarEdicionUsuario(){
-  document.getElementById("userForm").reset();document.getElementById("usrId").value="";
-  document.getElementById("usrPass").placeholder="••••••••";document.getElementById("formUserTitle").textContent="Crear / Editar Usuario";
+
+  document.getElementById("userForm").reset();
+  document.getElementById("usrId").value="";
+  document.getElementById("usrPass").placeholder="••••••••";
+  document.getElementById("formUserTitle").textContent="Crear / Editar Usuario";
   document.getElementById("btnCancelarEdicion").classList.add("hidden");
 }
 
@@ -1671,53 +2362,145 @@ function cancelarEdicionUsuario(){
    CONFIGURACIÓN
    ========================================================= */
 async function cargarConfiguracion(){
-  const cfgDefault={nombre:"Remisionario y Facturación",logo:""};
+
+  const cfgDefault={
+    nombre:"Remisionario y Facturación",
+    logo:""
+  };
+
   let cfg={...cfgDefault};
+
   try{
+
     exigirFirebase();
-    const snap=await db.collection("configuracion").doc("empresa").get();
-    if(snap.exists) cfg={...cfgDefault,...snap.data()};
+
+    const snap=await db
+      .collection("configuracion")
+      .doc("empresa")
+      .get();
+
+    if(snap.exists)
+      cfg={...cfgDefault,...snap.data()};
+
   }catch(e){
-    console.error("No se pudo cargar la configuración de Firebase:",e);
+
+    console.error(
+      "No se pudo cargar la configuración de Firebase:",
+      e
+    );
+
   }
-  document.getElementById("appBrandName").textContent=cfg.nombre||cfgDefault.nombre;
-  document.getElementById("docTitle").textContent=cfg.nombre||"Sistema de Remisiones y Facturación POS";
+
+  document.getElementById("appBrandName").textContent=
+    cfg.nombre||cfgDefault.nombre;
+
+  document.getElementById("docTitle").textContent=
+    cfg.nombre||"Sistema de Remisiones y Facturación POS";
+
   aplicarLogo(cfg.logo||"");
-  document.getElementById("cfgAppName").value=cfg.nombre||cfgDefault.nombre;
-  document.getElementById("cfgLogoUrl").value=(cfg.logo||"").startsWith("data:")?"":(cfg.logo||"");
-  logoBase64Temporal=(cfg.logo||"").startsWith("data:")?cfg.logo:"";
+
+  document.getElementById("cfgAppName").value=
+    cfg.nombre||cfgDefault.nombre;
+
+  document.getElementById("cfgLogoUrl").value=
+    (cfg.logo||"").startsWith("data:")
+      ? ""
+      : (cfg.logo||"");
+
+  logoBase64Temporal=
+    (cfg.logo||"").startsWith("data:")
+      ? cfg.logo
+      : "";
 }
+
 async function guardarConfiguracionEmpresa(event){
+
   event.preventDefault();
+
   if(currentUser?.role!=="admin")return;
+
   const nombre=document.getElementById("cfgAppName").value.trim();
   const url=document.getElementById("cfgLogoUrl").value.trim();
   const logo=logoBase64Temporal||url||"";
+
   try{
+
     exigirFirebase();
-    await db.collection("configuracion").doc("empresa").set({
-      nombre,logo,fechaActualizacion:new Date().toISOString()
-    },{merge:true});
+
+    await db
+      .collection("configuracion")
+      .doc("empresa")
+      .set({
+        nombre,
+        logo,
+        fechaActualizacion:new Date().toISOString()
+      },{
+        merge:true
+      });
+
     aplicarLogo(logo);
+
     document.getElementById("appBrandName").textContent=nombre;
     document.getElementById("docTitle").textContent=nombre;
+
     alert("Configuración guardada correctamente en Firebase.");
+
   }catch(e){
+
     console.error(e);
-    alert("No se pudo guardar la configuración en Firebase: "+e.message);
+
+    alert(
+      "No se pudo guardar la configuración en Firebase: "
+      +e.message
+    );
+
   }
 }
+
 function convertirImagenBase64(input){
-  const file=input.files?.[0];if(!file)return;
-  if(!file.type.startsWith("image/")){alert("Selecciona una imagen válida.");return;}
+
+  const file=input.files?.[0];
+
+  if(!file)return;
+
+  if(!file.type.startsWith("image/")){
+    alert("Selecciona una imagen válida.");
+    return;
+  }
+
   const reader=new FileReader();
-  reader.onload=e=>{logoBase64Temporal=e.target.result;document.getElementById("cfgLogoUrl").value="";aplicarLogo(logoBase64Temporal)};
+
+  reader.onload=e=>{
+
+    logoBase64Temporal=e.target.result;
+
+    document.getElementById("cfgLogoUrl").value="";
+
+    aplicarLogo(logoBase64Temporal);
+
+  };
+
   reader.readAsDataURL(file);
 }
+
 function aplicarLogo(src){
-  const box=document.getElementById("boxLogo"),preview=document.getElementById("cfgPreviewLogo");
+
+  const box=document.getElementById("boxLogo");
+  const preview=document.getElementById("cfgPreviewLogo");
+
   [box,preview].forEach(el=>{
-    if(src){el.innerHTML=`<img src="${escapeAttr(src)}" alt="Logo">`;}else el.textContent="POS";
+
+    if(src){
+
+      el.innerHTML=
+        `<img src="${escapeAttr(src)}" alt="Logo">`;
+
+    }else{
+
+      el.textContent="POS";
+
+    }
+
   });
 }
 
@@ -1725,40 +2508,173 @@ function aplicarLogo(src){
    FILTROS / UTILIDADES
    ========================================================= */
 async function actualizarFiltrosReportes(){
-  if(!currentUser||!["admin","lider"].includes(currentUser.role))return;
+
+  if(!currentUser||!["admin","lider"].includes(currentUser.role))
+    return;
+
   const datos=await obtenerRemisiones();
-  const asesores=[...new Set(datos.map(x=>x.asesor).filter(Boolean))].sort();
-  const areas=[...new Set(datos.map(x=>x.area).filter(Boolean))].sort();
-  const a=document.getElementById("repFiltroAsesor"),ar=document.getElementById("repFiltroArea");
-  const oldA=a.value,oldAr=ar.value;
-  a.innerHTML='<option value="TODOS">-- Todos los Asesores --</option>'+asesores.map(x=>`<option value="${escapeAttr(x)}">${escapeHtml(x)}</option>`).join("");
-  ar.innerHTML='<option value="TODAS">-- Todas las Áreas --</option>'+areas.map(x=>`<option value="${escapeAttr(x)}">${escapeHtml(x)}</option>`).join("");
-  if(asesores.includes(oldA))a.value=oldA;if(areas.includes(oldAr))ar.value=oldAr;
+
+  const asesores=[
+    ...new Set(
+      datos
+        .map(x=>x.asesor)
+        .filter(Boolean)
+    )
+  ].sort();
+
+  const areas=[
+    ...new Set(
+      datos
+        .map(x=>x.area)
+        .filter(Boolean)
+    )
+  ].sort();
+
+  const a=document.getElementById("repFiltroAsesor");
+  const ar=document.getElementById("repFiltroArea");
+
+  const oldA=a.value;
+  const oldAr=ar.value;
+
+  a.innerHTML=
+    '<option value="TODOS">-- Todos los Asesores --</option>'+
+    asesores
+      .map(x=>
+        `<option value="${escapeAttr(x)}">${escapeHtml(x)}</option>`
+      )
+      .join("");
+
+  ar.innerHTML=
+    '<option value="TODAS">-- Todas las Áreas --</option>'+
+    areas
+      .map(x=>
+        `<option value="${escapeAttr(x)}">${escapeHtml(x)}</option>`
+      )
+      .join("");
+
+  if(asesores.includes(oldA))
+    a.value=oldA;
+
+  if(areas.includes(oldAr))
+    ar.value=oldAr;
 }
-function money(n){return "$"+Math.round(Number(n)||0).toLocaleString("es-CO")}
-function formatNumber(n){return Number(n||0).toLocaleString("es-CO",{maximumFractionDigits:2})}
-function fechaHoy(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
-function escapeHtml(value){return String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-function escapeAttr(value){return escapeHtml(value).replace(/`/g,"&#96;")}
+
+function money(n){
+  return "$"+Math.round(Number(n)||0).toLocaleString("es-CO");
+}
+
+function formatNumber(n){
+  return Number(n||0).toLocaleString(
+    "es-CO",
+    {maximumFractionDigits:2}
+  );
+}
+
+function fechaHoy(){
+
+  const d=new Date();
+
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+
+}
+
+function escapeHtml(value){
+
+  return String(value??"").replace(
+    /[&<>"']/g,
+    c=>({
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;",
+      '"':"&quot;",
+      "'":"&#39;"
+    }[c])
+  );
+
+}
+
+function escapeAttr(value){
+
+  return escapeHtml(value).replace(/`/g,"&#96;");
+
+}
 
 /* =========================================================
    ARRANQUE
    ========================================================= */
 window.addEventListener("DOMContentLoaded",async()=>{
+
   initFirebase();
-  document.getElementById("loginForm").addEventListener("submit",handleLogin);
-  document.getElementById("userForm").addEventListener("submit",guardarUsuario);
-  document.getElementById("configForm").addEventListener("submit",guardarConfiguracionEmpresa);
-  document.getElementById("remClienteDoc").addEventListener("blur",buscarCliente);
+
+  document.getElementById("loginForm")
+    .addEventListener("submit",handleLogin);
+
+  document.getElementById("userForm")
+    .addEventListener("submit",guardarUsuario);
+
+  document.getElementById("configForm")
+    .addEventListener("submit",guardarConfiguracionEmpresa);
+
+  /*
+   * Búsqueda por documento:
+   * continúa funcionando como antes.
+   */
+  document.getElementById("remClienteDoc")
+    .addEventListener("blur",buscarCliente);
+
+  /*
+   * NUEVO:
+   * búsqueda automática por nombre mientras se escribe.
+   */
+  document.getElementById("remClienteNombre")
+    .addEventListener("input",buscarClientesPorNombre);
+
+  /*
+   * Ocultar las sugerencias al salir del campo.
+   */
+  document.getElementById("remClienteNombre")
+    .addEventListener("blur",()=>{
+      setTimeout(()=>{
+        ocultarSugerenciasClientes();
+      },200);
+    });
+
+  /*
+   * Si se hace clic fuera de las sugerencias,
+   * también se ocultan.
+   */
+  document.addEventListener("click",(event)=>{
+
+    const contenedor=document.getElementById("clienteSugerencias");
+    const campo=document.getElementById("remClienteNombre");
+
+    if(
+      contenedor &&
+      campo &&
+      !contenedor.contains(event.target) &&
+      event.target!==campo
+    ){
+
+      ocultarSugerenciasClientes();
+
+    }
+
+  });
+
   document.getElementById("remFecha").value=fechaHoy();
+
   document.getElementById("itemCant").value="1";
-document.getElementById("itemDescMonto").value="0";
-document.getElementById("itemAplicarIva").checked=false;
 
-actualizarCamposProducto();
+  document.getElementById("itemDescMonto").value="0";
 
-toggleFacturaOptions();
-actualizarEtiquetasPersona();
+  document.getElementById("itemAplicarIva").checked=false;
+
+  actualizarCamposProducto();
+
+  toggleFacturaOptions();
+
+  actualizarEtiquetasPersona();
+
 });
 </script>
 </body>
