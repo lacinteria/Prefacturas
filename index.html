@@ -1656,6 +1656,7 @@ function exportarReporteExcel(){
         "Documento",
         "Fecha",
         "Tipo",
+        "Estado",
         "Cliente",
         "Tipo Persona",
         "Documento Cliente",
@@ -1677,73 +1678,90 @@ function exportarReporteExcel(){
     datosRemisiones.forEach(r=>{
 
       detalle.push([
-        r.idDocumento||"",
-        r.fecha||"",
-        r.tipoDoc||"",
-        r.nomCliente||"",
-        r.tipoPersona||"",
-        r.docCliente||"",
-        r.ciudadCliente||"",
-        r.telCliente||"",
-        r.emailCliente||"",
-        r.asesor||"",
-        r.area||"",
-        r.formaPago||"",
-        Number(r.descGlobalPct||0),
-        Number(r.subtotal||0),
-        Number(r.descGlobal||0),
-        Number(r.total||0),
-        r.esClienteNuevo?"Sí":"No",
-        r.observaciones||""
-      ]);
+
+  r.idDocumento||"",
+
+  r.fecha||"",
+
+  r.tipoDoc||"",
+
+  r.estado||"",
+
+  r.nomCliente||"",
+
+  r.tipoPersona||"",
+
+  r.docCliente||"",
+
+  r.ciudadCliente||"",
+
+  r.telCliente||"",
+
+  r.emailCliente||"",
+
+  r.asesor||"",
+
+  r.area||"",
+
+  r.formaPago||"",
+
+  Number(r.descGlobalPct||0),
+
+  Number(r.subtotal||0),
+
+  Number(r.descGlobal||0),
+
+  Number(r.total||0),
+
+  r.esClienteNuevo?"Sí":"No",
+
+  r.observaciones||""
+
+]);
 
     });
 
     const productos=[
-      [
-        "Documento",
-        "Fecha",
-        "Cliente",
-        "Asesor",
-        "Área",
-        "Descripción",
-        "Cantidad",
-        "Precio Base",
-        "IVA Incluido",
-        "IVA %",
-        "Precio Unitario",
-        "Descuento %",
-        "Descuento",
-        "Subtotal"
-      ]
-    ];
+  [
+    "Documento",
+    "Fecha",
+    "Cliente",
+    "Asesor",
+    "Área",
+    "Descripción",
+    "Cantidad",
+    "Precio Base",
+    "IVA Incluido",
+    "IVA %",
+    "Precio Unitario",
+    "Subtotal"
+  ]
+];
 
-    datosRemisiones.forEach(r=>{
+datosRemisiones.forEach(r=>{
 
-      const items=Array.isArray(r.items)?r.items:[];
+  const items=Array.isArray(r.items)?r.items:[];
 
-      items.forEach(item=>{
+  items.forEach(item=>{
 
-        productos.push([
-          r.idDocumento||"",
-          r.fecha||"",
-          r.nomCliente||"",
-          r.asesor||"",
-          r.area||"",
-          item.descripcion||"",
-          Number(item.cantidad||0),
-          Number(item.precioBase||0),
-          item.ivaAplicado?"Sí":"No",
-          Number(item.ivaPct||0),
-          Number(item.precioUnitario||0),
-          Number(item.descuentoPct||0),
-          Number(item.descuento||0),
-          Number(item.subtotal||0)
-        ]);
+    productos.push([
+      r.idDocumento||"",
+      r.fecha||"",
+      r.nomCliente||"",
+      r.asesor||"",
+      r.area||"",
+      item.descripcion||"",
+      Number(item.cantidad||0),
+      Number(item.precioBase||0),
+      item.ivaAplicado?"Sí":"No",
+      Number(item.ivaPct||0),
+      Number(item.precioUnitario||0),
+      Number(item.subtotal||0)
+    ]);
 
-      });
+  });
 
-    });
+});
 
     const asesoresMap={};
 
@@ -1903,21 +1921,21 @@ XLSX.utils.book_append_sheet(libro,hojaAreas,"Por Área");
     ];
 
     hojaProductos["!cols"]=[
-      {wch:15},
-      {wch:12},
-      {wch:28},
-      {wch:25},
-      {wch:20},
-      {wch:40},
-      {wch:12},
-      {wch:16},
-      {wch:16},
-      {wch:10},
-      {wch:18},
-      {wch:16},
-      {wch:16},
-      {wch:16}
-    ];
+
+  {wch:15},
+  {wch:12},
+  {wch:28},
+  {wch:25},
+  {wch:20},
+  {wch:40},
+  {wch:12},
+  {wch:16},
+  {wch:16},
+  {wch:10},
+  {wch:18},
+  {wch:16}
+
+];
 
     hojaAsesores["!cols"]=[
       {wch:28},
@@ -1959,7 +1977,7 @@ XLSX.utils.book_append_sheet(libro,hojaAreas,"Por Área");
 
     aplicarFormatoMoneda(hojaResumen,[1]);
     aplicarFormatoMoneda(hojaDetalle,[13,14,15]);
-    aplicarFormatoMoneda(hojaProductos,[7,10,12,13]);
+    aplicarFormatoMoneda(hojaProductos,[7,10,11]);
     aplicarFormatoMoneda(hojaAsesores,[3]);
     aplicarFormatoMoneda(hojaAreas,[2]);
 
