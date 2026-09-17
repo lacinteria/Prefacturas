@@ -1491,6 +1491,7 @@ async function guardarRemisionCompleta(){
       consecutivo,
       fecha,
       tipoDoc,
+      estado:"Pendiente",
       tipoPersona,
       docCliente,
       nomCliente,
@@ -2032,18 +2033,19 @@ async function verDetalleDoc(id){
   const items=Array.isArray(doc.items)?doc.items:[];
 
   document.getElementById("detalleContenido").innerHTML=`
-  <div class="grid-2">
-    <div><strong>Documento:</strong> ${escapeHtml(doc.idDocumento)}</div>
-    <div><strong>Fecha:</strong> ${escapeHtml(doc.fecha)}</div>
-    <div><strong>Cliente:</strong> ${escapeHtml(doc.nomCliente)}</div>
-    <div><strong>Documento cliente:</strong> ${escapeHtml(doc.docCliente)}</div>
-    <div><strong>Ciudad:</strong> ${escapeHtml(doc.ciudadCliente)}</div>
-    <div><strong>Teléfono:</strong> ${escapeHtml(doc.telCliente)}</div>
-    <div><strong>Asesor:</strong> ${escapeHtml(doc.asesor)}</div>
-    <div><strong>Área:</strong> ${escapeHtml(doc.area)}</div>
-    <div><strong>Forma de pago:</strong> ${escapeHtml(doc.formaPago)}</div>
-    <div><strong>Tipo:</strong> ${escapeHtml(doc.tipoDoc)}</div>
-  </div>
+ <div class="grid-2">
+  <div><strong>Documento:</strong> ${escapeHtml(doc.idDocumento)}</div>
+  <div><strong>Fecha:</strong> ${escapeHtml(doc.fecha)}</div>
+  <div><strong>Cliente:</strong> ${escapeHtml(doc.nomCliente)}</div>
+  <div><strong>Documento cliente:</strong> ${escapeHtml(doc.docCliente)}</div>
+  <div><strong>Ciudad:</strong> ${escapeHtml(doc.ciudadCliente)}</div>
+  <div><strong>Teléfono:</strong> ${escapeHtml(doc.telCliente)}</div>
+  <div><strong>Asesor:</strong> ${escapeHtml(doc.asesor)}</div>
+  <div><strong>Área:</strong> ${escapeHtml(doc.area)}</div>
+  <div><strong>Forma de pago:</strong> ${escapeHtml(doc.formaPago)}</div>
+  <div><strong>Tipo:</strong> ${escapeHtml(doc.tipoDoc)}</div>
+  <div><strong>Estado:</strong> ${escapeHtml(doc.estado||"Pendiente")}</div>
+</div>
 
   <div class="table-wrap">
     <table style="margin-top:15px">
@@ -2077,13 +2079,95 @@ async function verDetalleDoc(id){
     ? `<p><strong>Observaciones:</strong> ${escapeHtml(doc.observaciones)}</p>`
     : ""}
 
-  <div style="text-align:right;margin-top:15px">
-    <button class="btn primary" onclick="imprimirDocumento('${escapeAttr(doc.idDocumento)}')">
+   <div style="text-align:right;margin-top:15px">
+
+    ${
+      doc.estado !== "Pagada" &&
+      doc.estado !== "Anulada" &&
+      currentUser &&
+      ["admin","lider"].includes(currentUser.role)
+      ? `
+        <button
+          class="btn primary"
+          onclick="marcarComoPagada('${escapeAttr(doc.idDocumento)}')">
+          Pagar
+        </button>
+      `
+      : ""
+    }
+
+    <button
+      class="btn primary"
+      onclick="imprimirDocumento('${escapeAttr(doc.idDocumento)}')">
       Imprimir
     </button>
+
   </div>`;
 
   document.getElementById("detalleModal").classList.remove("hidden");
+}
+
+/* Marcar como pagada la factura, campo exclusivo para líder y Administrador*/ 
+
+async function marcarComoPagada(id){
+
+  if(!currentUser || !["admin","lider"].includes(currentUser.role)){
+    alert("No tienes permisos para marcar este documento como pagado.");
+    return;
+  }
+
+  const confirmar=confirm(
+    "¿Confirmas que este documento fue pagado?"
+  );
+
+  if(!confirmar)return;
+
+  try{
+
+    exigirFirebase();
+
+    await db.collection("remisiones").doc(id).update({
+      estado:"Pagada"
+    });
+
+    alert("Documento marcado como pagado.");
+
+    const documentoActualizado=
+      (await obtenerRemisiones()).find(
+        r=>(r.idDocumento||r.id)===id
+      );
+
+    if(documentoActualizado){
+
+      const index=datosRemisiones.findIndex(
+        r=>(r.idDocumento||r.id)===id
+      );
+
+      if(index!==-1){
+        datosRemisiones[index]=documentoActualizado;
+      }
+
+    }
+
+    await verDetalleDoc(id);
+
+    if(
+      document.getElementById("view-reporte") &&
+      !document.getElementById("view-reporte").classList.contains("hidden")
+    ){
+      await procesarReportes();
+    }
+
+  }catch(e){
+
+    console.error(e);
+
+    alert(
+      "No se pudo marcar el documento como pagado: "+
+      e.message
+    );
+
+  }
 }
 
 function cerrarDetalle(){
