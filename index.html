@@ -340,6 +340,22 @@ input:focus,select:focus,textarea:focus{outline:2px solid rgba(14,107,82,.15);bo
 <div class="field"><label>Nombre Comercial de la Empresa / App <span class="req">*</span></label><input type="text" id="cfgAppName" required placeholder="ej. Mi Empresa S.A.S."></div>
 <div class="field"><label>URL de la Imagen del Logo</label><input type="url" id="cfgLogoUrl" placeholder="https://ejemplo.com/logo.png"></div>
 <div class="field"><label>O Cargar Logo desde este equipo</label><input type="file" id="cfgLogoFile" accept="image/*" onchange="convertirImagenBase64(this)"></div>
+<div class="field">
+  <label>Código de Anulación <span class="req">*</span></label>
+  <input
+    type="password"
+    id="cfgCodigoAnulacion"
+    inputmode="numeric"
+    maxlength="6"
+    pattern="[0-9]{6}"
+    placeholder="Ingrese 6 dígitos"
+    oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,6)"
+    required
+  >
+  <small style="color:#666;">
+    Código exclusivo de Administración para anular documentos.
+  </small>
+</div>
 <div style="margin:15px 0;text-align:center"><small>Vista previa actual del Logo:</small><br><div id="cfgPreviewLogo" style="width:60px;height:60px;border-radius:8px;background:var(--brand);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:700;overflow:hidden;margin-top:5px;border:1px solid var(--line)">POS</div></div>
 <button type="submit" class="btn primary" style="width:100%">Guardar y Aplicar Cambios</button>
 </form></div>
@@ -2081,28 +2097,42 @@ async function verDetalleDoc(id){
 
    <div style="text-align:right;margin-top:15px">
 
-    ${
-      doc.estado !== "Pagada" &&
-      doc.estado !== "Anulada" &&
-      currentUser &&
-      ["admin","lider"].includes(currentUser.role)
-      ? `
-        <button
-          class="btn primary"
-          onclick="marcarComoPagada('${escapeAttr(doc.idDocumento)}')">
-          Pagar
-        </button>
-      `
-      : ""
-    }
+  ${
+    doc.estado !== "Pagada" &&
+    doc.estado !== "Anulada" &&
+    currentUser &&
+    ["admin","lider"].includes(currentUser.role)
+    ? `
+      <button
+        class="btn primary"
+        onclick="marcarComoPagada('${escapeAttr(doc.idDocumento)}')">
+        Pagar
+      </button>
+    `
+    : ""
+  }
 
-    <button
-      class="btn primary"
-      onclick="imprimirDocumento('${escapeAttr(doc.idDocumento)}')">
-      Imprimir
-    </button>
+  ${
+    doc.estado !== "Anulada" &&
+    currentUser &&
+    currentUser.role === "admin"
+    ? `
+      <button
+        class="btn secondary"
+        onclick="anularDocumento('${escapeAttr(doc.idDocumento)}')">
+        Anular
+      </button>
+    `
+    : ""
+  }
 
-  </div>`;
+  <button
+    class="btn primary"
+    onclick="imprimirDocumento('${escapeAttr(doc.idDocumento)}')">
+    Imprimir
+  </button>
+
+</div>`;
 
   document.getElementById("detalleModal").classList.remove("hidden");
 }
@@ -2168,6 +2198,187 @@ async function marcarComoPagada(id){
     );
 
   }
+}
+
+/* Agrega botón Anular, exclusivo para Admin*/
+
+async function anularDocumento(id){
+
+  try{
+
+    exigirFirebase();
+
+    /* =========================================
+       CONFIRMAR ANULACIÓN
+       ========================================= */
+
+    const confirmar=confirm(
+      "¿Está seguro de que desea ANULAR este documento?\n\n" +
+      "Esta acción cambiará su estado a ANULADA."
+    );
+
+    if(!confirmar){
+      return;
+    }
+
+
+    /* =========================================
+       OBTENER CÓDIGO CONFIGURADO POR ADMINISTRACIÓN
+       ========================================= */
+
+    const snapConfig=await db
+      .collection("configuracion")
+      .doc("empresa")
+      .get();
+
+    if(!snapConfig.exists){
+
+      alert(
+        "No existe una configuración de empresa."
+      );
+
+      return;
+    }
+
+    const configuracion=snapConfig.data();
+
+    const codigoConfigurado=
+      String(configuracion.codigoAnulacion||"").trim();
+
+
+    /* =========================================
+       VALIDAR QUE EXISTE CÓDIGO DE ANULACIÓN
+       ========================================= */
+
+    if(!/^\d{6}$/.test(codigoConfigurado)){
+
+      alert(
+        "No existe un código de anulación válido configurado por Administración.\n\n" +
+        "Debe configurarse un código de 6 dígitos antes de poder anular documentos."
+      );
+
+      return;
+    }
+
+
+    /* =========================================
+       SOLICITAR CÓDIGO
+       ========================================= */
+
+    const codigoIngresado=prompt(
+      "Ingrese el código de anulación de 6 dígitos:"
+    );
+
+
+    if(codigoIngresado===null){
+      return;
+    }
+
+
+    const codigo=
+      String(codigoIngresado)
+        .replace(/[^0-9]/g,"")
+        .trim();
+
+
+    /* =========================================
+       VALIDAR FORMATO
+       ========================================= */
+
+    if(!/^\d{6}$/.test(codigo)){
+
+      alert(
+        "Código inválido.\n\n" +
+        "El código debe contener exactamente 6 dígitos."
+      );
+
+      return;
+    }
+
+
+    /* =========================================
+       COMPARAR CON EL CÓDIGO DE ADMINISTRACIÓN
+       ========================================= */
+
+    if(codigo!==codigoConfigurado){
+
+      alert(
+        "Código de anulación incorrecto.\n\n" +
+        "El documento NO ha sido anulado."
+      );
+
+      return;
+    }
+
+
+    /* =========================================
+       SOLICITAR MOTIVO
+       ========================================= */
+
+    const observacion=prompt(
+      "Ingrese la observación o motivo de la anulación:"
+    );
+
+
+    if(observacion===null){
+      return;
+    }
+
+
+    if(!observacion.trim()){
+
+      alert(
+        "Debe ingresar una observación o motivo para anular el documento."
+      );
+
+      return;
+    }
+
+
+    /* =========================================
+       ANULAR DOCUMENTO
+       ========================================= */
+
+    await db
+      .collection("remisiones")
+      .doc(id)
+      .update({
+
+        estado:"Anulada",
+
+        codigoAnulacion:codigo,
+
+        observacionAnulacion:
+          observacion.trim(),
+
+        fechaAnulacion:
+          new Date().toISOString(),
+
+      });
+
+
+    /* =========================================
+       CONFIRMACIÓN
+       ========================================= */
+
+    alert(
+      "Documento anulado correctamente."
+    );
+
+  }catch(error){
+
+    console.error(
+      "Error al anular documento:",
+      error
+    );
+
+    alert(
+      "No fue posible anular el documento.\n\n" +
+      error.message
+    );
+
+  }
+
 }
 
 function cerrarDetalle(){
@@ -2426,9 +2637,10 @@ function cancelarEdicionUsuario(){
 async function cargarConfiguracion(){
 
   const cfgDefault={
-    nombre:"Remisionario y Facturación",
-    logo:""
-  };
+  nombre:"Remisionario y Facturación",
+  logo:"",
+  codigoAnulacion:""
+};
 
   let cfg={...cfgDefault};
 
@@ -2465,14 +2677,17 @@ async function cargarConfiguracion(){
     cfg.nombre||cfgDefault.nombre;
 
   document.getElementById("cfgLogoUrl").value=
-    (cfg.logo||"").startsWith("data:")
-      ? ""
-      : (cfg.logo||"");
+  (cfg.logo||"").startsWith("data:")
+    ? ""
+    : (cfg.logo||"");
 
-  logoBase64Temporal=
-    (cfg.logo||"").startsWith("data:")
-      ? cfg.logo
-      : "";
+document.getElementById("cfgCodigoAnulacion").value=
+  cfg.codigoAnulacion||"";
+
+logoBase64Temporal=
+  (cfg.logo||"").startsWith("data:")
+    ? cfg.logo
+    : "";
 }
 
 async function guardarConfiguracionEmpresa(event){
@@ -2485,6 +2700,14 @@ async function guardarConfiguracionEmpresa(event){
   const url=document.getElementById("cfgLogoUrl").value.trim();
   const logo=logoBase64Temporal||url||"";
 
+  const codigoAnulacion=
+    document.getElementById("cfgCodigoAnulacion").value.trim();
+
+  if(!/^\d{6}$/.test(codigoAnulacion)){
+    alert("El código de anulación debe tener exactamente 6 dígitos.");
+    return;
+  }
+
   try{
 
     exigirFirebase();
@@ -2495,6 +2718,7 @@ async function guardarConfiguracionEmpresa(event){
       .set({
         nombre,
         logo,
+        codigoAnulacion,
         fechaActualizacion:new Date().toISOString()
       },{
         merge:true
@@ -2518,7 +2742,6 @@ async function guardarConfiguracionEmpresa(event){
 
   }
 }
-
 function convertirImagenBase64(input){
 
   const file=input.files?.[0];
