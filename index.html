@@ -97,6 +97,14 @@ input:focus,select:focus,textarea:focus{outline:2px solid rgba(14,107,82,.15);bo
 
 @media(max-width:900px){.grid-5,.grid-4,.grid-3,.grid-2{grid-template-columns:1fr}.item-grid{grid-template-columns:1fr!important}.topbar{align-items:flex-start}.tabs{width:100%}}
 @media print{.no-print,.topbar,#loginModal{display:none!important}body{background:#fff}.card{border:none}}
+
+/* =========================================================
+   MAYÚSCULAS EN TODA LA INTERFAZ
+   ========================================================= */
+
+body {
+  text-transform: uppercase;
+}
 </style>
 </head>
 <body>
@@ -1815,17 +1823,58 @@ function exportarReporteExcel(){
 
     const libro=XLSX.utils.book_new();
 
-    const hojaResumen=XLSX.utils.aoa_to_sheet(resumen);
-    const hojaDetalle=XLSX.utils.aoa_to_sheet(detalle);
-    const hojaProductos=XLSX.utils.aoa_to_sheet(productos);
-    const hojaAsesores=XLSX.utils.aoa_to_sheet(consolidadoAsesores);
-    const hojaAreas=XLSX.utils.aoa_to_sheet(consolidadoAreas);
+const hojaResumen=XLSX.utils.aoa_to_sheet(resumen);
+const hojaDetalle=XLSX.utils.aoa_to_sheet(detalle);
+const hojaProductos=XLSX.utils.aoa_to_sheet(productos);
+const hojaAsesores=XLSX.utils.aoa_to_sheet(consolidadoAsesores);
+const hojaAreas=XLSX.utils.aoa_to_sheet(consolidadoAreas);
 
-    XLSX.utils.book_append_sheet(libro,hojaResumen,"Resumen");
-    XLSX.utils.book_append_sheet(libro,hojaDetalle,"Documentos");
-    XLSX.utils.book_append_sheet(libro,hojaProductos,"Productos");
-    XLSX.utils.book_append_sheet(libro,hojaAsesores,"Por Asesor");
-    XLSX.utils.book_append_sheet(libro,hojaAreas,"Por Área");
+
+/* =========================================================
+   CONVERTIR TEXTO DEL EXCEL A MAYÚSCULAS
+   ========================================================= */
+
+function convertirHojaAMayusculas(hoja){
+
+  const rango=XLSX.utils.decode_range(hoja["!ref"]);
+
+  for(let fila=rango.s.r; fila<=rango.e.r; fila++){
+
+    for(let columna=rango.s.c; columna<=rango.e.c; columna++){
+
+      const celda=XLSX.utils.encode_cell({
+        r:fila,
+        c:columna
+      });
+
+      if(
+        hoja[celda] &&
+        typeof hoja[celda].v==="string"
+      ){
+
+        hoja[celda].v=
+          hoja[celda].v.toUpperCase();
+
+      }
+
+    }
+
+  }
+
+}
+
+convertirHojaAMayusculas(hojaResumen);
+convertirHojaAMayusculas(hojaDetalle);
+convertirHojaAMayusculas(hojaProductos);
+convertirHojaAMayusculas(hojaAsesores);
+convertirHojaAMayusculas(hojaAreas);
+
+
+XLSX.utils.book_append_sheet(libro,hojaResumen,"Resumen");
+XLSX.utils.book_append_sheet(libro,hojaDetalle,"Documentos");
+XLSX.utils.book_append_sheet(libro,hojaProductos,"Productos");
+XLSX.utils.book_append_sheet(libro,hojaAsesores,"Por Asesor");
+XLSX.utils.book_append_sheet(libro,hojaAreas,"Por Área");
 
     hojaResumen["!cols"]=[
       {wch:28},
