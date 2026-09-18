@@ -2890,108 +2890,266 @@ function cerrarDetalle(){
 
 async function imprimirDocumento(id){
 
-  const doc=(await obtenerRemisiones()).find(r=>r.idDocumento===id);
+const doc=(await obtenerRemisiones()).find(r=>r.idDocumento===id);
 
-  if(!doc)return;
+if(!doc)return;
 
-  const w=window.open("","_blank","width=900,height=700");
+const w=window.open("","_blank","width=400,height=700");
 
-  const items=(doc.items||[])
-    .map(i=>`
-      <tr>
-        <td>${escapeHtml(i.descripcion)}</td>
-        <td>${i.cantidad}</td>
-        <td>${money(i.precioUnitario)}</td>
-        <td>${money(i.descuento)}</td>
-        <td>${money(i.subtotal)}</td>
-      </tr>
-    `).join("");
+const items=(doc.items||[])
+.map(i=>`
+<div class="item">
 
-  w.document.write(`
-    <html>
-    <head>
-      <title>${escapeHtml(doc.idDocumento)}</title>
+    <div class="item-desc">
+      ${escapeHtml(i.descripcion)}
+    </div>
 
-      <style>
-        body{
-              font-family:Arial;
-              padding:30px;
-              text-transform:uppercase;
-            }
-        table{width:100%;border-collapse:collapse;margin-top:20px}
-        th,td{border-bottom:1px solid #ddd;padding:8px;text-align:left}
-        .total{text-align:right;font-size:20px;font-weight:bold;margin-top:20px}
-      </style>
+    <div class="item-line">
+      <span>${i.cantidad} x ${money(i.precioUnitario)}</span>
+      <strong>${money(i.subtotal)}</strong>
+    </div>
 
-    </head>
+  </div>
+`).join("");
 
-    <body>
+w.document.write(`
+<html>
 
-      <h1>PREFACTURA</h1>
+<head>
 
-      <h2>${escapeHtml(doc.idDocumento)}</h2>
+  <title>${escapeHtml(doc.idDocumento)}</title>
 
-      <p>
-        <strong>Fecha:</strong>
-        ${escapeHtml(doc.fecha)}
-      </p>
+  <style>
 
-      <p>
-        <strong>Cliente:</strong>
-        ${escapeHtml(doc.nomCliente)}
-        ·
-        ${escapeHtml(doc.docCliente)}
-      </p>
+    @page{
+      size:80mm auto;
+      margin:0;
+    }
 
-      <p>
-        <strong>Ciudad:</strong>
-        ${escapeHtml(doc.ciudadCliente)}
-        ·
-        <strong>Tel:</strong>
-        ${escapeHtml(doc.telCliente)}
-      </p>
+    *{
+      box-sizing:border-box;
+    }
 
-      <p>
-        <strong>Asesor:</strong>
-        ${escapeHtml(doc.asesor)}
-        ·
-        <strong>Área:</strong>
-        ${escapeHtml(doc.area)}
-      </p>
+    body{
+      width:80mm;
+      margin:0;
+      padding:8mm 5mm;
+      font-family:Arial,Helvetica,sans-serif;
+      font-size:12px;
+      color:#000;
+      text-transform:uppercase;
+    }
 
-      <table>
-        <thead>
-          <tr>
-            <th>Descripción</th>
-            <th>Cant.</th>
-            <th>Precio</th>
-            <th>Desc.</th>
-            <th>Subtotal</th>
-          </tr>
-        </thead>
+    .center{
+      text-align:center;
+    }
 
-        <tbody>
-          ${items}
-        </tbody>
-      </table>
+    .titulo{
+      font-size:20px;
+      font-weight:bold;
+      margin-bottom:4px;
+    }
 
-      <div class="total">
-        Total: ${money(doc.total)}
-      </div>
+    .numero{
+      font-size:16px;
+      font-weight:bold;
+      margin-bottom:12px;
+    }
 
-      <p>
-        ${escapeHtml(doc.observaciones||"")}
-      </p>
+    .linea{
+      border-top:1px dashed #000;
+      margin:10px 0;
+    }
 
-      <script>
-        window.onload=()=>window.print();
-      <\/script>
+    .datos{
+      line-height:1.5;
+    }
 
-    </body>
-    </html>
-  `);
+    .datos strong{
+      font-weight:bold;
+    }
 
-  w.document.close();
+    .items{
+      margin-top:8px;
+    }
+
+    .item{
+      margin-bottom:9px;
+    }
+
+    .item-desc{
+      font-weight:bold;
+      margin-bottom:3px;
+      word-wrap:break-word;
+    }
+
+    .item-line{
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+    }
+
+    .totales{
+      margin-top:10px;
+    }
+
+    .total-line{
+      display:flex;
+      justify-content:space-between;
+      margin:4px 0;
+    }
+
+    .total-final{
+      font-size:17px;
+      font-weight:bold;
+      margin-top:7px;
+    }
+
+    .observaciones{
+      margin-top:10px;
+      line-height:1.4;
+      word-wrap:break-word;
+    }
+
+    .gracias{
+      margin-top:20px;
+      text-align:center;
+      font-weight:bold;
+    }
+
+    @media print{
+
+      body{
+        width:80mm;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+  <div class="center">
+
+    <div class="titulo">
+      PREFACTURA
+    </div>
+
+    <div class="numero">
+      ${escapeHtml(doc.idDocumento)}
+    </div>
+
+  </div>
+
+  <div class="linea"></div>
+
+  <div class="datos">
+
+    <div>
+      <strong>Fecha:</strong>
+      ${escapeHtml(doc.fecha||"")}
+    </div>
+
+    <div>
+      <strong>Cliente:</strong><br>
+      ${escapeHtml(doc.nomCliente||"")}
+    </div>
+
+    <div>
+      <strong>Documento:</strong>
+      ${escapeHtml(doc.docCliente||"")}
+    </div>
+
+    <div>
+      <strong>Ciudad:</strong>
+      ${escapeHtml(doc.ciudadCliente||"")}
+    </div>
+
+    <div>
+      <strong>Tel:</strong>
+      ${escapeHtml(doc.telCliente||"")}
+    </div>
+
+    <div>
+      <strong>Asesor:</strong>
+      ${escapeHtml(doc.asesor||"")}
+    </div>
+
+    <div>
+      <strong>Área:</strong>
+      ${escapeHtml(doc.area||"")}
+    </div>
+
+  </div>
+
+  <div class="linea"></div>
+
+  <div class="items">
+    ${items}
+  </div>
+
+  <div class="linea"></div>
+
+  <div class="totales">
+
+    <div class="total-line">
+      <span>SUBTOTAL</span>
+      <strong>${money(doc.subtotal||0)}</strong>
+    </div>
+
+    <div class="total-line">
+      <span>DESCUENTO</span>
+      <strong>${money(doc.descGlobal||0)}</strong>
+    </div>
+
+    <div class="total-line total-final">
+      <span>TOTAL</span>
+      <strong>${money(doc.total||0)}</strong>
+    </div>
+
+  </div>
+
+  <div class="linea"></div>
+
+  <div class="datos">
+
+    <strong>MEDIO DE PAGO:</strong>
+    ${escapeHtml(doc.formaPago||"")}
+
+  </div>
+
+  ${
+    doc.observaciones
+    ?
+    `
+    <div class="observaciones">
+      <strong>OBSERVACIONES:</strong><br>
+      ${escapeHtml(doc.observaciones)}
+    </div>
+    `
+    :
+    ""
+  }
+
+  <div class="gracias">
+    GRACIAS POR SU COMPRA
+  </div>
+
+  <script>
+    window.onload=()=>{
+      window.print();
+    };
+  <\/script>
+
+</body>
+
+</html>
+
+`);
+
+w.document.close();
 }
 
 /* =========================================================
