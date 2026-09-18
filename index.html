@@ -287,17 +287,14 @@ body {
     </div>
   </div>
 
-  <!-- CANTIDAD -->
-  <div class="field" style="margin:0">
-    <label>Cantidad <span class="req">*</span></label>
-    <input
-      type="number"
-      id="itemCant"
-      min="0.01"
-      step="any"
-      placeholder="1"
-    >
-  </div>
+  <input
+  type="number"
+  id="itemCant"
+  min="0.01"
+  step="any"
+  placeholder="1"
+  oninput="actualizarPrecioMoño()"
+>
 
   <!-- PRECIO -->
   <div class="field" style="margin:0">
@@ -781,16 +778,16 @@ function actualizarCamposProducto(){
             id="itemColor"
             placeholder="Ej. Rojo"
           >
-        </div>
+          </div>
 
-        <div class="field" style="margin:0">
+          <div class="field" style="margin:0">
           <label>Tamaño <span class="req">*</span></label>
-          <select id="itemTamano">
-            <option value="">Seleccionar...</option>
-            <option value="6MM">6MM</option>
-            <option value="9MM">9MM</option>
-            <option value="16MM">16MM</option>
-            <option value="22MM">22MM</option>
+          <select id="itemTamano" onchange="actualizarPrecioMoño()">
+              <option value="">Seleccionar...</option>
+             <option value="6MM">6MM</option>
+             <option value="9MM">9MM</option>
+              <option value="16MM">16MM</option>
+              <option value="22MM">22MM</option>
           </select>
         </div>
 
@@ -859,11 +856,89 @@ function actualizarCamposProducto(){
   `;
 }
 
+function obtenerPrecioMoño(cantidad, tamano){
+
+  cantidad = Number(cantidad);
+
+  if(!Number.isFinite(cantidad) || cantidad <= 0){
+    return null;
+  }
+
+  /*
+   * 6 MM
+   * Solo paquetes de 50
+   */
+  if(tamano === "6MM"){
+
+    if(cantidad % 50 !== 0){
+      return null;
+    }
+
+    return (cantidad / 50) * 12000;
+  }
+
+  /*
+   * 9 MM
+   */
+  if(tamano === "9MM"){
+    return cantidad < 50 ? 500 : 240;
+  }
+
+  /*
+   * 16 MM
+   */
+  if(tamano === "16MM"){
+    return cantidad < 50 ? 1000 : 600;
+  }
+
+  /*
+   * 22 MM
+   */
+  if(tamano === "22MM"){
+    return cantidad < 50 ? 1000 : 500;
+  }
+
+  return null;
+}
+
+function actualizarPrecioMoño(){
+
+  const tipoProducto=document.getElementById("itemTipoProducto")?.value;
+
+  if(tipoProducto!=="Moños"){
+    return;
+  }
+
+  const cantidad=Number(
+    document.getElementById("itemCant")?.value
+  );
+
+  const tamano=document.getElementById("itemTamano")?.value;
+
+  const campoPrecio=document.getElementById("itemPrecio");
+
+  if(!campoPrecio || !tamano){
+    return;
+  }
+
+  const precio=obtenerPrecioMoño(cantidad,tamano);
+
+  if(precio===null){
+
+    campoPrecio.value="";
+
+    return;
+  }
+
+  campoPrecio.value=precio;
+}
+
 function agregarItem(){
 
   const tipoProducto=document.getElementById("itemTipoProducto").value;
   const cant=Number(document.getElementById("itemCant").value);
-  const precioBase=Number(document.getElementById("itemPrecio").value);
+
+  let precioBase=Number(document.getElementById("itemPrecio").value);
 
   const aplicarIva =
   document.getElementById("itemAplicarIva").checked;
@@ -896,37 +971,35 @@ const descuentoPct = 0;
 
   if(tipoProducto==="Moños"){
 
-    const color=document.getElementById("itemColor")?.value.trim();
-    const tamano=document.getElementById("itemTamano")?.value;
+  const color=document.getElementById("itemColor")?.value.trim();
+  const tamano=document.getElementById("itemTamano")?.value;
 
-    if(!color || !tamano){
-      alert("Completa el color y tamaño del moño.");
-      return;
+  if(!color || !tamano){
+    alert("Completa el color y tamaño del moño.");
+    return;
+  }
+
+  const precioMoño=obtenerPrecioMoño(cant,tamano);
+
+  if(precioMoño===null){
+
+    if(tamano==="6MM"){
+      alert("Los moños de 6MM solo se venden en múltiplos de 50. Ejemplo: 50, 100, 150...");
+    }else{
+      alert("No se pudo determinar el precio del moño.");
     }
 
-    descripcion=`Moño ${tamano} ${color}`;
+    return;
+  }
 
-    datosProducto={
-      color,
-      tamano
-    };
+  precioBase=precioMoño;
 
-  }else if(tipoProducto==="Camisas"){
+  descripcion=`Moño ${tamano} ${color}`;
 
-    const material=document.getElementById("itemMaterial")?.value;
-    const talla=document.getElementById("itemTalla")?.value;
-
-    if(!material || !talla){
-      alert("Selecciona el material y la talla de la camisa.");
-      return;
-    }
-
-    descripcion=`Camisa ${material} Talla ${talla}`;
-
-    datosProducto={
-      material,
-      talla
-    };
+  datosProducto={
+    color,
+    tamano
+  };
 
   }else{
 
