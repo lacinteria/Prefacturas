@@ -131,6 +131,31 @@ input:focus,select:focus,textarea:focus{outline:2px solid rgba(14,107,82,.15);bo
 body {
   text-transform: uppercase;
 }
+
+.password-wrapper{
+  position:relative;
+}
+
+.password-wrapper input{
+  width:100%;
+  box-sizing:border-box;
+}
+
+.password-eye{
+  position:absolute;
+  right:10px;
+  top:50%;
+  transform:translateY(-50%);
+  border:0;
+  background:transparent;
+  padding:0;
+  margin:0;
+  cursor:pointer;
+  font-size:16px;
+  line-height:1;
+  color:var(--ink-soft);
+}
+
 </style>
 </head>
 <body>
@@ -141,7 +166,13 @@ body {
     <p style="margin:0 0 16px;text-align:center;font-size:13px;color:var(--ink-soft)">Ingresa tu usuario y contraseña</p>
     <form id="loginForm">
       <div class="field"><label>Usuario <span class="req">*</span></label><input type="text" id="loginUser" required autocomplete="username" placeholder="ej. admin"></div>
-      <div class="field"><label>Contraseña <span class="req">*</span></label><input type="password" id="loginPass" required autocomplete="current-password" placeholder="••••••••"></div>
+      <div class="field">
+  <label>Contraseña <span class="req">*</span></label>
+  <div class="password-wrapper">
+    <input type="password" id="loginPass" required autocomplete="current-password" placeholder="••••••••">
+    <button type="button" class="password-eye" onclick="toggleLoginPassword()" aria-label="Mostrar contraseña">👁</button>
+  </div>
+</div>
       <button type="submit" class="btn primary" style="width:100%;margin-top:10px">Iniciar Sesión</button>
     </form>
     <p id="loginError" class="hidden" style="color:var(--required);font-size:12px;margin-top:10px;text-align:center"></p>
@@ -359,6 +390,26 @@ body {
         <option value="Factura Electrónica">FE</option>
       </select>
     </div>
+
+    <div class="field" style="margin:0">
+  <label>Medio de Pago</label>
+  <select id="repFiltroFormaPago">
+    <option value="TODOS">-- Todos --</option>
+    <option value="EFECTIVO">EFECTIVO</option>
+    <option value="005 TRANSFERENCIA">005 TRANSFERENCIA</option>
+    <option value="SAS TRANSFERENCIA">SAS TRANSFERENCIA</option>
+    <option value="DATAFONO">DATAFONO</option>
+  </select>
+</div>
+
+<div class="field" style="margin:0">
+  <label>Cliente</label>
+  <select id="repFiltroClienteNuevo">
+    <option value="TODOS">-- Todos --</option>
+    <option value="NUEVOS">CLIENTES NUEVOS</option>
+    <option value="RECURRENTES">CLIENTES RECURRENTES</option>
+  </select>
+</div>
 
   </div>
 </div>
@@ -666,6 +717,15 @@ function showView(view){
 
   if(view==="usuarios") renderUsuarios();
 
+}
+
+function toggleLoginPassword(){
+
+  const campo=document.getElementById("loginPass");
+
+  if(!campo) return;
+
+  campo.type = campo.type === "password" ? "text" : "password";
 }
 
 function toggleFacturaOptions(){
@@ -1791,6 +1851,8 @@ async function procesarReportes(){
     const asesor=document.getElementById("repFiltroAsesor").value;
     const area=document.getElementById("repFiltroArea").value;
     const tipoDocFiltro=document.getElementById("repFiltroTipoDoc").value;
+    const formaPagoFiltro=document.getElementById("repFiltroFormaPago").value;
+    const clienteFiltro=document.getElementById("repFiltroClienteNuevo").value;
 
     const hoy=fechaHoy();
 
@@ -1847,6 +1909,14 @@ async function procesarReportes(){
         (r.tipoDoc||"Remisión")!==tipoDocFiltro
       )
         return false;
+        if(formaPagoFiltro!=="TODOS" && (r.formaPago||"")!==formaPagoFiltro)
+         return false;
+
+      if(clienteFiltro==="NUEVOS" && r.esClienteNuevo!==true)
+          return false;
+
+      if(clienteFiltro==="RECURRENTES" && r.esClienteNuevo===true)
+          return false;
 
       return true;
 
