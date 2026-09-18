@@ -44,7 +44,33 @@ input:focus,select:focus,textarea:focus{outline:2px solid rgba(14,107,82,.15);bo
 .table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:13.5px}th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th.num,td.num{text-align:right}
 .total-box{text-align:right;font-size:18px;font-weight:700;margin-top:15px;color:var(--brand-dark)}
 .kpi-card{background:var(--surface-alt);border:1px solid var(--line);padding:14px;border-radius:8px;text-align:center}.kpi-title{font-size:12px;color:var(--ink-soft);font-weight:600;text-transform:uppercase}.kpi-value{font-size:22px;font-weight:800;color:var(--brand-dark);margin-top:4px}
-.badge{display:inline-block;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:700}.badge.info{background:#DDEAF7;color:#24527A}.badge.success{background:#DDF1E7;color:#1C6B45}
+.badge{
+  display:inline-block;
+  padding:3px 8px;
+  border-radius:10px;
+  font-size:11px;
+  font-weight:700
+}
+
+.badge.info{
+  background:#DDEAF7;
+  color:#24527A
+}
+
+.badge.success{
+  background:#DDF1E7;
+  color:#1C6B45
+}
+
+.badge.warning{
+  background:#FFF3CD;
+  color:#856404
+}
+
+.badge.danger{
+  background:#F8D7DA;
+  color:#842029
+}
 .status{padding:8px 10px;border-radius:6px;font-size:12px;margin-bottom:12px}.status.ok{background:#E4F4EA;color:#17613C}.status.warn{background:#FFF4D6;color:#765A00}.status.error{background:#FCE5E5;color:#8B2020}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:8000;padding:20px}.modal-card{background:#fff;border-radius:10px;max-width:800px;width:100%;max-height:90vh;overflow:auto;padding:20px}
 
@@ -322,8 +348,7 @@ body {
 <div class="card" style="margin:0"><div class="section-title">Consolidado por Asesor</div><div class="table-wrap"><table><thead><tr><th>Asesor</th><th>Área</th><th class="num">Remisiones</th><th class="num">Total ($)</th></tr></thead><tbody id="tblConsolidadoAsesoresBody"><tr><td colspan="4" style="text-align:center;color:var(--ink-soft)">No hay datos.</td></tr></tbody></table></div></div>
 <div class="card" style="margin:0"><div class="section-title">Consolidado por Área</div><div class="table-wrap"><table><thead><tr><th>Área</th><th class="num">Remisiones</th><th class="num">Total ($)</th></tr></thead><tbody id="tblConsolidadoAreasBody"><tr><td colspan="3" style="text-align:center;color:var(--ink-soft)">No hay datos.</td></tr></tbody></table></div></div>
 </div>
-<div class="card"><div class="section-title">Detalle de Documentos Emitidos</div><div class="table-wrap"><table><thead><tr><th>Nº Documento / Tipo</th><th>Cliente / Doc</th><th>Ciudad</th><th>Teléfono</th><th>Asesor / Área</th><th>Pago</th><th class="num">Total</th><th>Acción</th></tr></thead><tbody id="tablaReportesBody"><tr><td colspan="8" style="text-align:center;color:var(--ink-soft)">Cargando datos...</td></tr></tbody></table></div></div>
-</section>
+<div class="card"><div class="section-title">Detalle de Documentos Emitidos</div><div class="table-wrap"><table><thead><tr><th>Nº Documento / Tipo</th><th>Cliente / Doc</th><th>Ciudad</th><th>Teléfono</th><th>Asesor / Área</th><th>Pago</th><th>Estado</th><th class="num">Total</th><th>Acción</th></tr></thead><tbody id="tablaReportesBody"><tr><td colspan="9" style="text-align:center;color:var(--ink-soft)">Cargando datos...</td></tr></tbody></table></div></div>
 
 <section id="view-usuarios" class="hidden">
 <div class="grid-2">
@@ -2088,7 +2113,7 @@ function renderTablaDetalleRemisiones(datos){
   if(!datos.length){
 
     tbody.innerHTML=
-      '<tr><td colspan="8" style="text-align:center;color:var(--ink-soft)">No se encontraron documentos para este filtro.</td></tr>';
+      '<tr><td colspan="9" style="text-align:center;color:var(--ink-soft)">No se encontraron documentos para este filtro.</td></tr>';
 
     return;
   }
@@ -2100,6 +2125,17 @@ function renderTablaDetalleRemisiones(datos){
 <td>${escapeHtml(r.telCliente||"N/A")}<br><small>${escapeHtml(r.emailCliente||"")}</small></td>
 <td>${escapeHtml(r.asesor||"N/A")}<br><small>${escapeHtml(r.area||"N/A")}</small></td>
 <td>${escapeHtml(r.formaPago||"N/A")}</td>
+<td>
+  <span class="badge ${
+  r.estado==="Pagada"
+    ? "success"
+    : r.estado==="Anulada"
+      ? "danger"
+      : "warning"
+}">
+    ${escapeHtml(r.estado||"Pendiente")}
+  </span>
+</td>
 <td class="num"><strong>${money(r.total||0)}</strong></td>
 <td><button class="btn small secondary" onclick="verDetalleDoc('${escapeAttr(r.idDocumento||r.id||"")}')">Ver Detalle</button></td>
 </tr>`).join("");
