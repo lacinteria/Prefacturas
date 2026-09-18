@@ -322,13 +322,45 @@ body {
 </section>
 
 <section id="view-reporte" class="hidden">
-<div class="card"><div class="section-title">Filtros de Búsqueda y Consolidación</div>
-<div class="grid-5" style="align-items:end">
-<div class="field" style="margin:0"><label>Desde (Fecha)</label><input type="date" id="repFechaInicio"></div>
-<div class="field" style="margin:0"><label>Hasta (Fecha)</label><input type="date" id="repFechaFin"></div>
-<div class="field" style="margin:0"><label>Asesor</label><select id="repFiltroAsesor"><option value="TODOS">-- Todos los Asesores --</option></select></div>
-<div class="field" style="margin:0"><label>Área</label><select id="repFiltroArea"><option value="TODAS">-- Todas las Áreas --</option></select></div>
-<div class="field" style="margin:0"><label>Tipo de Documento</label><select id="repFiltroTipoDoc"><option value="TODOS">-- Todos --</option><option value="Remisión">REM</option><option value="Factura Electrónica">FE</option></select></div>
+<<div class="card">
+  <div class="section-title">Filtros de Búsqueda y Consolidación</div>
+
+  <div class="grid-5" style="align-items:end">
+
+    <div class="field filtro-reporte-admin" style="margin:0">
+      <label>Desde (Fecha)</label>
+      <input type="date" id="repFechaInicio">
+    </div>
+
+    <div class="field filtro-reporte-admin" style="margin:0">
+      <label>Hasta (Fecha)</label>
+      <input type="date" id="repFechaFin">
+    </div>
+
+    <div class="field filtro-reporte-admin" style="margin:0">
+      <label>Asesor</label>
+      <select id="repFiltroAsesor">
+        <option value="TODOS">-- Todos los Asesores --</option>
+      </select>
+    </div>
+
+    <div class="field filtro-reporte-admin" style="margin:0">
+      <label>Área</label>
+      <select id="repFiltroArea">
+        <option value="TODAS">-- Todas las Áreas --</option>
+      </select>
+    </div>
+
+    <div class="field" style="margin:0">
+      <label>Tipo de Documento</label>
+      <select id="repFiltroTipoDoc">
+        <option value="TODOS">-- Todos --</option>
+        <option value="Remisión">REM</option>
+        <option value="Factura Electrónica">FE</option>
+      </select>
+    </div>
+
+  </div>
 </div>
 <div style="margin-top:12px;text-align:right;display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap">
   <button class="btn primary" onclick="procesarReportes()">
@@ -594,7 +626,7 @@ async function aplicarSesion(){
   document.getElementById("txtAreaUsuario").textContent="Área: "+(currentUser.area||"-");
   document.getElementById("remAsesor").value=currentUser.nombre||currentUser.username||"";
   const admin=currentUser.role==="admin", lider=currentUser.role==="lider";
-  document.getElementById("tabReportes").classList.toggle("hidden",!(admin||lider));
+  document.getElementById("tabReportes").classList.toggle("hidden",false);
   document.getElementById("tabUsuarios").classList.toggle("hidden",!admin);
   document.getElementById("tabAjustes").classList.toggle("hidden",!admin);
   await cargarConfiguracion();
@@ -605,23 +637,35 @@ async function aplicarSesion(){
    NAVEGACIÓN Y FORMULARIO
    ========================================================= */
 function showView(view){
+
   if(!currentUser) return;
-  const permisos={reporte:["admin","lider"],usuarios:["admin"],ajustes:["admin"]};
+
+  const permisos={reporte:["admin","lider","asesor"],usuarios:["admin"],ajustes:["admin"]};
+
   if(permisos[view] && !permisos[view].includes(currentUser.role)){
+
     alert("No tienes permisos para acceder a esta sección.");
+
     return;
+
   }
 
   ["venta","reporte","usuarios","ajustes"].forEach(v=>
+
     document.getElementById("view-"+v).classList.toggle("hidden",v!==view)
+
   );
 
   document.querySelectorAll(".tab-btn").forEach(b=>
+
     b.classList.toggle("active",b.dataset.view===view)
+
   );
 
   if(view==="reporte") procesarReportes();
+
   if(view==="usuarios") renderUsuarios();
+
 }
 
 function toggleFacturaOptions(){
@@ -761,7 +805,10 @@ function agregarItem(){
   const cant=Number(document.getElementById("itemCant").value);
   const precioBase=Number(document.getElementById("itemPrecio").value);
 
-  const aplicarIva=document.getElementById("itemAplicarIva").checked;
+  const aplicarIva =
+  document.getElementById("itemAplicarIva").checked;
+
+const descuentoPct = 0;
 
   if(!tipoProducto){
     alert("Selecciona el tipo de producto.");
@@ -902,48 +949,100 @@ function editarItem(index){
 
   const item = itemsActuales[index];
 
-  if(!item) return;
+  if(!item){
+    alert("No se encontró el producto que deseas editar.");
+    return;
+  }
 
   window.itemEditandoIndex = index;
 
-  document.getElementById("itemTipoProducto").value = item.tipoProducto || "";
+  const tipoProducto = document.getElementById("itemTipoProducto");
+  const cantidad = document.getElementById("itemCant");
+  const precio = document.getElementById("itemPrecio");
+  const aplicarIva = document.getElementById("itemAplicarIva");
+
+  tipoProducto.value = item.tipoProducto || "";
 
   actualizarCamposProducto();
 
+  /*
+   * =========================================================
+   * CARGAR CAMPOS ESPECÍFICOS DEL PRODUCTO
+   * =========================================================
+   */
+
   if(item.tipoProducto === "Moños"){
 
-    document.getElementById("itemColor").value = item.color || "";
-    document.getElementById("itemTamano").value = item.tamano || "";
+    const color = document.getElementById("itemColor");
+    const tamano = document.getElementById("itemTamano");
+
+    if(color)
+      color.value = item.color || "";
+
+    if(tamano)
+      tamano.value = item.tamano || "";
 
   }else if(item.tipoProducto === "Camisas"){
 
-    document.getElementById("itemMaterial").value = item.material || "";
-    document.getElementById("itemTalla").value = item.talla || "";
+    const material = document.getElementById("itemMaterial");
+    const talla = document.getElementById("itemTalla");
+
+    if(material)
+      material.value = item.material || "";
+
+    if(talla)
+      talla.value = item.talla || "";
 
   }else{
 
-    document.getElementById("itemDescripcion").value =
-      item.descripcionDetalle || "";
+    const descripcion = document.getElementById("itemDescripcion");
+
+    if(descripcion)
+      descripcion.value = item.descripcionDetalle || "";
+
   }
 
-  document.getElementById("itemCant").value = item.cantidad;
-  document.getElementById("itemPrecio").value = item.precioBase;
-  document.getElementById("itemAplicarIva").checked = !!item.ivaAplicado;
+  /*
+   * =========================================================
+   * CARGAR CANTIDAD Y PRECIO
+   * =========================================================
+   */
+
+  cantidad.value = item.cantidad ?? 1;
+
+  precio.value = item.precioBase ?? 0;
+
+  /*
+   * =========================================================
+   * CARGAR IVA
+   * =========================================================
+   */
+
+  aplicarIva.checked = item.ivaAplicado === true;
+
+  /*
+   * =========================================================
+   * CAMBIAR BOTÓN AGREGAR POR ACTUALIZAR
+   * =========================================================
+   */
 
   const boton = document.querySelector(
     '.item-grid button[onclick="agregarItem()"]'
   );
 
   if(boton){
-    boton.textContent = "✓ Actualizar";
-    boton.setAttribute("onclick","actualizarItem()");
+
+    boton.textContent = "Guardar cambios";
+
+    boton.setAttribute(
+      "onclick",
+      "actualizarItem()"
+    );
+
   }
 
-  document.getElementById("itemTipoProducto").scrollIntoView({
-    behavior:"smooth",
-    block:"center"
-  });
 }
+
 
 function actualizarItem(){
 
@@ -966,8 +1065,16 @@ function actualizarItem(){
   const aplicarIva =
     document.getElementById("itemAplicarIva").checked;
 
+  /*
+   * =========================================================
+   * VALIDACIONES
+   * =========================================================
+   */
+
   if(!tipoProducto){
+
     alert("Selecciona el tipo de producto.");
+
     return;
   }
 
@@ -977,12 +1084,26 @@ function actualizarItem(){
     !Number.isFinite(precioBase) ||
     precioBase < 0
   ){
+
     alert("Completa correctamente cantidad y precio.");
+
     return;
   }
 
+  /*
+   * =========================================================
+   * CONSTRUIR DESCRIPCIÓN
+   * =========================================================
+   */
+
   let descripcion = "";
   let datosProducto = {};
+
+  /*
+   * =========================================================
+   * MOÑOS
+   * =========================================================
+   */
 
   if(tipoProducto === "Moños"){
 
@@ -993,16 +1114,25 @@ function actualizarItem(){
       document.getElementById("itemTamano")?.value;
 
     if(!color || !tamano){
+
       alert("Completa el color y tamaño del moño.");
+
       return;
     }
 
-    descripcion = `Moño ${tamano} ${color}`;
+    descripcion =
+      `Moño ${tamano} ${color}`;
 
     datosProducto = {
       color,
       tamano
     };
+
+  /*
+   * =========================================================
+   * CAMISAS
+   * =========================================================
+   */
 
   }else if(tipoProducto === "Camisas"){
 
@@ -1013,45 +1143,75 @@ function actualizarItem(){
       document.getElementById("itemTalla")?.value;
 
     if(!material || !talla){
-      alert("Selecciona el material y la talla de la camisa.");
+
+      alert(
+        "Selecciona el material y la talla de la camisa."
+      );
+
       return;
     }
 
-    descripcion = `Camisa ${material} Talla ${talla}`;
+    descripcion =
+      `Camisa ${material} Talla ${talla}`;
 
     datosProducto = {
       material,
       talla
     };
 
+  /*
+   * =========================================================
+   * RESTO DE PRODUCTOS
+   * =========================================================
+   */
+
   }else{
 
     const detalle =
-      document.getElementById("itemDescripcion")?.value.trim();
+      document.getElementById("itemDescripcion")
+        ?.value.trim();
 
     if(!detalle){
+
       alert("Escribe la descripción del producto.");
+
       return;
     }
 
-    descripcion = `${tipoProducto} - ${detalle}`;
+    descripcion =
+      `${tipoProducto} - ${detalle}`;
 
     datosProducto = {
       descripcionDetalle: detalle
     };
+
   }
 
-  const precioUnitario = aplicarIva
-    ? precioBase * 1.19
-    : precioBase;
+  /*
+   * =========================================================
+   * IVA
+   * =========================================================
+   */
 
-  const brutoItem = cant * precioUnitario;
+  const precioUnitario =
+    aplicarIva
+      ? precioBase * 1.19
+      : precioBase;
 
-  const descuento =
-    brutoItem * (descuentoPct / 100);
+  /*
+   * =========================================================
+   * SUBTOTAL
+   * =========================================================
+   */
 
   const subtotal =
-    brutoItem - descuento;
+    cant * precioUnitario;
+
+  /*
+   * =========================================================
+   * ACTUALIZAR EL ÍTEM
+   * =========================================================
+   */
 
   itemsActuales[index] = {
 
@@ -1068,34 +1228,70 @@ function actualizarItem(){
     precioUnitario,
 
     ivaIncluido: !aplicarIva,
+
     ivaAplicado: aplicarIva,
+
     ivaPct: aplicarIva ? 19 : 0,
 
-    descuentoPct,
-    descuento,
-
     subtotal
+
   };
 
+  /*
+   * =========================================================
+   * SALIR DEL MODO EDICIÓN
+   * =========================================================
+   */
+
   window.itemEditandoIndex = undefined;
+
+  /*
+   * =========================================================
+   * RESTAURAR BOTÓN + AGREGAR
+   * =========================================================
+   */
 
   const boton = document.querySelector(
     '.item-grid button[onclick="actualizarItem()"]'
   );
 
   if(boton){
+
     boton.textContent = "+ Agregar";
-    boton.setAttribute("onclick","agregarItem()");
+
+    boton.setAttribute(
+      "onclick",
+      "agregarItem()"
+    );
+
   }
 
+  /*
+   * =========================================================
+   * LIMPIAR CAMPOS
+   * =========================================================
+   */
+
   document.getElementById("itemTipoProducto").value = "";
+
   document.getElementById("itemCant").value = "1";
+
   document.getElementById("itemPrecio").value = "";
+
   document.getElementById("itemAplicarIva").checked = false;
 
   actualizarCamposProducto();
+
+  /*
+   * =========================================================
+   * ACTUALIZAR TABLA Y TOTALES
+   * =========================================================
+   */
+
   renderItems();
+
   calcularTotales();
+
 }
 
 function eliminarItem(index){
@@ -1583,7 +1779,7 @@ async function guardarRemisionCompleta(){
    ========================================================= */
 async function procesarReportes(){
 
-  if(!currentUser || !["admin","lider"].includes(currentUser.role))
+  if(!currentUser)
     return;
 
   try{
@@ -1596,13 +1792,61 @@ async function procesarReportes(){
     const area=document.getElementById("repFiltroArea").value;
     const tipoDocFiltro=document.getElementById("repFiltroTipoDoc").value;
 
+    const hoy=fechaHoy();
+
     const filtrados=datos.filter(r=>{
 
-      if(inicio&&String(r.fecha)<inicio)return false;
-      if(fin&&String(r.fecha)>fin)return false;
-      if(asesor!=="TODOS"&&(r.asesor||"")!==asesor)return false;
-      if(area!=="TODAS"&&(r.area||"")!==area)return false;
-      if(tipoDocFiltro!=="TODOS"&&(r.tipoDoc||"Remisión")!==tipoDocFiltro)return false;
+      /* =====================================================
+         RESTRICCIÓN EXCLUSIVA PARA ASESORES
+         ===================================================== */
+
+      if(currentUser.role==="asesor"){
+
+        const nombreAsesor=
+          currentUser.nombre||
+          currentUser.username||
+          "";
+
+        // Solo sus propias remisiones
+        if((r.asesor||"")!==nombreAsesor)
+          return false;
+
+        // Solo remisiones creadas HOY
+        if(String(r.fecha)!==String(hoy))
+          return false;
+
+      }
+
+      /* =====================================================
+         FILTROS NORMALES
+         Solo afectan a ADMIN y LÍDER
+         ===================================================== */
+
+      if(currentUser.role!=="asesor"){
+
+        if(inicio&&String(r.fecha)<inicio)
+          return false;
+
+        if(fin&&String(r.fecha)>fin)
+          return false;
+
+        if(asesor!=="TODOS"&&(r.asesor||"")!==asesor)
+          return false;
+
+        if(area!=="TODAS"&&(r.area||"")!==area)
+          return false;
+
+      }
+
+      /* =====================================================
+         FILTRO TIPO DE DOCUMENTO
+         ===================================================== */
+
+      if(
+        tipoDocFiltro!=="TODOS" &&
+        (r.tipoDoc||"Remisión")!==tipoDocFiltro
+      )
+        return false;
 
       return true;
 
@@ -1619,9 +1863,16 @@ async function procesarReportes(){
     );
 
     document.getElementById("kpiTotalVentas").textContent=money(total);
-    document.getElementById("kpiCantRemisiones").textContent=filtrados.length;
+
+    document.getElementById("kpiCantRemisiones").textContent=
+      filtrados.length;
+
     document.getElementById("kpiTicketPromedio").textContent=
-      money(filtrados.length?total/filtrados.length:0);
+      money(
+        filtrados.length
+          ? total/filtrados.length
+          : 0
+      );
 
     renderConsolidadoAsesores(filtrados);
     renderConsolidadoAreas(filtrados);
@@ -1632,7 +1883,7 @@ async function procesarReportes(){
     console.error(e);
 
     document.getElementById("tablaReportesBody").innerHTML=
-      `<tr><td colspan="8">Error cargando reportes: ${escapeHtml(e.message)}</td></tr>`;
+      `<tr><td colspan="9">Error cargando reportes: ${escapeHtml(e.message)}</td></tr>`;
 
   }
 }
@@ -2137,7 +2388,13 @@ function renderTablaDetalleRemisiones(datos){
   </span>
 </td>
 <td class="num"><strong>${money(r.total||0)}</strong></td>
-<td><button class="btn small secondary" onclick="verDetalleDoc('${escapeAttr(r.idDocumento||r.id||"")}')">Ver Detalle</button></td>
+<td>
+  ${
+    currentUser.role==="asesor"
+      ? `<button class="btn small secondary" onclick="imprimirDocumento('${escapeAttr(r.idDocumento||r.id||"")}')">Imprimir</button>`
+      : `<button class="btn small secondary" onclick="verDetalleDoc('${escapeAttr(r.idDocumento||r.id||"")}')">Ver Detalle</button>`
+  }
+</td>
 </tr>`).join("");
 }
 
@@ -2901,7 +3158,7 @@ function aplicarLogo(src){
    ========================================================= */
 async function actualizarFiltrosReportes(){
 
-  if(!currentUser||!["admin","lider"].includes(currentUser.role))
+  if(!currentUser)
     return;
 
   const datos=await obtenerRemisiones();
