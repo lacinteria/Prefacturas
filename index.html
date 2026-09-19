@@ -156,6 +156,363 @@ body {
   color:var(--ink-soft);
 }
 
+/* =========================================================
+RESPONSIVE - TABLETS Y DISPOSITIVOS TÁCTILES
+========================================================= */
+
+/* TABLETS GRANDES / PANTALLAS TÁCTILES */
+@media (min-width:901px) and (max-width:1200px){
+
+main{
+padding:18px;
+max-width:100%;
+}
+
+.card{
+padding:18px;
+}
+
+.grid-2{
+grid-template-columns:repeat(2,1fr);
+}
+
+.grid-3{
+grid-template-columns:repeat(2,1fr);
+}
+
+.grid-4{
+grid-template-columns:repeat(2,1fr);
+}
+
+.grid-5{
+grid-template-columns:repeat(3,1fr);
+}
+
+.topbar{
+padding:12px 16px;
+}
+
+.tabs{
+flex:1;
+justify-content:center;
+}
+
+.tab-btn{
+padding:10px 13px;
+}
+
+input,
+select,
+textarea{
+min-height:42px;
+font-size:14px;
+}
+
+.btn{
+min-height:42px;
+padding:10px 15px;
+}
+
+.btn.small{
+min-height:36px;
+}
+
+th,
+td{
+padding:9px 10px;
+}
+
+}
+
+/* =========================================================
+TABLETS VERTICALES
+========================================================= */
+
+@media (min-width:601px) and (max-width:900px){
+
+main{
+padding:14px;
+max-width:100%;
+}
+
+.card{
+padding:16px;
+margin-bottom:14px;
+}
+
+.grid-2{
+grid-template-columns:repeat(2,1fr);
+}
+
+.grid-3,
+.grid-4{
+grid-template-columns:repeat(2,1fr);
+}
+
+.grid-5{
+grid-template-columns:repeat(2,1fr);
+}
+
+.topbar{
+padding:12px 14px;
+gap:10px;
+}
+
+.brand{
+width:100%;
+}
+
+.tabs{
+width:100%;
+overflow-x:auto;
+flex-wrap:nowrap;
+justify-content:flex-start;
+-webkit-overflow-scrolling:touch;
+scrollbar-width:none;
+}
+
+.tabs::-webkit-scrollbar{
+display:none;
+}
+
+.tab-btn{
+flex:0 0 auto;
+min-height:42px;
+padding:10px 14px;
+font-size:13px;
+}
+
+.user-badge{
+width:100%;
+justify-content:flex-end;
+}
+
+input,
+select,
+textarea{
+min-height:43px;
+font-size:14px;
+}
+
+.btn{
+min-height:43px;
+padding:10px 15px;
+}
+
+.btn.small{
+min-height:38px;
+padding:7px 11px;
+}
+
+.field{
+font-size:13px;
+}
+
+.section-title{
+font-size:15px;
+}
+
+table{
+font-size:13px;
+min-width:650px;
+}
+
+.table-wrap{
+margin-left:-2px;
+margin-right:-2px;
+}
+
+.kpi-card{
+padding:13px;
+}
+
+}
+
+/* =========================================================
+CELULARES
+========================================================= */
+
+@media (max-width:600px){
+
+main{
+padding:10px;
+}
+
+.card{
+padding:14px;
+border-radius:8px;
+margin-bottom:12px;
+}
+
+.grid-2,
+.grid-3,
+.grid-4,
+.grid-5{
+grid-template-columns:1fr;
+}
+
+.topbar{
+padding:10px;
+}
+
+.brand{
+width:100%;
+}
+
+.tabs{
+width:100%;
+overflow-x:auto;
+flex-wrap:nowrap;
+justify-content:flex-start;
+-webkit-overflow-scrolling:touch;
+scrollbar-width:none;
+}
+
+.tabs::-webkit-scrollbar{
+display:none;
+}
+
+.tab-btn{
+flex:0 0 auto;
+min-height:42px;
+padding:10px 13px;
+}
+
+.user-badge{
+width:100%;
+justify-content:flex-start;
+}
+
+input,
+select,
+textarea{
+min-height:44px;
+font-size:14px;
+}
+
+.btn{
+min-height:44px;
+}
+
+.btn.small{
+min-height:38px;
+}
+
+table{
+min-width:650px;
+}
+
+.modal{
+padding:10px;
+align-items:flex-start;
+}
+
+.modal-card{
+max-height:95vh;
+padding:15px;
+}
+
+}
+
+/* =========================================================
+MEJORAS PARA PANTALLAS TÁCTILES
+========================================================= */
+
+@media (pointer:coarse){
+
+.btn,
+.tab-btn,
+select{
+cursor:pointer;
+}
+
+input,
+select,
+textarea{
+min-height:42px;
+}
+
+.btn{
+min-height:42px;
+}
+
+.btn.small{
+min-height:38px;
+}
+
+}
+
+/* =========================================================
+EVITAR DESBORDAMIENTO HORIZONTAL
+========================================================= */
+
+html,
+body{
+max-width:100%;
+overflow-x:hidden;
+}
+
+.card,
+.field,
+.grid-2,
+.grid-3,
+.grid-4,
+.grid-5{
+min-width:0;
+}
+
+/* =========================================================
+CAMPOS DE PRODUCTOS
+========================================================= */
+
+.item-grid{
+min-width:0;
+}
+
+@media (min-width:601px){
+
+.item-grid{
+grid-template-columns:1.3fr .7fr .9fr auto!important;
+align-items:end;
+}
+
+}
+
+/* =========================================================
+MEJOR PRESENTACIÓN DE TÍTULOS
+========================================================= */
+
+@media (max-width:900px){
+
+h1{
+font-size:24px;
+}
+
+h2{
+font-size:20px;
+}
+
+h3{
+font-size:17px;
+}
+
+}
+
+/* =========================================================
+SUGERENCIAS DE CLIENTES EN TOUCH
+========================================================= */
+
+@media (pointer:coarse){
+
+.cliente-sugerencia{
+padding:12px;
+font-size:14px;
+min-height:44px;
+}
+
+}
+
+
 </style>
 </head>
 <body>
