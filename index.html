@@ -2860,8 +2860,56 @@ function renderTablaDetalleRemisiones(datos){
 <td>
   ${
     currentUser.role==="asesor"
-      ? `<button class="btn small secondary" onclick="imprimirDocumento('${escapeAttr(r.idDocumento||r.id||"")}')">Imprimir</button>`
-      : `<button class="btn small secondary" onclick="verDetalleDoc('${escapeAttr(r.idDocumento||r.id||"")}')">Ver Detalle</button>`
+
+      ? `
+        <button
+          class="btn small secondary"
+          onclick="imprimirDocumento('${escapeAttr(r.idDocumento||r.id||"")}')"
+        >
+          Imprimir
+        </button>
+      `
+
+      : `
+        <div style="display:flex;gap:5px;flex-wrap:wrap">
+
+  <button
+    class="btn small secondary"
+    onclick="verDetalleDoc('${escapeAttr(r.idDocumento||r.id||"")}')"
+  >
+    Detalle
+  </button>
+
+  ${
+  ["admin","lider"].includes(currentUser.role) &&
+  r.estado!=="Pagada" &&
+  r.estado!=="Anulada"
+      ? `
+        <button
+          class="btn small primary"
+          onclick="marcarComoPagada('${escapeAttr(r.idDocumento||r.id||"")}')"
+        >
+          Pagar
+        </button>
+      `
+      : ""
+  }
+
+  ${
+    currentUser.role==="admin" && r.estado!=="Anulada"
+      ? `
+        <button
+          class="btn small danger"
+          onclick="anularDocumento('${escapeAttr(r.idDocumento||r.id||"")}')"
+        >
+          Anular
+        </button>
+      `
+      : ""
+  }
+
+</div>
+      `
   }
 </td>
 </tr>`).join("");
