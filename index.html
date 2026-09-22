@@ -44,33 +44,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid rgba(14,107,82,.15);bo
 .table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:13.5px}th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th.num,td.num{text-align:right}
 .total-box{text-align:right;font-size:18px;font-weight:700;margin-top:15px;color:var(--brand-dark)}
 .kpi-card{background:var(--surface-alt);border:1px solid var(--line);padding:14px;border-radius:8px;text-align:center}.kpi-title{font-size:12px;color:var(--ink-soft);font-weight:600;text-transform:uppercase}.kpi-value{font-size:22px;font-weight:800;color:var(--brand-dark);margin-top:4px}
-.badge{
-  display:inline-block;
-  padding:3px 8px;
-  border-radius:10px;
-  font-size:11px;
-  font-weight:700
-}
-
-.badge.info{
-  background:#DDEAF7;
-  color:#24527A
-}
-
-.badge.success{
-  background:#DDF1E7;
-  color:#1C6B45
-}
-
-.badge.warning{
-  background:#FFF3CD;
-  color:#856404
-}
-
-.badge.danger{
-  background:#F8D7DA;
-  color:#842029
-}
+.badge{display:inline-block;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:700}.badge.info{background:#DDEAF7;color:#24527A}.badge.success{background:#DDF1E7;color:#1C6B45}
 .status{padding:8px 10px;border-radius:6px;font-size:12px;margin-bottom:12px}.status.ok{background:#E4F4EA;color:#17613C}.status.warn{background:#FFF4D6;color:#765A00}.status.error{background:#FCE5E5;color:#8B2020}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:8000;padding:20px}.modal-card{background:#fff;border-radius:10px;max-width:800px;width:100%;max-height:90vh;overflow:auto;padding:20px}
 
@@ -131,385 +105,6 @@ input:focus,select:focus,textarea:focus{outline:2px solid rgba(14,107,82,.15);bo
 body {
   text-transform: uppercase;
 }
-
-.password-wrapper{
-  position:relative;
-}
-
-.password-wrapper input{
-  width:100%;
-  box-sizing:border-box;
-}
-
-.password-eye{
-  position:absolute;
-  right:10px;
-  top:50%;
-  transform:translateY(-50%);
-  border:0;
-  background:transparent;
-  padding:0;
-  margin:0;
-  cursor:pointer;
-  font-size:16px;
-  line-height:1;
-  color:var(--ink-soft);
-}
-/* =========================================================
-RESPONSIVE - TABLETS Y DISPOSITIVOS TÁCTILES
-========================================================= */
-
-/* TABLETS GRANDES / PANTALLAS TÁCTILES */
-@media (min-width:901px) and (max-width:1200px){
-
-main{
-padding:18px;
-max-width:100%;
-}
-
-.card{
-padding:18px;
-}
-
-.grid-2{
-grid-template-columns:repeat(2,1fr);
-}
-
-.grid-3{
-grid-template-columns:repeat(2,1fr);
-}
-
-.grid-4{
-grid-template-columns:repeat(2,1fr);
-}
-
-.grid-5{
-grid-template-columns:repeat(3,1fr);
-}
-
-.topbar{
-padding:12px 16px;
-}
-
-.tabs{
-flex:1;
-justify-content:center;
-}
-
-.tab-btn{
-padding:10px 13px;
-}
-
-input,
-select,
-textarea{
-min-height:42px;
-font-size:14px;
-}
-
-.btn{
-min-height:42px;
-padding:10px 15px;
-}
-
-.btn.small{
-min-height:36px;
-}
-
-th,
-td{
-padding:9px 10px;
-}
-
-}
-
-/* =========================================================
-TABLETS VERTICALES
-========================================================= */
-
-@media (min-width:601px) and (max-width:900px){
-
-main{
-padding:14px;
-max-width:100%;
-}
-
-.card{
-padding:16px;
-margin-bottom:14px;
-}
-
-.grid-2{
-grid-template-columns:repeat(2,1fr);
-}
-
-.grid-3,
-.grid-4{
-grid-template-columns:repeat(2,1fr);
-}
-
-.grid-5{
-grid-template-columns:repeat(2,1fr);
-}
-
-.topbar{
-padding:12px 14px;
-gap:10px;
-}
-
-.brand{
-width:100%;
-}
-
-.tabs{
-width:100%;
-overflow-x:auto;
-flex-wrap:nowrap;
-justify-content:flex-start;
--webkit-overflow-scrolling:touch;
-scrollbar-width:none;
-}
-
-.tabs::-webkit-scrollbar{
-display:none;
-}
-
-.tab-btn{
-flex:0 0 auto;
-min-height:42px;
-padding:10px 14px;
-font-size:13px;
-}
-
-.user-badge{
-width:100%;
-justify-content:flex-end;
-}
-
-input,
-select,
-textarea{
-min-height:43px;
-font-size:14px;
-}
-
-.btn{
-min-height:43px;
-padding:10px 15px;
-}
-
-.btn.small{
-min-height:38px;
-padding:7px 11px;
-}
-
-.field{
-font-size:13px;
-}
-
-.section-title{
-font-size:15px;
-}
-
-table{
-font-size:13px;
-min-width:650px;
-}
-
-.table-wrap{
-margin-left:-2px;
-margin-right:-2px;
-}
-
-.kpi-card{
-padding:13px;
-}
-
-}
-
-/* =========================================================
-CELULARES
-========================================================= */
-
-@media (max-width:600px){
-
-main{
-padding:10px;
-}
-
-.card{
-padding:14px;
-border-radius:8px;
-margin-bottom:12px;
-}
-
-.grid-2,
-.grid-3,
-.grid-4,
-.grid-5{
-grid-template-columns:1fr;
-}
-
-.topbar{
-padding:10px;
-}
-
-.brand{
-width:100%;
-}
-
-.tabs{
-width:100%;
-overflow-x:auto;
-flex-wrap:nowrap;
-justify-content:flex-start;
--webkit-overflow-scrolling:touch;
-scrollbar-width:none;
-}
-
-.tabs::-webkit-scrollbar{
-display:none;
-}
-
-.tab-btn{
-flex:0 0 auto;
-min-height:42px;
-padding:10px 13px;
-}
-
-.user-badge{
-width:100%;
-justify-content:flex-start;
-}
-
-input,
-select,
-textarea{
-min-height:44px;
-font-size:14px;
-}
-
-.btn{
-min-height:44px;
-}
-
-.btn.small{
-min-height:38px;
-}
-
-table{
-min-width:650px;
-}
-
-.modal{
-padding:10px;
-align-items:flex-start;
-}
-
-.modal-card{
-max-height:95vh;
-padding:15px;
-}
-
-}
-
-/* =========================================================
-MEJORAS PARA PANTALLAS TÁCTILES
-========================================================= */
-
-@media (pointer:coarse){
-
-.btn,
-.tab-btn,
-select{
-cursor:pointer;
-}
-
-input,
-select,
-textarea{
-min-height:42px;
-}
-
-.btn{
-min-height:42px;
-}
-
-.btn.small{
-min-height:38px;
-}
-
-}
-
-/* =========================================================
-EVITAR DESBORDAMIENTO HORIZONTAL
-========================================================= */
-
-html,
-body{
-max-width:100%;
-overflow-x:hidden;
-}
-
-.card,
-.field,
-.grid-2,
-.grid-3,
-.grid-4,
-.grid-5{
-min-width:0;
-}
-
-/* =========================================================
-CAMPOS DE PRODUCTOS
-========================================================= */
-
-.item-grid{
-min-width:0;
-}
-
-@media (min-width:601px){
-
-.item-grid{
-grid-template-columns:1.3fr .7fr .9fr auto!important;
-align-items:end;
-}
-
-}
-
-/* =========================================================
-MEJOR PRESENTACIÓN DE TÍTULOS
-========================================================= */
-
-@media (max-width:900px){
-
-h1{
-font-size:24px;
-}
-
-h2{
-font-size:20px;
-}
-
-h3{
-font-size:17px;
-}
-
-}
-
-/* =========================================================
-SUGERENCIAS DE CLIENTES EN TOUCH
-========================================================= */
-
-@media (pointer:coarse){
-
-.cliente-sugerencia{
-padding:12px;
-font-size:14px;
-min-height:44px;
-}
-
-}
 </style>
 </head>
 <body>
@@ -520,13 +115,7 @@ min-height:44px;
     <p style="margin:0 0 16px;text-align:center;font-size:13px;color:var(--ink-soft)">Ingresa tu usuario y contraseña</p>
     <form id="loginForm">
       <div class="field"><label>Usuario <span class="req">*</span></label><input type="text" id="loginUser" required autocomplete="username" placeholder="ej. admin"></div>
-      <div class="field">
-  <label>Contraseña <span class="req">*</span></label>
-  <div class="password-wrapper">
-    <input type="password" id="loginPass" required autocomplete="current-password" placeholder="••••••••">
-    <button type="button" class="password-eye" onclick="toggleLoginPassword()" aria-label="Mostrar contraseña">👁</button>
-  </div>
-</div>
+      <div class="field"><label>Contraseña <span class="req">*</span></label><input type="password" id="loginPass" required autocomplete="current-password" placeholder="••••••••"></div>
       <button type="submit" class="btn primary" style="width:100%;margin-top:10px">Iniciar Sesión</button>
     </form>
     <p id="loginError" class="hidden" style="color:var(--required);font-size:12px;margin-top:10px;text-align:center"></p>
@@ -611,20 +200,20 @@ min-height:44px;
     <label>Producto <span class="req">*</span></label>
     <select id="itemTipoProducto" onchange="actualizarCamposProducto()">
       <option value="">Seleccionar producto...</option>
-      <option value="Moños">MOÑOS</option>
-      <option value="Bordados">BORDADOS</option>
+      <option value="Moños">Moños</option>
+      <option value="Bordados">Bordados</option>
       <option value="DTF">DTF</option>
-      <option value="Camisas">CAMISAS</option>
-      <option value="Cinta">CINTA</option>
-      <option value="Aplique">APLIQUE</option>
-      <option value="Piro">PIROGRABADO</option>
-      <option value="Elástico">ELÁSTICO</option>
-      <option value="Reata">REATA</option>
-      <option value="Herraje">HERRAJES</option>
-      <option value="Placa">PLACA</option>
-      <option value="Pedreria">PEDRERIA</option>
-      <option value="Personalizado">PERSONALIZADO</option>
-      <option value="otro">OTRO</option>
+      <option value="Camisas">Camisas</option>
+      <option value="Cinta">Cinta</option>
+      <option value="Aplique">Aplique</option>
+      <option value="Piro">Piro</option>
+      <option value="Elástico">Elástico</option>
+      <option value="Reata">Reata</option>
+      <option value="Herraje">Herraje</option>
+      <option value="Placa">Placa</option>
+      <option value="Pedreria">Pedreria</option>
+      <option value="Personalizado">Personalizado</option>
+      <option value="otro">Otro</option>
     </select>
   </div>
 
@@ -641,7 +230,7 @@ min-height:44px;
     </div>
   </div>
 
-    <!-- CANTIDAD -->
+  <!-- CANTIDAD -->
   <div class="field" style="margin:0">
     <label>Cantidad <span class="req">*</span></label>
     <input
@@ -650,7 +239,6 @@ min-height:44px;
       min="0.01"
       step="any"
       placeholder="1"
-      oninput="actualizarPrecioMoño()"
     >
   </div>
 
@@ -708,65 +296,13 @@ min-height:44px;
 </section>
 
 <section id="view-reporte" class="hidden">
-<<div class="card">
-  <div class="section-title">Filtros de Búsqueda y Consolidación</div>
-
-  <div class="grid-5" style="align-items:end">
-
-    <div class="field filtro-reporte-admin" style="margin:0">
-      <label>Desde (Fecha)</label>
-      <input type="date" id="repFechaInicio">
-    </div>
-
-    <div class="field filtro-reporte-admin" style="margin:0">
-      <label>Hasta (Fecha)</label>
-      <input type="date" id="repFechaFin">
-    </div>
-
-    <div class="field filtro-reporte-admin" style="margin:0">
-      <label>Asesor</label>
-      <select id="repFiltroAsesor">
-        <option value="TODOS">-- Todos los Asesores --</option>
-      </select>
-    </div>
-
-    <div class="field filtro-reporte-admin" style="margin:0">
-      <label>Área</label>
-      <select id="repFiltroArea">
-        <option value="TODAS">-- Todas las Áreas --</option>
-      </select>
-    </div>
-
-    <div class="field" style="margin:0">
-      <label>Tipo de Documento</label>
-      <select id="repFiltroTipoDoc">
-        <option value="TODOS">-- Todos --</option>
-        <option value="Remisión">REM</option>
-        <option value="Factura Electrónica">FE</option>
-      </select>
-    </div>
-
-    <div class="field" style="margin:0">
-  <label>Medio de Pago</label>
-  <select id="repFiltroFormaPago">
-    <option value="TODOS">-- Todos --</option>
-    <option value="EFECTIVO">EFECTIVO</option>
-    <option value="005 TRANSFERENCIA">005 TRANSFERENCIA</option>
-    <option value="SAS TRANSFERENCIA">SAS TRANSFERENCIA</option>
-    <option value="DATAFONO">DATAFONO</option>
-  </select>
-</div>
-
-<div class="field" style="margin:0">
-  <label>Cliente</label>
-  <select id="repFiltroClienteNuevo">
-    <option value="TODOS">-- Todos --</option>
-    <option value="NUEVOS">CLIENTES NUEVOS</option>
-    <option value="RECURRENTES">CLIENTES RECURRENTES</option>
-  </select>
-</div>
-
-  </div>
+<div class="card"><div class="section-title">Filtros de Búsqueda y Consolidación</div>
+<div class="grid-5" style="align-items:end">
+<div class="field" style="margin:0"><label>Desde (Fecha)</label><input type="date" id="repFechaInicio"></div>
+<div class="field" style="margin:0"><label>Hasta (Fecha)</label><input type="date" id="repFechaFin"></div>
+<div class="field" style="margin:0"><label>Asesor</label><select id="repFiltroAsesor"><option value="TODOS">-- Todos los Asesores --</option></select></div>
+<div class="field" style="margin:0"><label>Área</label><select id="repFiltroArea"><option value="TODAS">-- Todas las Áreas --</option></select></div>
+<div class="field" style="margin:0"><label>Tipo de Documento</label><select id="repFiltroTipoDoc"><option value="TODOS">-- Todos --</option><option value="Remisión">REM</option><option value="Factura Electrónica">FE</option></select></div>
 </div>
 <div style="margin-top:12px;text-align:right;display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap">
   <button class="btn primary" onclick="procesarReportes()">
@@ -786,7 +322,8 @@ min-height:44px;
 <div class="card" style="margin:0"><div class="section-title">Consolidado por Asesor</div><div class="table-wrap"><table><thead><tr><th>Asesor</th><th>Área</th><th class="num">Remisiones</th><th class="num">Total ($)</th></tr></thead><tbody id="tblConsolidadoAsesoresBody"><tr><td colspan="4" style="text-align:center;color:var(--ink-soft)">No hay datos.</td></tr></tbody></table></div></div>
 <div class="card" style="margin:0"><div class="section-title">Consolidado por Área</div><div class="table-wrap"><table><thead><tr><th>Área</th><th class="num">Remisiones</th><th class="num">Total ($)</th></tr></thead><tbody id="tblConsolidadoAreasBody"><tr><td colspan="3" style="text-align:center;color:var(--ink-soft)">No hay datos.</td></tr></tbody></table></div></div>
 </div>
-<div class="card"><div class="section-title">Detalle de Documentos Emitidos</div><div class="table-wrap"><table><thead><tr><th>Nº Documento / Tipo</th><th>Cliente / Doc</th><th>Ciudad</th><th>Teléfono</th><th>Asesor / Área</th><th>Pago</th><th>Estado</th><th class="num">Total</th><th>Acción</th></tr></thead><tbody id="tablaReportesBody"><tr><td colspan="9" style="text-align:center;color:var(--ink-soft)">Cargando datos...</td></tr></tbody></table></div></div>
+<div class="card"><div class="section-title">Detalle de Documentos Emitidos</div><div class="table-wrap"><table><thead><tr><th>Nº Documento / Tipo</th><th>Cliente / Doc</th><th>Ciudad</th><th>Teléfono</th><th>Asesor / Área</th><th>Pago</th><th class="num">Total</th><th>Acción</th></tr></thead><tbody id="tablaReportesBody"><tr><td colspan="8" style="text-align:center;color:var(--ink-soft)">Cargando datos...</td></tr></tbody></table></div></div>
+</section>
 
 <section id="view-usuarios" class="hidden">
 <div class="grid-2">
@@ -1032,7 +569,7 @@ async function aplicarSesion(){
   document.getElementById("txtAreaUsuario").textContent="Área: "+(currentUser.area||"-");
   document.getElementById("remAsesor").value=currentUser.nombre||currentUser.username||"";
   const admin=currentUser.role==="admin", lider=currentUser.role==="lider";
-  document.getElementById("tabReportes").classList.toggle("hidden",false);
+  document.getElementById("tabReportes").classList.toggle("hidden",!(admin||lider));
   document.getElementById("tabUsuarios").classList.toggle("hidden",!admin);
   document.getElementById("tabAjustes").classList.toggle("hidden",!admin);
   await cargarConfiguracion();
@@ -1043,44 +580,23 @@ async function aplicarSesion(){
    NAVEGACIÓN Y FORMULARIO
    ========================================================= */
 function showView(view){
-
   if(!currentUser) return;
-
-  const permisos={reporte:["admin","lider","asesor"],usuarios:["admin"],ajustes:["admin"]};
-
+  const permisos={reporte:["admin","lider"],usuarios:["admin"],ajustes:["admin"]};
   if(permisos[view] && !permisos[view].includes(currentUser.role)){
-
     alert("No tienes permisos para acceder a esta sección.");
-
     return;
-
   }
 
   ["venta","reporte","usuarios","ajustes"].forEach(v=>
-
     document.getElementById("view-"+v).classList.toggle("hidden",v!==view)
-
   );
 
   document.querySelectorAll(".tab-btn").forEach(b=>
-
     b.classList.toggle("active",b.dataset.view===view)
-
   );
 
   if(view==="reporte") procesarReportes();
-
   if(view==="usuarios") renderUsuarios();
-
-}
-
-function toggleLoginPassword(){
-
-  const campo=document.getElementById("loginPass");
-
-  if(!campo) return;
-
-  campo.type = campo.type === "password" ? "text" : "password";
 }
 
 function toggleFacturaOptions(){
@@ -1136,16 +652,16 @@ function actualizarCamposProducto(){
             id="itemColor"
             placeholder="Ej. Rojo"
           >
-          </div>
+        </div>
 
-          <div class="field" style="margin:0">
+        <div class="field" style="margin:0">
           <label>Tamaño <span class="req">*</span></label>
-          <select id="itemTamano" onchange="actualizarPrecioMoño()">
-              <option value="">Seleccionar...</option>
-             <option value="6MM">6MM</option>
-             <option value="9MM">9MM</option>
-              <option value="16MM">16MM</option>
-              <option value="22MM">22MM</option>
+          <select id="itemTamano">
+            <option value="">Seleccionar...</option>
+            <option value="6MM">6MM</option>
+            <option value="9MM">9MM</option>
+            <option value="16MM">16MM</option>
+            <option value="22MM">22MM</option>
           </select>
         </div>
 
@@ -1154,6 +670,7 @@ function actualizarCamposProducto(){
 
     return;
   }
+
   /*
    * ======================================================
    * CAMISAS
@@ -1163,13 +680,32 @@ function actualizarCamposProducto(){
   if(tipo==="Camisas"){
 
     contenedor.innerHTML=`
-      <div class="field" style="margin:0">
-        <label>Descripción <span class="req">*</span></label>
-        <input
-          type="text"
-          id="itemDescripcion"
-          placeholder="Ej. Qatar Negra Talla M"
-        >
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+
+        <div class="field" style="margin:0">
+          <label>Material <span class="req">*</span></label>
+          <select id="itemMaterial">
+            <option value="">Seleccionar...</option>
+            <option value="Qatar">Qatar</option>
+            <option value="Tela fría">Tela fría</option>
+            <option value="Manga Doblada">Manga Doblada</option>
+            <option value="Niño">Niño</option>
+          </select>
+        </div>
+
+        <div class="field" style="margin:0">
+          <label>Talla <span class="req">*</span></label>
+          <select id="itemTalla">
+            <option value="">Seleccionar...</option>
+            <option value="XS">XS</option>
+            <option value="S">S</option>
+            <option value="M">M</option>
+            <option value="L">L</option>
+            <option value="XL">XL</option>
+            <option value="XXL">XXL</option>
+          </select>
+        </div>
+
       </div>
     `;
 
@@ -1194,94 +730,13 @@ function actualizarCamposProducto(){
   `;
 }
 
-function obtenerPrecioMoño(cantidad, tamano){
-
-  cantidad = Number(cantidad);
-
-  if(!Number.isFinite(cantidad) || cantidad <= 0){
-    return null;
-  }
-
-  /*
-   * 6 MM
-   * Solo paquetes de 50
-   */
-  if(tamano === "6MM"){
-
-    if(cantidad % 50 !== 0){
-      return null;
-    }
-
-    return (cantidad / 50) * 12000;
-  }
-
-  /*
-   * 9 MM
-   */
-  if(tamano === "9MM"){
-    return cantidad < 50 ? 500 : 240;
-  }
-
-  /*
-   * 16 MM
-   */
-  if(tamano === "16MM"){
-    return cantidad < 50 ? 1000 : 600;
-  }
-
-  /*
-   * 22 MM
-   */
-  if(tamano === "22MM"){
-    return cantidad < 50 ? 1000 : 500;
-  }
-
-  return null;
-}
-
-function actualizarPrecioMoño(){
-
-  const tipoProducto=document.getElementById("itemTipoProducto")?.value;
-
-  if(tipoProducto!=="Moños"){
-    return;
-  }
-
-  const cantidad=Number(
-    document.getElementById("itemCant")?.value
-  );
-
-  const tamano=document.getElementById("itemTamano")?.value;
-
-  const campoPrecio=document.getElementById("itemPrecio");
-
-  if(!campoPrecio || !tamano){
-    return;
-  }
-
-  const precio=obtenerPrecioMoño(cantidad,tamano);
-
-  if(precio===null){
-
-    campoPrecio.value="";
-
-    return;
-  }
-
-  campoPrecio.value=precio;
-}
-
 function agregarItem(){
 
   const tipoProducto=document.getElementById("itemTipoProducto").value;
   const cant=Number(document.getElementById("itemCant").value);
+  const precioBase=Number(document.getElementById("itemPrecio").value);
 
-  let precioBase=Number(document.getElementById("itemPrecio").value);
-
-  const aplicarIva =
-  document.getElementById("itemAplicarIva").checked;
-
-const descuentoPct = 0;
+  const aplicarIva=document.getElementById("itemAplicarIva").checked;
 
   if(!tipoProducto){
     alert("Selecciona el tipo de producto.");
@@ -1309,35 +764,37 @@ const descuentoPct = 0;
 
   if(tipoProducto==="Moños"){
 
-  const color=document.getElementById("itemColor")?.value.trim();
-  const tamano=document.getElementById("itemTamano")?.value;
+    const color=document.getElementById("itemColor")?.value.trim();
+    const tamano=document.getElementById("itemTamano")?.value;
 
-  if(!color || !tamano){
-    alert("Completa el color y tamaño del moño.");
-    return;
-  }
-
-  const precioMoño=obtenerPrecioMoño(cant,tamano);
-
-  if(precioMoño===null){
-
-    if(tamano==="6MM"){
-      alert("Los moños de 6MM solo se venden en múltiplos de 50. Ejemplo: 50, 100, 150...");
-    }else{
-      alert("No se pudo determinar el precio del moño.");
+    if(!color || !tamano){
+      alert("Completa el color y tamaño del moño.");
+      return;
     }
 
-    return;
-  }
+    descripcion=`Moño ${tamano} ${color}`;
 
-  precioBase=precioMoño;
+    datosProducto={
+      color,
+      tamano
+    };
 
-  descripcion=`Moño ${tamano} ${color}`;
+  }else if(tipoProducto==="Camisas"){
 
-  datosProducto={
-    color,
-    tamano
-  };
+    const material=document.getElementById("itemMaterial")?.value;
+    const talla=document.getElementById("itemTalla")?.value;
+
+    if(!material || !talla){
+      alert("Selecciona el material y la talla de la camisa.");
+      return;
+    }
+
+    descripcion=`Camisa ${material} Talla ${talla}`;
+
+    datosProducto={
+      material,
+      talla
+    };
 
   }else{
 
@@ -1420,95 +877,48 @@ function editarItem(index){
 
   const item = itemsActuales[index];
 
-  if(!item){
-    alert("No se encontró el producto que deseas editar.");
-    return;
-  }
+  if(!item) return;
 
   window.itemEditandoIndex = index;
 
-  const tipoProducto = document.getElementById("itemTipoProducto");
-  const cantidad = document.getElementById("itemCant");
-  const precio = document.getElementById("itemPrecio");
-  const aplicarIva = document.getElementById("itemAplicarIva");
-
-  tipoProducto.value = item.tipoProducto || "";
+  document.getElementById("itemTipoProducto").value = item.tipoProducto || "";
 
   actualizarCamposProducto();
 
-  /*
-   * =========================================================
-   * CARGAR CAMPOS ESPECÍFICOS DEL PRODUCTO
-   * =========================================================
-   */
-
   if(item.tipoProducto === "Moños"){
 
-    const color = document.getElementById("itemColor");
-    const tamano = document.getElementById("itemTamano");
-
-    if(color)
-      color.value = item.color || "";
-
-    if(tamano)
-      tamano.value = item.tamano || "";
+    document.getElementById("itemColor").value = item.color || "";
+    document.getElementById("itemTamano").value = item.tamano || "";
 
   }else if(item.tipoProducto === "Camisas"){
 
-    const descripcion = document.getElementById("itemDescripcion");
-
-    if(descripcion)
-      descripcion.value = item.descripcion || "";
+    document.getElementById("itemMaterial").value = item.material || "";
+    document.getElementById("itemTalla").value = item.talla || "";
 
   }else{
 
-    const descripcion = document.getElementById("itemDescripcion");
-
-    if(descripcion)
-      descripcion.value = item.descripcionDetalle || "";
-
+    document.getElementById("itemDescripcion").value =
+      item.descripcionDetalle || "";
   }
-  /*
-   * =========================================================
-   * CARGAR CANTIDAD Y PRECIO
-   * =========================================================
-   */
 
-  cantidad.value = item.cantidad ?? 1;
-
-  precio.value = item.precioBase ?? 0;
-
-  /*
-   * =========================================================
-   * CARGAR IVA
-   * =========================================================
-   */
-
-  aplicarIva.checked = item.ivaAplicado === true;
-
-  /*
-   * =========================================================
-   * CAMBIAR BOTÓN AGREGAR POR ACTUALIZAR
-   * =========================================================
-   */
+  document.getElementById("itemCant").value = item.cantidad;
+  document.getElementById("itemPrecio").value = item.precioBase;
+  document.getElementById("itemAplicarIva").checked = !!item.ivaAplicado;
 
   const boton = document.querySelector(
     '.item-grid button[onclick="agregarItem()"]'
   );
 
   if(boton){
-
-    boton.textContent = "Guardar cambios";
-
-    boton.setAttribute(
-      "onclick",
-      "actualizarItem()"
-    );
-
+    boton.textContent = "✓ Actualizar";
+    boton.setAttribute("onclick","actualizarItem()");
   }
 
+  document.getElementById("itemTipoProducto").scrollIntoView({
+    behavior:"smooth",
+    block:"center"
+  });
 }
-
 
 function actualizarItem(){
 
@@ -1531,16 +941,8 @@ function actualizarItem(){
   const aplicarIva =
     document.getElementById("itemAplicarIva").checked;
 
-  /*
-   * =========================================================
-   * VALIDACIONES
-   * =========================================================
-   */
-
   if(!tipoProducto){
-
     alert("Selecciona el tipo de producto.");
-
     return;
   }
 
@@ -1550,26 +952,12 @@ function actualizarItem(){
     !Number.isFinite(precioBase) ||
     precioBase < 0
   ){
-
     alert("Completa correctamente cantidad y precio.");
-
     return;
   }
 
-  /*
-   * =========================================================
-   * CONSTRUIR DESCRIPCIÓN
-   * =========================================================
-   */
-
   let descripcion = "";
   let datosProducto = {};
-
-  /*
-   * =========================================================
-   * MOÑOS
-   * =========================================================
-   */
 
   if(tipoProducto === "Moños"){
 
@@ -1580,97 +968,65 @@ function actualizarItem(){
       document.getElementById("itemTamano")?.value;
 
     if(!color || !tamano){
-
       alert("Completa el color y tamaño del moño.");
-
       return;
     }
 
-    descripcion =
-      `Moño ${tamano} ${color}`;
+    descripcion = `Moño ${tamano} ${color}`;
 
     datosProducto = {
       color,
       tamano
     };
 
-  /*
-   * =========================================================
-   * CAMISAS
-   * =========================================================
-   */
-
   }else if(tipoProducto === "Camisas"){
 
-    const descripcionCamisa =
-      document.getElementById("itemDescripcion")?.value.trim();
+    const material =
+      document.getElementById("itemMaterial")?.value;
 
-    if(!descripcionCamisa){
+    const talla =
+      document.getElementById("itemTalla")?.value;
 
-      alert(
-        "Escribe la descripción de la camisa."
-      );
-
+    if(!material || !talla){
+      alert("Selecciona el material y la talla de la camisa.");
       return;
     }
 
-    descripcion = descripcionCamisa;
+    descripcion = `Camisa ${material} Talla ${talla}`;
 
-    datosProducto = {};
-
-  /*
-   * =========================================================
-   * RESTO DE PRODUCTOS
-   * =========================================================
-   */
+    datosProducto = {
+      material,
+      talla
+    };
 
   }else{
 
     const detalle =
-      document.getElementById("itemDescripcion")
-        ?.value.trim();
+      document.getElementById("itemDescripcion")?.value.trim();
 
     if(!detalle){
-
       alert("Escribe la descripción del producto.");
-
       return;
     }
 
-    descripcion =
-      `${tipoProducto} - ${detalle}`;
+    descripcion = `${tipoProducto} - ${detalle}`;
 
     datosProducto = {
       descripcionDetalle: detalle
     };
-
   }
 
-  /*
-   * =========================================================
-   * IVA
-   * =========================================================
-   */
+  const precioUnitario = aplicarIva
+    ? precioBase * 1.19
+    : precioBase;
 
-  const precioUnitario =
-    aplicarIva
-      ? precioBase * 1.19
-      : precioBase;
+  const brutoItem = cant * precioUnitario;
 
-  /*
-   * =========================================================
-   * SUBTOTAL
-   * =========================================================
-   */
+  const descuento =
+    brutoItem * (descuentoPct / 100);
 
   const subtotal =
-    cant * precioUnitario;
-
-  /*
-   * =========================================================
-   * ACTUALIZAR EL ÍTEM
-   * =========================================================
-   */
+    brutoItem - descuento;
 
   itemsActuales[index] = {
 
@@ -1687,70 +1043,34 @@ function actualizarItem(){
     precioUnitario,
 
     ivaIncluido: !aplicarIva,
-
     ivaAplicado: aplicarIva,
-
     ivaPct: aplicarIva ? 19 : 0,
 
-    subtotal
+    descuentoPct,
+    descuento,
 
+    subtotal
   };
 
-  /*
-   * =========================================================
-   * SALIR DEL MODO EDICIÓN
-   * =========================================================
-   */
-
   window.itemEditandoIndex = undefined;
-
-  /*
-   * =========================================================
-   * RESTAURAR BOTÓN + AGREGAR
-   * =========================================================
-   */
 
   const boton = document.querySelector(
     '.item-grid button[onclick="actualizarItem()"]'
   );
 
   if(boton){
-
     boton.textContent = "+ Agregar";
-
-    boton.setAttribute(
-      "onclick",
-      "agregarItem()"
-    );
-
+    boton.setAttribute("onclick","agregarItem()");
   }
 
-  /*
-   * =========================================================
-   * LIMPIAR CAMPOS
-   * =========================================================
-   */
-
   document.getElementById("itemTipoProducto").value = "";
-
   document.getElementById("itemCant").value = "1";
-
   document.getElementById("itemPrecio").value = "";
-
   document.getElementById("itemAplicarIva").checked = false;
 
   actualizarCamposProducto();
-
-  /*
-   * =========================================================
-   * ACTUALIZAR TABLA Y TOTALES
-   * =========================================================
-   */
-
   renderItems();
-
   calcularTotales();
-
 }
 
 function eliminarItem(index){
@@ -2238,7 +1558,7 @@ async function guardarRemisionCompleta(){
    ========================================================= */
 async function procesarReportes(){
 
-  if(!currentUser)
+  if(!currentUser || !["admin","lider"].includes(currentUser.role))
     return;
 
   try{
@@ -2250,72 +1570,14 @@ async function procesarReportes(){
     const asesor=document.getElementById("repFiltroAsesor").value;
     const area=document.getElementById("repFiltroArea").value;
     const tipoDocFiltro=document.getElementById("repFiltroTipoDoc").value;
-    const formaPagoFiltro=document.getElementById("repFiltroFormaPago").value;
-    const clienteFiltro=document.getElementById("repFiltroClienteNuevo").value;
-
-    const hoy=fechaHoy();
 
     const filtrados=datos.filter(r=>{
 
-      /* =====================================================
-         RESTRICCIÓN EXCLUSIVA PARA ASESORES
-         ===================================================== */
-
-      if(currentUser.role==="asesor"){
-
-        const nombreAsesor=
-          currentUser.nombre||
-          currentUser.username||
-          "";
-
-        // Solo sus propias remisiones
-        if((r.asesor||"")!==nombreAsesor)
-          return false;
-
-        // Solo remisiones creadas HOY
-        if(String(r.fecha)!==String(hoy))
-          return false;
-
-      }
-
-      /* =====================================================
-         FILTROS NORMALES
-         Solo afectan a ADMIN y LÍDER
-         ===================================================== */
-
-      if(currentUser.role!=="asesor"){
-
-        if(inicio&&String(r.fecha)<inicio)
-          return false;
-
-        if(fin&&String(r.fecha)>fin)
-          return false;
-
-        if(asesor!=="TODOS"&&(r.asesor||"")!==asesor)
-          return false;
-
-        if(area!=="TODAS"&&(r.area||"")!==area)
-          return false;
-
-      }
-
-      /* =====================================================
-         FILTRO TIPO DE DOCUMENTO
-         ===================================================== */
-
-      if(
-        tipoDocFiltro!=="TODOS" &&
-        (r.tipoDoc||"Remisión")!==tipoDocFiltro
-      )
-        return false;
-        if(formaPagoFiltro!=="TODOS" && (r.formaPago||"")!==formaPagoFiltro)
-         return false;
-
-      if(clienteFiltro==="NUEVOS" && r.esClienteNuevo!==true)
-          return false;
-
-      if(clienteFiltro==="RECURRENTES" && r.esClienteNuevo===true)
-          return false;
+      if(inicio&&String(r.fecha)<inicio)return false;
+      if(fin&&String(r.fecha)>fin)return false;
+      if(asesor!=="TODOS"&&(r.asesor||"")!==asesor)return false;
+      if(area!=="TODAS"&&(r.area||"")!==area)return false;
+      if(tipoDocFiltro!=="TODOS"&&(r.tipoDoc||"Remisión")!==tipoDocFiltro)return false;
 
       return true;
 
@@ -2332,16 +1594,9 @@ async function procesarReportes(){
     );
 
     document.getElementById("kpiTotalVentas").textContent=money(total);
-
-    document.getElementById("kpiCantRemisiones").textContent=
-      filtrados.length;
-
+    document.getElementById("kpiCantRemisiones").textContent=filtrados.length;
     document.getElementById("kpiTicketPromedio").textContent=
-      money(
-        filtrados.length
-          ? total/filtrados.length
-          : 0
-      );
+      money(filtrados.length?total/filtrados.length:0);
 
     renderConsolidadoAsesores(filtrados);
     renderConsolidadoAreas(filtrados);
@@ -2352,7 +1607,7 @@ async function procesarReportes(){
     console.error(e);
 
     document.getElementById("tablaReportesBody").innerHTML=
-      `<tr><td colspan="9">Error cargando reportes: ${escapeHtml(e.message)}</td></tr>`;
+      `<tr><td colspan="8">Error cargando reportes: ${escapeHtml(e.message)}</td></tr>`;
 
   }
 }
@@ -2833,7 +2088,7 @@ function renderTablaDetalleRemisiones(datos){
   if(!datos.length){
 
     tbody.innerHTML=
-      '<tr><td colspan="9" style="text-align:center;color:var(--ink-soft)">No se encontraron documentos para este filtro.</td></tr>';
+      '<tr><td colspan="8" style="text-align:center;color:var(--ink-soft)">No se encontraron documentos para este filtro.</td></tr>';
 
     return;
   }
@@ -2845,73 +2100,8 @@ function renderTablaDetalleRemisiones(datos){
 <td>${escapeHtml(r.telCliente||"N/A")}<br><small>${escapeHtml(r.emailCliente||"")}</small></td>
 <td>${escapeHtml(r.asesor||"N/A")}<br><small>${escapeHtml(r.area||"N/A")}</small></td>
 <td>${escapeHtml(r.formaPago||"N/A")}</td>
-<td>
-  <span class="badge ${
-  r.estado==="Pagada"
-    ? "success"
-    : r.estado==="Anulada"
-      ? "danger"
-      : "warning"
-}">
-    ${escapeHtml(r.estado||"Pendiente")}
-  </span>
-</td>
 <td class="num"><strong>${money(r.total||0)}</strong></td>
-<td>
-  ${
-    currentUser.role==="asesor"
-
-      ? `
-        <button
-          class="btn small secondary"
-          onclick="imprimirDocumento('${escapeAttr(r.idDocumento||r.id||"")}')"
-        >
-          Imprimir
-        </button>
-      `
-
-      : `
-        <div style="display:flex;gap:5px;flex-wrap:wrap">
-
-  <button
-    class="btn small secondary"
-    onclick="verDetalleDoc('${escapeAttr(r.idDocumento||r.id||"")}')"
-  >
-    Detalle
-  </button>
-
-  ${
-  ["admin","lider"].includes(currentUser.role) &&
-  r.estado!=="Pagada" &&
-  r.estado!=="Anulada"
-      ? `
-        <button
-          class="btn small primary"
-          onclick="marcarComoPagada('${escapeAttr(r.idDocumento||r.id||"")}')"
-        >
-          Pagar
-        </button>
-      `
-      : ""
-  }
-
-  ${
-    currentUser.role==="admin" && r.estado!=="Anulada"
-      ? `
-        <button
-          class="btn small danger"
-          onclick="anularDocumento('${escapeAttr(r.idDocumento||r.id||"")}')"
-        >
-          Anular
-        </button>
-      `
-      : ""
-  }
-
-</div>
-      `
-  }
-</td>
+<td><button class="btn small secondary" onclick="verDetalleDoc('${escapeAttr(r.idDocumento||r.id||"")}')">Ver Detalle</button></td>
 </tr>`).join("");
 }
 
@@ -3264,266 +2454,108 @@ function cerrarDetalle(){
 
 async function imprimirDocumento(id){
 
-const doc=(await obtenerRemisiones()).find(r=>r.idDocumento===id);
-
-if(!doc)return;
-
-const w=window.open("","_blank","width=400,height=700");
-
-const items=(doc.items||[])
-.map(i=>`
-<div class="item">
-
-    <div class="item-desc">
-      ${escapeHtml(i.descripcion)}
-    </div>
-
-    <div class="item-line">
-      <span>${i.cantidad} x ${money(i.precioUnitario)}</span>
-      <strong>${money(i.subtotal)}</strong>
-    </div>
-
-  </div>
-`).join("");
-
-w.document.write(`
-<html>
-
-<head>
-
-  <title>${escapeHtml(doc.idDocumento)}</title>
-
-  <style>
-
-    @page{
-      size:80mm auto;
-      margin:0;
-    }
-
-    *{
-      box-sizing:border-box;
-    }
-
-    body{
-      width:80mm;
-      margin:0;
-      padding:8mm 5mm;
-      font-family:Arial,Helvetica,sans-serif;
-      font-size:12px;
-      color:#000;
-      text-transform:uppercase;
-    }
-
-    .center{
-      text-align:center;
-    }
-
-    .titulo{
-      font-size:20px;
-      font-weight:bold;
-      margin-bottom:4px;
-    }
-
-    .numero{
-      font-size:16px;
-      font-weight:bold;
-      margin-bottom:12px;
-    }
-
-    .linea{
-      border-top:1px dashed #000;
-      margin:10px 0;
-    }
-
-    .datos{
-      line-height:1.5;
-    }
-
-    .datos strong{
-      font-weight:bold;
-    }
-
-    .items{
-      margin-top:8px;
-    }
-
-    .item{
-      margin-bottom:9px;
-    }
-
-    .item-desc{
-      font-weight:bold;
-      margin-bottom:3px;
-      word-wrap:break-word;
-    }
-
-    .item-line{
-      display:flex;
-      justify-content:space-between;
-      gap:8px;
-    }
-
-    .totales{
-      margin-top:10px;
-    }
-
-    .total-line{
-      display:flex;
-      justify-content:space-between;
-      margin:4px 0;
-    }
-
-    .total-final{
-      font-size:17px;
-      font-weight:bold;
-      margin-top:7px;
-    }
-
-    .observaciones{
-      margin-top:10px;
-      line-height:1.4;
-      word-wrap:break-word;
-    }
-
-    .gracias{
-      margin-top:20px;
-      text-align:center;
-      font-weight:bold;
-    }
-
-    @media print{
-
-      body{
-        width:80mm;
-      }
-
-    }
-
-  </style>
-
-</head>
-
-<body>
-
-  <div class="center">
-
-    <div class="titulo">
-      PREFACTURA
-    </div>
-
-    <div class="numero">
-      ${escapeHtml(doc.idDocumento)}
-    </div>
-
-  </div>
-
-  <div class="linea"></div>
-
-  <div class="datos">
-
-    <div>
-      <strong>Fecha:</strong>
-      ${escapeHtml(doc.fecha||"")}
-    </div>
-
-    <div>
-      <strong>Cliente:</strong><br>
-      ${escapeHtml(doc.nomCliente||"")}
-    </div>
-
-    <div>
-      <strong>Documento:</strong>
-      ${escapeHtml(doc.docCliente||"")}
-    </div>
-
-    <div>
-      <strong>Ciudad:</strong>
-      ${escapeHtml(doc.ciudadCliente||"")}
-    </div>
-
-    <div>
-      <strong>Tel:</strong>
-      ${escapeHtml(doc.telCliente||"")}
-    </div>
-
-    <div>
-      <strong>Asesor:</strong>
-      ${escapeHtml(doc.asesor||"")}
-    </div>
-
-    <div>
-      <strong>Área:</strong>
-      ${escapeHtml(doc.area||"")}
-    </div>
-
-  </div>
-
-  <div class="linea"></div>
-
-  <div class="items">
-    ${items}
-  </div>
-
-  <div class="linea"></div>
-
-  <div class="totales">
-
-    <div class="total-line">
-      <span>SUBTOTAL</span>
-      <strong>${money(doc.subtotal||0)}</strong>
-    </div>
-
-    <div class="total-line">
-      <span>DESCUENTO</span>
-      <strong>${money(doc.descGlobal||0)}</strong>
-    </div>
-
-    <div class="total-line total-final">
-      <span>TOTAL</span>
-      <strong>${money(doc.total||0)}</strong>
-    </div>
-
-  </div>
-
-  <div class="linea"></div>
-
-  <div class="datos">
-
-    <strong>MEDIO DE PAGO:</strong>
-    ${escapeHtml(doc.formaPago||"")}
-
-  </div>
-
-  ${
-    doc.observaciones
-    ?
-    `
-    <div class="observaciones">
-      <strong>OBSERVACIONES:</strong><br>
-      ${escapeHtml(doc.observaciones)}
-    </div>
-    `
-    :
-    ""
-  }
-
-  <div class="gracias">
-    GRACIAS POR SU COMPRA
-  </div>
-
-  <script>
-    window.onload=()=>{
-      window.print();
-    };
-  <\/script>
-
-</body>
-
-</html>
-
-`);
-
-w.document.close();
+  const doc=(await obtenerRemisiones()).find(r=>r.idDocumento===id);
+
+  if(!doc)return;
+
+  const w=window.open("","_blank","width=900,height=700");
+
+  const items=(doc.items||[])
+    .map(i=>`
+      <tr>
+        <td>${escapeHtml(i.descripcion)}</td>
+        <td>${i.cantidad}</td>
+        <td>${money(i.precioUnitario)}</td>
+        <td>${money(i.descuento)}</td>
+        <td>${money(i.subtotal)}</td>
+      </tr>
+    `).join("");
+
+  w.document.write(`
+    <html>
+    <head>
+      <title>${escapeHtml(doc.idDocumento)}</title>
+
+      <style>
+        body{
+              font-family:Arial;
+              padding:30px;
+              text-transform:uppercase;
+            }
+        table{width:100%;border-collapse:collapse;margin-top:20px}
+        th,td{border-bottom:1px solid #ddd;padding:8px;text-align:left}
+        .total{text-align:right;font-size:20px;font-weight:bold;margin-top:20px}
+      </style>
+
+    </head>
+
+    <body>
+
+      <h1>PREFACTURA</h1>
+
+      <h2>${escapeHtml(doc.idDocumento)}</h2>
+
+      <p>
+        <strong>Fecha:</strong>
+        ${escapeHtml(doc.fecha)}
+      </p>
+
+      <p>
+        <strong>Cliente:</strong>
+        ${escapeHtml(doc.nomCliente)}
+        ·
+        ${escapeHtml(doc.docCliente)}
+      </p>
+
+      <p>
+        <strong>Ciudad:</strong>
+        ${escapeHtml(doc.ciudadCliente)}
+        ·
+        <strong>Tel:</strong>
+        ${escapeHtml(doc.telCliente)}
+      </p>
+
+      <p>
+        <strong>Asesor:</strong>
+        ${escapeHtml(doc.asesor)}
+        ·
+        <strong>Área:</strong>
+        ${escapeHtml(doc.area)}
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Descripción</th>
+            <th>Cant.</th>
+            <th>Precio</th>
+            <th>Desc.</th>
+            <th>Subtotal</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          ${items}
+        </tbody>
+      </table>
+
+      <div class="total">
+        Total: ${money(doc.total)}
+      </div>
+
+      <p>
+        ${escapeHtml(doc.observaciones||"")}
+      </p>
+
+      <script>
+        window.onload=()=>window.print();
+      <\/script>
+
+    </body>
+    </html>
+  `);
+
+  w.document.close();
 }
 
 /* =========================================================
@@ -3833,7 +2865,7 @@ function aplicarLogo(src){
    ========================================================= */
 async function actualizarFiltrosReportes(){
 
-  if(!currentUser)
+  if(!currentUser||!["admin","lider"].includes(currentUser.role))
     return;
 
   const datos=await obtenerRemisiones();
