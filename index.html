@@ -782,6 +782,34 @@ min-height:44px;
 <div class="kpi-card"><div class="kpi-title">Remisiones / Docs Realizados</div><div class="kpi-value" id="kpiCantRemisiones">0</div></div>
 <div class="kpi-card"><div class="kpi-title">Promedio por Venta</div><div class="kpi-value" id="kpiTicketPromedio">$0</div></div>
 </div>
+<div class="card" id="cardPresupuestoMensual" style="margin-bottom:16px">
+  <div class="section-title">Presupuesto Mensual</div>
+
+  <div class="grid-3">
+
+    <div class="kpi-card">
+      <div class="kpi-title">Meta Mensual</div>
+      <div class="kpi-value" id="kpiMetaMensual">$0</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-title">Vendido</div>
+      <div class="kpi-value" id="kpiVendidoMensual">$0</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-title">Faltante</div>
+      <div class="kpi-value" id="kpiFaltanteMensual">$0</div>
+    </div>
+
+  </div>
+
+  <div style="text-align:center;margin-top:12px">
+    <strong>Cumplimiento:</strong>
+    <span id="kpiCumplimientoMensual">0%</span>
+  </div>
+
+</div>
 <div class="grid-2" style="margin-bottom:16px">
 <div class="card" style="margin:0"><div class="section-title">Consolidado por Asesor</div><div class="table-wrap"><table><thead><tr><th>Asesor</th><th>Área</th><th class="num">Remisiones</th><th class="num">Total ($)</th></tr></thead><tbody id="tblConsolidadoAsesoresBody"><tr><td colspan="4" style="text-align:center;color:var(--ink-soft)">No hay datos.</td></tr></tbody></table></div></div>
 <div class="card" style="margin:0"><div class="section-title">Consolidado por Área</div><div class="table-wrap"><table><thead><tr><th>Área</th><th class="num">Remisiones</th><th class="num">Total ($)</th></tr></thead><tbody id="tblConsolidadoAreasBody"><tr><td colspan="3" style="text-align:center;color:var(--ink-soft)">No hay datos.</td></tr></tbody></table></div></div>
@@ -799,6 +827,7 @@ min-height:44px;
 <div class="field"><label>Contraseña <span class="req">*</span></label><input type="text" id="usrPass" placeholder="••••••••"></div>
 <div class="field"><label>Rol <span class="req">*</span></label><select id="usrRole"><option value="asesor">Asesor</option><option value="lider">Líder</option><option value="admin">Administrador</option></select></div>
 <div class="field"><label>Área asignada <span class="req">*</span></label><input type="text" id="usrArea" placeholder="ej. General, Bordados, Ventas..." required></div>
+<div class="field"><label>Presupuesto Mensual</label><input type="number" id="usrPresupuestoMensual" min="0" step="1000" placeholder="ej. 20000000"></div>
 <button type="submit" class="btn primary">Guardar Usuario</button><button type="button" class="btn secondary hidden" id="btnCancelarEdicion" onclick="cancelarEdicionUsuario()">Cancelar edición</button>
 </form></div>
 <div class="card"><h2 style="margin-top:0">Usuarios Registrados</h2><div class="table-wrap"><table><thead><tr><th>Usuario</th><th>Clave</th><th>Rol / Área</th><th>Acción</th></tr></thead><tbody id="tablaUsuariosBody"></tbody></table></div></div>
@@ -2253,12 +2282,11 @@ async function procesarReportes(){
     const tipoDocFiltro=document.getElementById("repFiltroTipoDoc").value;
     const formaPagoFiltro=document.getElementById("repFiltroFormaPago").value;
     const clienteFiltro=document.getElementById("repFiltroClienteNuevo").value;
-
-    const hoy=fechaHoy();
+    const metaMensual=Number(currentUser?.presupuestoMensual||0);
 
     const filtrados=datos.filter(r=>{
 
-      /* =====================================================
+           /* =====================================================
          RESTRICCIÓN EXCLUSIVA PARA ASESORES
          ===================================================== */
 
@@ -2273,24 +2301,19 @@ async function procesarReportes(){
         if((r.asesor||"")!==nombreAsesor)
           return false;
 
-        // Solo remisiones creadas HOY
-        if(String(r.fecha)!==String(hoy))
-          return false;
-
       }
 
       /* =====================================================
          FILTROS NORMALES
-         Solo afectan a ADMIN y LÍDER
          ===================================================== */
 
+      if(inicio&&String(r.fecha)<inicio)
+        return false;
+
+      if(fin&&String(r.fecha)>fin)
+        return false;
+
       if(currentUser.role!=="asesor"){
-
-        if(inicio&&String(r.fecha)<inicio)
-          return false;
-
-        if(fin&&String(r.fecha)>fin)
-          return false;
 
         if(asesor!=="TODOS"&&(r.asesor||"")!==asesor)
           return false;
@@ -2331,6 +2354,32 @@ async function procesarReportes(){
       (s,r)=>s+Number(r.total||0),
       0
     );
+    
+
+
+const vendidoMensual=total;
+
+const faltanteMensual=Math.max(
+  metaMensual-vendidoMensual,
+  0
+);
+
+const cumplimientoMensual=
+  metaMensual>0
+    ? Math.min((vendidoMensual/metaMensual)*100,100)
+    : 0;
+
+document.getElementById("kpiMetaMensual").textContent=
+  money(metaMensual);
+
+document.getElementById("kpiVendidoMensual").textContent=
+  money(vendidoMensual);
+
+document.getElementById("kpiFaltanteMensual").textContent=
+  money(faltanteMensual);
+
+document.getElementById("kpiCumplimientoMensual").textContent=
+  cumplimientoMensual.toFixed(1)+"%";
 
     document.getElementById("kpiTotalVentas").textContent=money(total);
 
@@ -3585,6 +3634,9 @@ async function guardarUsuario(event){
   const pass=document.getElementById("usrPass").value;
   const role=document.getElementById("usrRole").value;
   const area=document.getElementById("usrArea").value.trim();
+  const presupuestoMensual=Number(
+  document.getElementById("usrPresupuestoMensual").value||0
+);
 
   if(!nombre||!username||!area){
     alert("Completa los campos obligatorios.");
@@ -3610,13 +3662,16 @@ async function guardarUsuario(event){
   const anterior=users.find(u=>u.id===id);
 
   const user={
-    id:id||undefined,
-    nombre,
-    username,
-    pass:pass||(anterior?.pass||""),
-    role,
-    area
-  };
+
+  id:id||undefined,
+  nombre,
+  username,
+  pass:pass||(anterior?.pass||""),
+  role,
+  area,
+  presupuestoMensual
+
+};
 
   const saved=await guardarUsuarioDB(user);
 
@@ -3643,7 +3698,7 @@ async function editarUsuario(id){
   document.getElementById("usrPass").placeholder="Dejar vacío para conservar";
   document.getElementById("usrRole").value=u.role||"asesor";
   document.getElementById("usrArea").value=u.area||"";
-
+  document.getElementById("usrPresupuestoMensual").value=u.presupuestoMensual??"";
   document.getElementById("formUserTitle").textContent="Editar Usuario";
   document.getElementById("btnCancelarEdicion").classList.remove("hidden");
 }
