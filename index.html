@@ -155,7 +155,6 @@ body {
   line-height:1;
   color:var(--ink-soft);
 }
-
 /* =========================================================
 RESPONSIVE - TABLETS Y DISPOSITIVOS TÁCTILES
 ========================================================= */
@@ -511,8 +510,6 @@ min-height:44px;
 }
 
 }
-
-
 </style>
 </head>
 <body>
@@ -644,14 +641,18 @@ min-height:44px;
     </div>
   </div>
 
-  <input
-  type="number"
-  id="itemCant"
-  min="0.01"
-  step="any"
-  placeholder="1"
-  oninput="actualizarPrecioMoño()"
->
+    <!-- CANTIDAD -->
+  <div class="field" style="margin:0">
+    <label>Cantidad <span class="req">*</span></label>
+    <input
+      type="number"
+      id="itemCant"
+      min="0.01"
+      step="any"
+      placeholder="1"
+      oninput="actualizarPrecioMoño()"
+    >
+  </div>
 
   <!-- PRECIO -->
   <div class="field" style="margin:0">
@@ -1153,7 +1154,6 @@ function actualizarCamposProducto(){
 
     return;
   }
-
   /*
    * ======================================================
    * CAMISAS
@@ -1163,32 +1163,13 @@ function actualizarCamposProducto(){
   if(tipo==="Camisas"){
 
     contenedor.innerHTML=`
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-
-        <div class="field" style="margin:0">
-          <label>Material <span class="req">*</span></label>
-          <select id="itemMaterial">
-            <option value="">Seleccionar...</option>
-            <option value="Qatar">Qatar</option>
-            <option value="Tela fría">Tela fría</option>
-            <option value="Manga Doblada">Manga Doblada</option>
-            <option value="Niño">Niño</option>
-          </select>
-        </div>
-
-        <div class="field" style="margin:0">
-          <label>Talla <span class="req">*</span></label>
-          <select id="itemTalla">
-            <option value="">Seleccionar...</option>
-            <option value="XS">XS</option>
-            <option value="S">S</option>
-            <option value="M">M</option>
-            <option value="L">L</option>
-            <option value="XL">XL</option>
-            <option value="XXL">XXL</option>
-          </select>
-        </div>
-
+      <div class="field" style="margin:0">
+        <label>Descripción <span class="req">*</span></label>
+        <input
+          type="text"
+          id="itemDescripcion"
+          placeholder="Ej. Qatar Negra Talla M"
+        >
       </div>
     `;
 
@@ -1474,14 +1455,10 @@ function editarItem(index){
 
   }else if(item.tipoProducto === "Camisas"){
 
-    const material = document.getElementById("itemMaterial");
-    const talla = document.getElementById("itemTalla");
+    const descripcion = document.getElementById("itemDescripcion");
 
-    if(material)
-      material.value = item.material || "";
-
-    if(talla)
-      talla.value = item.talla || "";
+    if(descripcion)
+      descripcion.value = item.descripcion || "";
 
   }else{
 
@@ -1491,7 +1468,6 @@ function editarItem(index){
       descripcion.value = item.descripcionDetalle || "";
 
   }
-
   /*
    * =========================================================
    * CARGAR CANTIDAD Y PRECIO
@@ -1626,28 +1602,21 @@ function actualizarItem(){
 
   }else if(tipoProducto === "Camisas"){
 
-    const material =
-      document.getElementById("itemMaterial")?.value;
+    const descripcionCamisa =
+      document.getElementById("itemDescripcion")?.value.trim();
 
-    const talla =
-      document.getElementById("itemTalla")?.value;
-
-    if(!material || !talla){
+    if(!descripcionCamisa){
 
       alert(
-        "Selecciona el material y la talla de la camisa."
+        "Escribe la descripción de la camisa."
       );
 
       return;
     }
 
-    descripcion =
-      `Camisa ${material} Talla ${talla}`;
+    descripcion = descripcionCamisa;
 
-    datosProducto = {
-      material,
-      talla
-    };
+    datosProducto = {};
 
   /*
    * =========================================================
