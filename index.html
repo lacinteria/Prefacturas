@@ -1925,6 +1925,104 @@ function limpiarFormulario(){
     document.getElementById("remAsesor").value=currentUser.nombre||currentUser.username;
 }
 
+// Editar factura, sólo para Asesores y sólo cuando la factura esté pendiente
+
+async function editarDocumento(id){
+
+  const doc =
+    datosRemisiones.find(r=>(r.idDocumento||r.id)===id) ||
+    (await obtenerRemisiones()).find(r=>(r.idDocumento||r.id)===id);
+
+  if(!doc){
+    alert("No se encontró el documento que deseas editar.");
+    return;
+  }
+
+  if(doc.estado!=="Pendiente"){
+    alert("Solo se pueden editar documentos en estado Pendiente.");
+    return;
+  }
+
+  /*
+   * =========================================================
+   * GUARDAR DOCUMENTO EN EDICIÓN
+   * =========================================================
+   */
+
+  window.documentoEditandoId = doc.idDocumento;
+
+  /*
+   * =========================================================
+   * ABRIR FORMULARIO
+   * =========================================================
+   */
+
+  showView("venta");
+
+  /*
+   * =========================================================
+   * CARGAR DATOS DEL CLIENTE
+   * =========================================================
+   */
+
+  document.getElementById("remFecha").value =
+    doc.fecha || fechaHoy();
+
+  document.getElementById("remTipoDoc").value =
+    doc.tipoDoc || "Remisión";
+
+  document.getElementById("remTipoPersona").value =
+    doc.tipoPersona || "Natural";
+
+  document.getElementById("remClienteDoc").value =
+    doc.docCliente || "";
+
+  document.getElementById("remClienteNombre").value =
+    doc.nomCliente || "";
+
+  document.getElementById("remClienteCiudad").value =
+    doc.ciudadCliente || "";
+
+  document.getElementById("remClienteTel").value =
+    doc.telCliente || "";
+
+  document.getElementById("remClienteEmail").value =
+    doc.emailCliente || "";
+
+  document.getElementById("remFormaPago").value =
+    doc.formaPago || "";
+
+  document.getElementById("remDescGlobal").value =
+    doc.descGlobalPct || 0;
+
+  document.getElementById("remObs").value =
+    doc.observaciones || "";
+
+  /*
+   * =========================================================
+   * CARGAR PRODUCTOS
+   * =========================================================
+   */
+
+  itemsActuales =
+    Array.isArray(doc.items)
+      ? JSON.parse(JSON.stringify(doc.items))
+      : [];
+
+  /*
+   * =========================================================
+   * ACTUALIZAR FORMULARIO
+   * =========================================================
+   */
+
+  toggleFacturaOptions();
+  actualizarEtiquetasPersona();
+
+  renderItems();
+  calcularTotales();
+
+}
+
 /* =========================================================
    CLIENTES
    ========================================================= */
@@ -2136,6 +2234,7 @@ async function guardarRemisionCompleta(){
     alert("La sesión no está activa.");
     return;
   }
+  alert("Documento en edición: " + (window.documentoEditandoId || "NINGUNO"));
 
   const fecha=fechaHoy();
   document.getElementById("remFecha").value=fecha;
@@ -2178,20 +2277,40 @@ async function guardarRemisionCompleta(){
 
   try{
 
-    const existentes=await obtenerRemisiones();
+   const existentes=await obtenerRemisiones();
 
-    const prefijo=tipoDoc==="Factura Electrónica"?"FE":"REM";
+let consecutivo;
+let customId;
 
-    const usados=existentes.filter(r=>r.tipoDoc===tipoDoc);
+if(window.documentoEditandoId){
 
-    const maxConsecutivo=usados.reduce(
-      (max,r)=>Math.max(max,Number(r.consecutivo)||0),
-      0
+  const documentoOriginal=
+    existentes.find(
+      r=>(r.idDocumento||r.id)===window.documentoEditandoId
     );
 
-    const consecutivo=maxConsecutivo+1;
+  if(!documentoOriginal){
+    alert("No se encontró el documento original para editar.");
+    return;
+  }
 
-    const customId=`PREF-${String(consecutivo).padStart(3,"0")}`;
+  consecutivo=documentoOriginal.consecutivo;
+  customId=documentoOriginal.idDocumento;
+
+}else{
+
+  const usados=existentes.filter(r=>r.tipoDoc===tipoDoc);
+
+  const maxConsecutivo=usados.reduce(
+    (max,r)=>Math.max(max,Number(r.consecutivo)||0),
+    0
+  );
+
+  consecutivo=maxConsecutivo+1;
+
+  customId=`PREF-${String(consecutivo).padStart(3,"0")}`;
+
+}
 
     const clienteAnterior=await obtenerCliente(docCliente);
 
@@ -2220,30 +2339,65 @@ async function guardarRemisionCompleta(){
      */
     clientesCacheBusqueda=null;
 
-    const documento={
-      idDocumento:customId,
-      consecutivo,
-      fecha,
-      tipoDoc,
-      estado:"Pendiente",
-      tipoPersona,
-      docCliente,
-      nomCliente,
-      ciudadCliente,
-      telCliente,
-      emailCliente,
-      formaPago,
-      descGlobalPct,
-      descGlobal,
-      observaciones:obs,
-      items:JSON.parse(JSON.stringify(itemsActuales)),
-      subtotal:bruto,
-      total,
-      esClienteNuevo,
-      asesor:currentUser.nombre||currentUser.username,
-      area:currentUser.area||"",
-      fechaCreacion:new Date().toISOString()
-    };
+    const documentoOriginal =
+  window.documentoEditandoId
+    ? existentes.find(
+        r=>(r.idDocumento||r.id)===window.documentoEditandoId
+      )
+    : null;
+
+const documento={
+
+  idDocumento:customId,
+
+  consecutivo,
+
+  fecha,
+
+  tipoDoc,
+
+  estado:documentoOriginal?.estado || "Pendiente",
+
+  tipoPersona,
+
+  docCliente,
+
+  nomCliente,
+
+  ciudadCliente,
+
+  telCliente,
+
+  emailCliente,
+
+  formaPago,
+
+  descGlobalPct,
+
+  descGlobal,
+
+  observaciones:obs,
+
+  items:JSON.parse(JSON.stringify(itemsActuales)),
+
+  subtotal:bruto,
+
+  total,
+
+  esClienteNuevo:
+
+    documentoOriginal?.esClienteNuevo ??
+    esClienteNuevo,
+
+  asesor:currentUser.nombre||currentUser.username,
+
+  area:currentUser.area||"",
+
+  fechaCreacion:
+    documentoOriginal?.fechaCreacion ||
+    new Date().toISOString()
+
+};
 
     await guardarRemisionDB(documento);
 
@@ -2889,38 +3043,54 @@ function renderTablaDetalleRemisiones(datos){
   }
 
   tbody.innerHTML=datos.map(r=>`<tr>
-<td><strong>${escapeHtml(r.idDocumento||"Sin ID")}</strong><br><small>${escapeHtml(r.fecha||"")} · ${escapeHtml(r.tipoDoc||"Remisión")}</small></td>
-<td><strong>${escapeHtml(r.nomCliente||"Cliente")}</strong><br><small>${escapeHtml(r.tipoPersona||"Persona")}: ${escapeHtml(r.docCliente||"N/A")}</small></td>
-<td>${escapeHtml(r.ciudadCliente||"N/A")}</td>
-<td>${escapeHtml(r.telCliente||"N/A")}<br><small>${escapeHtml(r.emailCliente||"")}</small></td>
-<td>${escapeHtml(r.asesor||"N/A")}<br><small>${escapeHtml(r.area||"N/A")}</small></td>
-<td>${escapeHtml(r.formaPago||"N/A")}</td>
-<td>
+  <td><strong>${escapeHtml(r.idDocumento||"Sin ID")}</strong><br><small>${escapeHtml(r.fecha||"")} · ${escapeHtml(r.tipoDoc||"Remisión")}</small></td>
+  <td><strong>${escapeHtml(r.nomCliente||"Cliente")}</strong><br><small>${escapeHtml(r.tipoPersona||"Persona")}: ${escapeHtml(r.docCliente||"N/A")}</small></td>
+  <td>${escapeHtml(r.ciudadCliente||"N/A")}</td>
+  <td>${escapeHtml(r.telCliente||"N/A")}<br><small>${escapeHtml(r.emailCliente||"")}</small></td>
+  <td>${escapeHtml(r.asesor||"N/A")}<br><small>${escapeHtml(r.area||"N/A")}</small></td>
+  <td>${escapeHtml(r.formaPago||"N/A")}</td>
+  <td>
   <span class="badge ${
   r.estado==="Pagada"
     ? "success"
     : r.estado==="Anulada"
       ? "danger"
       : "warning"
-}">
+  }">
     ${escapeHtml(r.estado||"Pendiente")}
   </span>
-</td>
-<td class="num"><strong>${money(r.total||0)}</strong></td>
-<td>
+  </td>
+  <td class="num"><strong>${money(r.total||0)}</strong></td>
+  <td>
   ${
     currentUser.role==="asesor"
 
-      ? `
-        <button
-          class="btn small secondary"
-          onclick="imprimirDocumento('${escapeAttr(r.idDocumento||r.id||"")}')"
-        >
-          Imprimir
-        </button>
-      `
+  ? `
+    <div style="display:flex;gap:5px;flex-wrap:wrap">
 
-      : `
+      <button
+        class="btn small secondary"
+        onclick="imprimirDocumento('${escapeAttr(r.idDocumento||r.id||"")}')"
+      >
+        Imprimir
+      </button>
+
+      ${
+        r.estado==="Pendiente"
+          ? `
+            <button
+              class="btn small primary"
+              onclick="editarDocumento('${escapeAttr(r.idDocumento||r.id||"")}')"
+            >
+              Editar
+            </button>
+          `
+          : ""
+      }
+
+    </div>
+  `
+        : `
         <div style="display:flex;gap:5px;flex-wrap:wrap">
 
   <button
@@ -2958,11 +3128,11 @@ function renderTablaDetalleRemisiones(datos){
       : ""
   }
 
-</div>
+  </div>
       `
   }
-</td>
-</tr>`).join("");
+    </td>
+    </tr>`).join("");
 }
 
 async function verDetalleDoc(id){
