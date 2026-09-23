@@ -708,7 +708,7 @@ min-height:44px;
 </section>
 
 <section id="view-reporte" class="hidden">
-<<div class="card">
+<div class="card">
   <div class="section-title">Filtros de Búsqueda y Consolidación</div>
 
   <div class="grid-5" style="align-items:end">
@@ -755,6 +755,15 @@ min-height:44px;
     <option value="SAS TRANSFERENCIA">SAS TRANSFERENCIA</option>
     <option value="DATAFONO">DATAFONO</option>
   </select>
+
+  <div class="field" style="margin:0">
+  <label>Buscar Cliente</label>
+  <input
+    type="text"
+    id="repBuscarCliente"
+    placeholder="Nombre o número de documento"
+  >
+  </div>
 </div>
 
 <div class="field" style="margin:0">
@@ -2436,6 +2445,10 @@ async function procesarReportes(){
     const tipoDocFiltro=document.getElementById("repFiltroTipoDoc").value;
     const formaPagoFiltro=document.getElementById("repFiltroFormaPago").value;
     const clienteFiltro=document.getElementById("repFiltroClienteNuevo").value;
+    const buscarCliente=
+    document.getElementById("repBuscarCliente").value
+    .trim()
+    .toLowerCase();
     const metaMensual=Number(currentUser?.presupuestoMensual||0);
 
     const filtrados=datos.filter(r=>{
@@ -2456,6 +2469,23 @@ async function procesarReportes(){
           return false;
 
       }
+
+      if(buscarCliente){
+
+  const nombreCliente=
+    String(r.nomCliente||"").toLowerCase();
+
+  const documentoCliente=
+    String(r.docCliente||"").toLowerCase();
+
+  if(
+    !nombreCliente.includes(buscarCliente) &&
+    !documentoCliente.includes(buscarCliente)
+  ){
+    return false;
+  }
+
+}
 
       /* =====================================================
          FILTROS NORMALES
