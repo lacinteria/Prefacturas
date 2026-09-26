@@ -885,7 +885,7 @@ min-height:44px;
 <div class="field"><label>Nombre Completo <span class="req">*</span></label><input type="text" id="usrNombre" required placeholder="ej. Duvan"></div>
 <div class="field"><label>Usuario (Login) <span class="req">*</span></label><input type="text" id="usrUsername" required placeholder="ej. duvan"></div>
 <div class="field"><label>Contraseña <span class="req">*</span></label><input type="text" id="usrPass" placeholder="••••••••"></div>
-<div class="field"><label>Rol <span class="req">*</span></label><select id="usrRole"><option value="asesor">Asesor</option><option value="lider">Líder</option><option value="admin">Administrador</option></select></div>
+<div class="field"><label>Rol <span class="req">*</span></label><select id="usrRole"><option value="asesor">Asesor</option><option value="caja">Caja</option><option value="admin">Administrador</option></select></div>
 <div class="field"><label>Área asignada <span class="req">*</span></label><input type="text" id="usrArea" placeholder="ej. General, Bordados, Ventas..." required></div>
 <div class="field"><label>Presupuesto Mensual</label><input type="number" id="usrPresupuestoMensual" min="0" step="1000" placeholder="ej. 20000000"></div>
 <button type="submit" class="btn primary">Guardar Usuario</button><button type="button" class="btn secondary hidden" id="btnCancelarEdicion" onclick="cancelarEdicionUsuario()">Cancelar edición</button>
@@ -1121,7 +1121,7 @@ async function aplicarSesion(){
   document.getElementById("sessionRole").textContent=String(currentUser.role||"asesor").toUpperCase();
   document.getElementById("txtAreaUsuario").textContent="Área: "+(currentUser.area||"-");
   document.getElementById("remAsesor").value=currentUser.nombre||currentUser.username||"";
-  const admin=currentUser.role==="admin", lider=currentUser.role==="lider";
+  const admin=currentUser.role==="admin", caja=currentUser.role==="caja";
   document.getElementById("tabReportes").classList.toggle("hidden",false);
   document.getElementById("tabUsuarios").classList.toggle("hidden",!admin);
   document.getElementById("tabAjustes").classList.toggle("hidden",!admin);
@@ -1136,7 +1136,7 @@ function showView(view){
 
   if(!currentUser) return;
 
-  const permisos={reporte:["admin","lider","asesor"],usuarios:["admin"],ajustes:["admin"]};
+  const permisos={reporte:["admin","caja","asesor"],usuarios:["admin"],ajustes:["admin"]};
 
   if(permisos[view] && !permisos[view].includes(currentUser.role)){
 
@@ -2637,7 +2637,7 @@ document.getElementById("kpiCumplimientoMensual").textContent=
 
 function exportarReporteExcel(){
 
-  if(!currentUser || !["admin","lider"].includes(currentUser.role)){
+  if(!currentUser || !["admin","caja"].includes(currentUser.role)){
     alert("No tienes permisos para exportar reportes.");
     return;
   }
@@ -3175,7 +3175,7 @@ function renderTablaDetalleRemisiones(datos){
   </button>
 
   ${
-  ["admin","lider"].includes(currentUser.role) &&
+  ["admin","caja"].includes(currentUser.role) &&
   r.estado!=="Pagada" &&
   r.estado!=="Anulada"
       ? `
@@ -3272,7 +3272,7 @@ async function verDetalleDoc(id){
     doc.estado !== "Pagada" &&
     doc.estado !== "Anulada" &&
     currentUser &&
-    ["admin","lider"].includes(currentUser.role)
+    ["admin","caja"].includes(currentUser.role)
     ? `
       <button
         class="btn primary"
