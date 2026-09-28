@@ -783,17 +783,17 @@ min-height:44px;
       <input type="date" id="repFechaFin">
     </div>
 
-    <div class="field filtro-reporte-admin" style="margin:0">
+    <div id="contenedorFiltroAsesor" class="field filtro-reporte-admin" style="margin:0">
       <label>Asesor</label>
       <select id="repFiltroAsesor">
-        <option value="TODOS">-- Todos los Asesores --</option>
+      <option value="TODOS">-- Todos los Asesores --</option>
       </select>
     </div>
 
-    <div class="field filtro-reporte-admin" style="margin:0">
+   <div id="contenedorFiltroArea" class="field filtro-reporte-admin" style="margin:0">
       <label>Área</label>
       <select id="repFiltroArea">
-        <option value="TODAS">-- Todas las Áreas --</option>
+      <option value="TODAS">-- Todas las Áreas --</option>
       </select>
     </div>
 
@@ -1122,6 +1122,10 @@ async function aplicarSesion(){
   document.getElementById("txtAreaUsuario").textContent="Área: "+(currentUser.area||"-");
   document.getElementById("remAsesor").value=currentUser.nombre||currentUser.username||"";
   const admin=currentUser.role==="admin", caja=currentUser.role==="caja";
+  document.getElementById("contenedorFiltroAsesor")
+  .classList.toggle("hidden",currentUser.role==="asesor");
+  document.getElementById("contenedorFiltroArea")
+  .classList.toggle("hidden",currentUser.role!=="admin");
   document.querySelector('[data-view="venta"]').classList.toggle("hidden",caja);
   document.getElementById("tabReportes").classList.toggle("hidden",false);
   document.getElementById("tabUsuarios").classList.toggle("hidden",!admin);
@@ -3143,13 +3147,6 @@ function renderTablaDetalleRemisiones(datos){
   ? `
     <div style="display:flex;gap:5px;flex-wrap:wrap">
 
-      <button
-        class="btn small secondary"
-        onclick="imprimirDocumento('${escapeAttr(r.idDocumento||r.id||"")}')"
-      >
-        Imprimir
-      </button>
-
       ${
         r.estado==="Pendiente"
           ? `
@@ -4138,14 +4135,30 @@ async function actualizarFiltrosReportes(){
     return;
 
   const datos=await obtenerRemisiones();
+const usuarios=await obtenerUsuarios();
 
-  const asesores=[
-    ...new Set(
-      datos
-        .map(x=>x.asesor)
-        .filter(Boolean)
-    )
-  ].sort();
+let usuariosAsesores=usuarios.filter(u=>
+  u.role==="asesor"
+);
+
+if(currentUser.role==="caja"){
+
+  const areaCaja=
+    String(currentUser.area||"").trim();
+
+  usuariosAsesores=usuariosAsesores.filter(u=>
+    String(u.area||"").trim()===areaCaja
+  );
+
+}
+
+const asesores=[
+  ...new Set(
+    usuariosAsesores
+      .map(u=>u.nombre||u.username)
+      .filter(Boolean)
+  )
+].sort();
 
   const areas=[
     ...new Set(
