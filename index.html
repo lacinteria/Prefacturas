@@ -2311,9 +2311,9 @@ async function guardarRemisionCompleta(){
   const descGlobalPct=Math.max(0,Math.min(100,Number(document.getElementById("remDescGlobal").value)||0));
   const obs=document.getElementById("remObs").value.trim();
 
-  if(!fecha||!docCliente||!nomCliente||!ciudadCliente||!telCliente){
-    alert("Completa todos los campos obligatorios (*).");
-    return;
+  if(!fecha||!tipoDoc||!tipoPersona||!formaPago||!docCliente||!nomCliente||!ciudadCliente||!telCliente){
+  alert("Completa todos los campos obligatorios (*).");
+  return;
   }
 
   if(tipoDoc==="Factura Electrónica"&&!emailCliente){
