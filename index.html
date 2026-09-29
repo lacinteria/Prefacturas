@@ -2545,22 +2545,40 @@ async function procesarReportes(){
 
     const filtrados=datos.filter(r=>{
 
-           /* =====================================================
-         RESTRICCIÓN EXCLUSIVA PARA ASESORES
-         ===================================================== */
+  /* =====================================================
+     RESTRICCIÓN PARA ASESORES
+     ===================================================== */
 
-      if(currentUser.role==="asesor"){
+  if(currentUser.role==="asesor"){
 
-        const nombreAsesor=
-          currentUser.nombre||
-          currentUser.username||
-          "";
+    const nombreAsesor=
+      currentUser.nombre||
+      currentUser.username||
+      "";
 
-        // Solo sus propias remisiones
-        if((r.asesor||"")!==nombreAsesor)
-          return false;
+    // Solo sus propias remisiones
+    if((r.asesor||"")!==nombreAsesor)
+      return false;
 
-      }
+  }
+
+  /* =====================================================
+     RESTRICCIÓN PARA CAJA
+     ===================================================== */
+
+  if(currentUser.role==="caja"){
+
+    const areaCaja=
+      String(currentUser.area||"").trim();
+
+    const areaRemision=
+      String(r.area||"").trim();
+
+    // Caja solo puede ver remisiones de su propia área
+    if(areaRemision!==areaCaja)
+      return false;
+
+  }
 
       if(buscarCliente){
 
