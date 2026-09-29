@@ -1161,6 +1161,9 @@ async function aplicarSesion(){
   document.getElementById("contenedorConsolidadoArea")
   .classList.toggle("hidden",currentUser.role!=="admin");
   document.querySelector('[data-view="venta"]').classList.toggle("hidden",caja);
+    if(caja){
+    showView("reporte");
+    }
   document.getElementById("tabReportes").classList.toggle("hidden",false);
   document.getElementById("tabUsuarios").classList.toggle("hidden",!admin);
   document.getElementById("tabAjustes").classList.toggle("hidden",!admin);
