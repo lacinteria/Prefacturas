@@ -592,6 +592,7 @@ min-height:44px;
     <option value="" selected disabled>-- Seleccione --</option>
     <option value="Remisión">Remisión Simple (REM)</option>
     <option value="Factura Electrónica">Factura Electrónica (FE)</option>
+    <option value="Cotización">Cotización</option>
   </select>
 </div>
 <div class="field">
@@ -2440,7 +2441,11 @@ if(window.documentoEditandoId){
 
   consecutivo=maxConsecutivo+1;
 
-  customId=`PREF-${String(consecutivo).padStart(3,"0")}`;
+const prefijo=tipoDoc==="Cotización"
+  ? "COT"
+  : "PREF";
+
+customId=`${prefijo}-${String(consecutivo).padStart(3,"0")}`;
 
 }
 
@@ -2668,10 +2673,15 @@ async function procesarReportes(){
 
     datosRemisiones=filtrados;
 
-    const total=filtrados.reduce(
-      (s,r)=>s+Number(r.total||0),
-      0
-    );
+const datosContables=filtrados.filter(r=>
+  String(r.tipoDoc||"").trim().toLowerCase()!=="cotización" &&
+  String(r.estado||"").trim().toLowerCase()==="pagada"
+);
+
+const total=datosContables.reduce(
+  (s,r)=>s+Number(r.total||0),
+  0
+);
     
 
 
@@ -2711,9 +2721,9 @@ document.getElementById("kpiCumplimientoMensual").textContent=
           : 0
       );
 
-    renderConsolidadoAsesores(filtrados);
-    renderConsolidadoAreas(filtrados);
-    renderConsolidadoFormaPago(filtrados);
+    renderConsolidadoAsesores(datosContables);
+    renderConsolidadoAreas(datosContables);
+    renderConsolidadoFormaPago(datosContables);
     renderTablaDetalleRemisiones(filtrados);
 
   }catch(e){
@@ -3268,16 +3278,16 @@ function renderTablaDetalleRemisiones(datos){
     <div style="display:flex;gap:5px;flex-wrap:wrap">
 
       ${
-        r.estado==="Pendiente"
-          ? `
-            <button
-              class="btn small primary"
-              onclick="editarDocumento('${escapeAttr(r.idDocumento||r.id||"")}')"
-            >
-              Editar
-            </button>
-          `
-          : ""
+        r.estado==="Pendiente" && r.tipoDoc!=="Cotización"
+  ? `
+    <button
+      class="btn small primary"
+      onclick="editarDocumento('${escapeAttr(r.idDocumento||r.id||"")}')
+    >
+      Editar
+    </button>
+  `
+  : ""
       }
 
     </div>
@@ -3286,11 +3296,45 @@ function renderTablaDetalleRemisiones(datos){
         <div style="display:flex;gap:5px;flex-wrap:wrap">
 
   <button
-    class="btn small secondary"
-    onclick="verDetalleDoc('${escapeAttr(r.idDocumento||r.id||"")}')"
-  >
-    Detalle
-  </button>
+  class="btn small secondary"
+  onclick="verDetalleDoc('${escapeAttr(r.idDocumento||r.id||"")}')"
+>
+  Detalle
+</button>
+
+${
+  r.tipoDoc==="Cotización"
+    ? ""
+    : `
+      ${
+        ["admin","caja"].includes(currentUser.role) &&
+        r.estado!=="Pagada" &&
+        r.estado!=="Anulada"
+          ? `
+            <button
+              class="btn small primary"
+              onclick="marcarComoPagada('${escapeAttr(r.idDocumento||r.id||"")}')"
+            >
+              Pagar
+            </button>
+          `
+          : ""
+      }
+
+      ${
+        currentUser.role==="admin" && r.estado!=="Anulada"
+          ? `
+            <button
+              class="btn small danger"
+              onclick="anularDocumento('${escapeAttr(r.idDocumento||r.id||"")}')"
+            >
+              Anular
+            </button>
+          `
+          : ""
+      }
+    `
+}
 
   ${
   ["admin","caja"].includes(currentUser.role) &&
