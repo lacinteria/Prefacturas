@@ -532,6 +532,11 @@ min-height:44px;
 
 .footer-digito a:hover{
   text-decoration:underline;
+
+  .campo-error{
+  border:2px solid #dc2626 !important;
+  background:#fff1f2 !important;
+}
 }
 </style>
 </head>
@@ -2356,10 +2361,31 @@ async function guardarRemisionCompleta(){
   const descGlobalPct=Math.max(0,Math.min(100,Number(document.getElementById("remDescGlobal").value)||0));
   const obs=document.getElementById("remObs").value.trim();
 
-  if(!fecha||!tipoDoc||!tipoPersona||!formaPago||!docCliente||!nomCliente||!ciudadCliente||!telCliente){
+  const camposObligatorios = [
+  ["remFecha", fecha],
+  ["remTipoDoc", tipoDoc],
+  ["remTipoPersona", tipoPersona],
+  ["remFormaPago", formaPago],
+  ["remClienteDoc", docCliente],
+  ["remClienteNombre", nomCliente],
+  ["remClienteCiudad", ciudadCliente],
+  ["remClienteTel", telCliente]
+];
+
+camposObligatorios.forEach(([id, valor]) => {
+
+  document.getElementById(id).style.border =
+    valor ? "" : "3px solid red";
+
+});
+
+if(camposObligatorios.some(([id, valor]) => !valor)){
+
   alert("Completa todos los campos obligatorios (*).");
+
   return;
-  }
+
+}
 
   if(tipoDoc==="Factura Electrónica"&&!emailCliente){
     alert("El correo electrónico es obligatorio para Facturación Electrónica.");
@@ -3784,7 +3810,7 @@ w.document.write(`
       }
 
     }
-
+}
   </style>
 
 </head>
