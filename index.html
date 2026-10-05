@@ -3252,123 +3252,131 @@ function renderTablaDetalleRemisiones(datos){
   }
 
   tbody.innerHTML=datos.map(r=>`<tr>
-  <td><strong>${escapeHtml(r.idDocumento||"Sin ID")}</strong><br><small>${escapeHtml(r.fecha||"")} · ${escapeHtml(r.tipoDoc||"Remisión")}</small></td>
-  <td><strong>${escapeHtml(r.nomCliente||"Cliente")}</strong><br><small>${escapeHtml(r.tipoPersona||"Persona")}: ${escapeHtml(r.docCliente||"N/A")}</small></td>
-  <td>${escapeHtml(r.ciudadCliente||"N/A")}</td>
-  <td>${escapeHtml(r.telCliente||"N/A")}<br><small>${escapeHtml(r.emailCliente||"")}</small></td>
-  <td>${escapeHtml(r.asesor||"N/A")}<br><small>${escapeHtml(r.area||"N/A")}</small></td>
-  <td>${escapeHtml(r.formaPago||"N/A")}</td>
   <td>
-  <span class="badge ${
-  r.estado==="Pagada"
-    ? "success"
-    : r.estado==="Anulada"
-      ? "danger"
-      : "warning"
-  }">
-    ${escapeHtml(r.estado||"Pendiente")}
-  </span>
+    <strong>${escapeHtml(r.idDocumento||"Sin ID")}</strong><br>
+    <small>${escapeHtml(r.fecha||"")} · ${escapeHtml(r.tipoDoc||"Remisión")}</small>
   </td>
-  <td class="num"><strong>${money(r.total||0)}</strong></td>
+
   <td>
+    <strong>${escapeHtml(r.nomCliente||"Cliente")}</strong><br>
+    <small>${escapeHtml(r.tipoPersona||"Persona")}: ${escapeHtml(r.docCliente||"N/A")}</small>
+  </td>
+
+  <td>${escapeHtml(r.ciudadCliente||"N/A")}</td>
+
+  <td>
+    ${escapeHtml(r.telCliente||"N/A")}<br>
+    <small>${escapeHtml(r.emailCliente||"")}</small>
+  </td>
+
+  <td>
+    ${escapeHtml(r.asesor||"N/A")}<br>
+    <small>${escapeHtml(r.area||"N/A")}</small>
+  </td>
+
+  <td>${escapeHtml(r.formaPago||"N/A")}</td>
+
+  <td>
+    <span class="badge ${
+      r.estado==="Pagada"
+        ? "success"
+        : r.estado==="Anulada"
+          ? "danger"
+          : "warning"
+    }">
+      ${escapeHtml(r.estado||"Pendiente")}
+    </span>
+  </td>
+
+  <td class="num">
+    <strong>${money(r.total||0)}</strong>
+  </td>
+
+  <td>
+
   ${
     currentUser.role==="asesor"
 
-  ? `
-    <div style="display:flex;gap:5px;flex-wrap:wrap">
+    ? `
+      <div style="display:flex;gap:5px;flex-wrap:wrap">
 
-      ${
-        r.estado==="Pendiente" && r.tipoDoc!=="Cotización"
-  ? `
-    <button
-      class="btn small primary"
-      onclick="editarDocumento('${escapeAttr(r.idDocumento||r.id||"")}')
-    >
-      Editar
-    </button>
-  `
-  : ""
-      }
+        ${
+          r.estado==="Pendiente" && r.tipoDoc!=="Cotización"
+            ? `
+              <button
+                class="btn small primary"
+                onclick="editarDocumento('${escapeAttr(r.idDocumento||r.id||"")}')"
+              >
+                Editar
+              </button>
+            `
+            : ""
+        }
 
-    </div>
-  `
-        : `
-        <div style="display:flex;gap:5px;flex-wrap:wrap">
-
-  <button
-  class="btn small secondary"
-  onclick="verDetalleDoc('${escapeAttr(r.idDocumento||r.id||"")}')"
->
-  Detalle
-</button>
-
-${
-  r.tipoDoc==="Cotización"
-    ? ""
-    : `
-      ${
-        ["admin","caja"].includes(currentUser.role) &&
-        r.estado!=="Pagada" &&
-        r.estado!=="Anulada"
-          ? `
-            <button
-              class="btn small primary"
-              onclick="marcarComoPagada('${escapeAttr(r.idDocumento||r.id||"")}')"
-            >
-              Pagar
-            </button>
-          `
-          : ""
-      }
-
-      ${
-        currentUser.role==="admin" && r.estado!=="Anulada"
-          ? `
-            <button
-              class="btn small danger"
-              onclick="anularDocumento('${escapeAttr(r.idDocumento||r.id||"")}')"
-            >
-              Anular
-            </button>
-          `
-          : ""
-      }
+      </div>
     `
-}
 
-  ${
-  ["admin","caja"].includes(currentUser.role) &&
-  r.estado!=="Pagada" &&
-  r.estado!=="Anulada"
-      ? `
+    : `
+
+      <div style="display:flex;gap:5px;flex-wrap:wrap">
+
         <button
-          class="btn small primary"
-          onclick="marcarComoPagada('${escapeAttr(r.idDocumento||r.id||"")}')"
+          class="btn small secondary"
+          onclick="verDetalleDoc('${escapeAttr(r.idDocumento||r.id||"")}')"
         >
-          Pagar
+          Detalle
         </button>
-      `
-      : ""
+
+        ${
+          r.tipoDoc==="Cotización"
+            ? ""
+
+            : `
+
+              ${
+                ["admin","caja"].includes(currentUser.role) &&
+                r.estado!=="Pagada" &&
+                r.estado!=="Anulada"
+
+                  ? `
+                    <button
+                      class="btn small primary"
+                      onclick="marcarComoPagada('${escapeAttr(r.idDocumento||r.id||"")}')"
+                    >
+                      Pagar
+                    </button>
+                  `
+
+                  : ""
+              }
+
+              ${
+                currentUser.role==="admin" &&
+                r.estado!=="Anulada"
+
+                  ? `
+                    <button
+                      class="btn small danger"
+                      onclick="anularDocumento('${escapeAttr(r.idDocumento||r.id||"")}')"
+                    >
+                      Anular
+                    </button>
+                  `
+
+                  : ""
+              }
+
+            `
+        }
+
+      </div>
+
+    `
   }
 
-  ${
-    currentUser.role==="admin" && r.estado!=="Anulada"
-      ? `
-        <button
-          class="btn small danger"
-          onclick="anularDocumento('${escapeAttr(r.idDocumento||r.id||"")}')"
-        >
-          Anular
-        </button>
-      `
-      : ""
-  }
+  </td>
 
-  </div>
-      `
-  }
-    </td>
-    </tr>`).join("");
+  </tr>`).join("");
 }
 
 async function verDetalleDoc(id){
@@ -3973,13 +3981,297 @@ w.document.write(`
     };
   <\/script>
 
-</body>
+  </body>
 
-</html>
+  </html>
 
-`);
+  `);
 
-w.document.close();
+  w.document.close();
+}
+
+async function generarPDFDocumento(id){
+
+  const doc=(await obtenerRemisiones())
+    .find(r=>r.idDocumento===id);
+
+  if(!doc)return;
+
+  const w=window.open("","_blank","width=900,height=900");
+
+  const items=(doc.items||[])
+    .map(i=>`
+      <div class="item">
+
+        <div class="item-desc">
+          ${escapeHtml(i.descripcion)}
+        </div>
+
+        <div class="item-line">
+          <span>
+            ${i.cantidad} x ${money(i.precioUnitario)}
+          </span>
+
+          <strong>
+            ${money(i.subtotal)}
+          </strong>
+        </div>
+
+      </div>
+    `)
+    .join("");
+
+  w.document.write(`
+  <html>
+
+  <head>
+
+    <title>${escapeHtml(doc.idDocumento)}</title>
+
+    <style>
+
+      @page{
+        size:Letter;
+        margin:12mm;
+      }
+
+      *{
+        box-sizing:border-box;
+      }
+
+      body{
+        width:100%;
+        margin:0;
+        padding:0;
+        font-family:Arial,Helvetica,sans-serif;
+        font-size:12px;
+        color:#000;
+        text-transform:uppercase;
+      }
+
+      .documento{
+        width:100%;
+        max-width:190mm;
+        margin:0 auto;
+      }
+
+      .center{
+        text-align:center;
+      }
+
+      .titulo{
+        font-size:24px;
+        font-weight:bold;
+        margin-bottom:6px;
+      }
+
+      .numero{
+        font-size:18px;
+        font-weight:bold;
+        margin-bottom:18px;
+      }
+
+      .linea{
+        border-top:1px solid #000;
+        margin:14px 0;
+      }
+
+      .datos{
+        line-height:1.7;
+      }
+
+      .datos strong{
+        font-weight:bold;
+      }
+
+      .items{
+        margin-top:12px;
+      }
+
+      .item{
+        margin-bottom:10px;
+      }
+
+      .item-desc{
+        font-weight:bold;
+        margin-bottom:4px;
+        word-wrap:break-word;
+      }
+
+      .item-line{
+        display:flex;
+        justify-content:space-between;
+        gap:20px;
+      }
+
+      .totales{
+        margin-top:14px;
+        width:100%;
+      }
+
+      .total-line{
+        display:flex;
+        justify-content:space-between;
+        margin:6px 0;
+      }
+
+      .total-final{
+        font-size:18px;
+        font-weight:bold;
+        margin-top:10px;
+      }
+
+      .observaciones{
+        margin-top:14px;
+        line-height:1.5;
+        word-wrap:break-word;
+      }
+
+      .gracias{
+        margin-top:30px;
+        text-align:center;
+        font-weight:bold;
+      }
+
+      @media print{
+
+        body{
+          width:100%;
+        }
+
+      }
+
+    </style>
+
+  </head>
+
+  <body>
+
+    <div class="documento">
+
+      <div class="center">
+
+        <div class="titulo">
+          PREFACTURA
+        </div>
+
+        <div class="numero">
+          ${escapeHtml(doc.idDocumento)}
+        </div>
+
+      </div>
+
+      <div class="linea"></div>
+
+      <div class="datos">
+
+        <div>
+          <strong>Fecha:</strong>
+          ${escapeHtml(doc.fecha||"")}
+        </div>
+
+        <div>
+          <strong>Cliente:</strong><br>
+          ${escapeHtml(doc.nomCliente||"")}
+        </div>
+
+        <div>
+          <strong>Documento:</strong>
+          ${escapeHtml(doc.docCliente||"")}
+        </div>
+
+        <div>
+          <strong>Ciudad:</strong>
+          ${escapeHtml(doc.ciudadCliente||"")}
+        </div>
+
+        <div>
+          <strong>Tel:</strong>
+          ${escapeHtml(doc.telCliente||"")}
+        </div>
+
+        <div>
+          <strong>Asesor:</strong>
+          ${escapeHtml(doc.asesor||"")}
+        </div>
+
+        <div>
+          <strong>Área:</strong>
+          ${escapeHtml(doc.area||"")}
+        </div>
+
+      </div>
+
+      <div class="linea"></div>
+
+      <div class="items">
+        ${items}
+      </div>
+
+      <div class="linea"></div>
+
+      <div class="totales">
+
+        <div class="total-line">
+          <span>SUBTOTAL</span>
+          <strong>${money(doc.subtotal||0)}</strong>
+        </div>
+
+        <div class="total-line">
+          <span>DESCUENTO</span>
+          <strong>${money(doc.descGlobal||0)}</strong>
+        </div>
+
+        <div class="total-line total-final">
+          <span>TOTAL</span>
+          <strong>${money(doc.total||0)}</strong>
+        </div>
+
+      </div>
+
+      <div class="linea"></div>
+
+      <div class="datos">
+
+        <strong>MEDIO DE PAGO:</strong>
+        ${escapeHtml(doc.formaPago||"")}
+
+      </div>
+
+      ${
+        doc.observaciones
+        ?
+        `
+        <div class="observaciones">
+
+          <strong>OBSERVACIONES:</strong><br>
+
+          ${escapeHtml(doc.observaciones)}
+
+        </div>
+        `
+        :
+        ""
+      }
+
+      <div class="gracias">
+        GRACIAS POR SU COMPRA
+      </div>
+
+    </div>
+
+    <script>
+      window.onload=()=>{
+        window.print();
+      };
+    <\/script>
+
+  </body>
+
+  </html>
+  `);
+
+  w.document.close();
 }
 
 /* =========================================================
