@@ -988,6 +988,7 @@ let firebaseActivo = false;
 let currentUser = null;
 let itemsActuales = [];
 let datosRemisiones = [];
+let cacheRemisiones=null;
 let logoBase64Temporal = "";
 
 /* =========================================================
@@ -1043,8 +1044,22 @@ async function obtenerUsuarios(){
 
 async function obtenerRemisiones(){
   exigirFirebase();
-  const snap=await db.collection("remisiones").get();
-  return snap.docs.map(d=>({id:d.id,...d.data()}));
+
+  if(cacheRemisiones!==null)
+    return cacheRemisiones;
+
+  const snap=await db
+    .collection("remisiones")
+    .get();
+
+  cacheRemisiones=
+    snap.docs.map(d=>({
+      id:d.id,
+      ...d.data()
+    }));
+
+  return cacheRemisiones;
+
 }
 
 async function guardarUsuarioDB(user){
@@ -2042,8 +2057,9 @@ function limpiarFormulario(){
 async function editarDocumento(id){
 
   const doc =
-    datosRemisiones.find(r=>(r.idDocumento||r.id)===id) ||
-    (await obtenerRemisiones()).find(r=>(r.idDocumento||r.id)===id);
+    datosRemisiones.find(
+      r=>(r.idDocumento||r.id)===id
+    );
 
   if(!doc){
     alert("No se encontró el documento que deseas editar.");
@@ -2408,15 +2424,14 @@ if(camposObligatorios.some(([id, valor]) => !valor)){
 
   try{
 
-   const existentes=await obtenerRemisiones();
-
-let consecutivo;
+   let consecutivo;
 let customId;
+let documentoOriginal=null;
 
 if(window.documentoEditandoId){
 
-  const documentoOriginal=
-    existentes.find(
+  documentoOriginal =
+    datosRemisiones.find(
       r=>(r.idDocumento||r.id)===window.documentoEditandoId
     );
 
@@ -2430,20 +2445,29 @@ if(window.documentoEditandoId){
 
 }else{
 
-  const usados=existentes.filter(r=>r.tipoDoc===tipoDoc);
+  const snapUltimo =
+    await db
+      .collection("remisiones")
+      .where("tipoDoc","==",tipoDoc)
+      .orderBy("consecutivo","desc")
+      .limit(1)
+      .get();
 
-  const maxConsecutivo=usados.reduce(
-    (max,r)=>Math.max(max,Number(r.consecutivo)||0),
-    0
-  );
+  const ultimo =
+    snapUltimo.empty
+      ? null
+      : snapUltimo.docs[0].data();
 
-  consecutivo=maxConsecutivo+1;
+  consecutivo =
+    Number(ultimo?.consecutivo||0)+1;
 
-const prefijo=tipoDoc==="Cotización"
-  ? "COT"
-  : "PREF";
+  const prefijo =
+    tipoDoc==="Cotización"
+      ? "COT"
+      : "PREF";
 
-customId=`${prefijo}-${String(consecutivo).padStart(3,"0")}`;
+  customId =
+    `${prefijo}-${String(consecutivo).padStart(3,"0")}`;
 
 }
 
@@ -2474,12 +2498,6 @@ customId=`${prefijo}-${String(consecutivo).padStart(3,"0")}`;
      */
     clientesCacheBusqueda=null;
 
-    const documentoOriginal =
-  window.documentoEditandoId
-    ? existentes.find(
-        r=>(r.idDocumento||r.id)===window.documentoEditandoId
-      )
-    : null;
 
 const documento={
 
@@ -2535,6 +2553,8 @@ const documento={
 };
 
     await guardarRemisionDB(documento);
+
+    cacheRemisiones=null;
 
     window.documentoEditandoId=null;
 
@@ -3381,9 +3401,10 @@ function renderTablaDetalleRemisiones(datos){
 
 async function verDetalleDoc(id){
 
-  const doc=
-    datosRemisiones.find(r=>(r.idDocumento||r.id)===id) ||
-    (await obtenerRemisiones()).find(r=>(r.idDocumento||r.id)===id);
+  const doc =
+    datosRemisiones.find(
+      r=>(r.idDocumento||r.id)===id
+    );
 
   if(!doc)return;
 
@@ -3436,6 +3457,18 @@ async function verDetalleDoc(id){
     ? `<p><strong>Observaciones:</strong> ${escapeHtml(doc.observaciones)}</p>`
     : ""}
 
+  ${
+    doc.estado === "Anulada"
+    ? `
+      <div style="margin-top:15px;padding:12px;border:1px solid #dc2626;border-radius:8px;">
+        <strong>Estado:</strong> ANULADA<br>
+        <strong>Motivo de anulación:</strong>
+        ${escapeHtml(doc.observacionAnulacion||"Sin motivo registrado.")}
+      </div>
+    `
+    : ""
+  }
+
    <div style="text-align:right;margin-top:15px">
 
   ${
@@ -3467,11 +3500,17 @@ async function verDetalleDoc(id){
     : ""
   }
 
-  <button
-    class="btn primary"
-    onclick="imprimirDocumento('${escapeAttr(doc.idDocumento)}')">
-    Imprimir
-  </button>
+  ${
+    doc.estado !== "Anulada"
+    ? `
+      <button
+        class="btn primary"
+        onclick="imprimirDocumento('${escapeAttr(doc.idDocumento)}')">
+        Imprimir
+      </button>
+    `
+    : ""
+  }
 
 </div>`;
 
@@ -3503,19 +3542,28 @@ async function marcarComoPagada(id){
 
     alert("Documento marcado como pagado.");
 
-    const documentoActualizado=
-      (await obtenerRemisiones()).find(
+    const documentoActualizado =
+      datosRemisiones.find(
         r=>(r.idDocumento||r.id)===id
       );
 
     if(documentoActualizado){
 
-      const index=datosRemisiones.findIndex(
-        r=>(r.idDocumento||r.id)===id
-      );
+      documentoActualizado.estado="Pagada";
 
-      if(index!==-1){
-        datosRemisiones[index]=documentoActualizado;
+    }
+
+    if(cacheRemisiones){
+
+      const documentoCacheado =
+        cacheRemisiones.find(
+          r=>(r.idDocumento||r.id)===id
+        );
+
+      if(documentoCacheado){
+
+        documentoCacheado.estado="Pagada";
+
       }
 
     }
@@ -3674,8 +3722,37 @@ async function anularDocumento(id){
 
       return;
     }
+        if(cacheRemisiones){
 
+  const documentoCacheado =
+    cacheRemisiones.find(
+      r=>(r.idDocumento||r.id)===id
+    );
 
+  if(documentoCacheado){
+
+    documentoCacheado.estado="Anulada";
+    documentoCacheado.codigoAnulacion=codigo;
+    documentoCacheado.observacionAnulacion=observacion.trim();
+    documentoCacheado.fechaAnulacion=new Date().toISOString();
+
+  }
+
+}
+
+const documentoActualizado =
+  datosRemisiones.find(
+    r=>(r.idDocumento||r.id)===id
+  );
+
+if(documentoActualizado){
+
+  documentoActualizado.estado="Anulada";
+  documentoActualizado.codigoAnulacion=codigo;
+  documentoActualizado.observacionAnulacion=observacion.trim();
+
+}
+      
     /* =========================================
        ANULAR DOCUMENTO
        ========================================= */
@@ -3705,6 +3782,7 @@ async function anularDocumento(id){
     alert(
       "Documento anulado correctamente."
     );
+    await verDetalleDoc(id);
 
   }catch(error){
 
@@ -3728,7 +3806,7 @@ function cerrarDetalle(){
 
 async function imprimirDocumento(id){
 
-const doc=(await obtenerRemisiones()).find(r=>r.idDocumento===id);
+const doc=datosRemisiones.find(r=>r.idDocumento===id);
 
 if(!doc)return;
 
@@ -3992,8 +4070,7 @@ w.document.write(`
 
 async function generarPDFDocumento(id){
 
-  const doc=(await obtenerRemisiones())
-    .find(r=>r.idDocumento===id);
+  const doc=datosRemisiones.find(r=>r.idDocumento===id);
 
   if(!doc)return;
 
