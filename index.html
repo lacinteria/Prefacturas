@@ -2346,8 +2346,6 @@ async function guardarRemisionCompleta(){
     alert("La sesión no está activa.");
     return;
   }
-  alert("Documento en edición: " + (window.documentoEditandoId || "NINGUNO"));
-
   const fecha=fechaHoy();
   document.getElementById("remFecha").value=fecha;
 
@@ -2537,6 +2535,8 @@ const documento={
 };
 
     await guardarRemisionDB(documento);
+
+    window.documentoEditandoId=null;
 
     alert(`¡Documento registrado con éxito!\nCódigo asignado: ${customId}`);
 
