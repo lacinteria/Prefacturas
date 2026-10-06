@@ -2627,15 +2627,31 @@ async function procesarReportes(){
        FILTRO POR FECHA
        ===================================================== */
 
-    if(inicio){
-      consulta=
-        consulta.where("fecha",">=",inicio);
-    }
+    if(currentUser.role==="caja"){
 
-    if(fin){
-      consulta=
-        consulta.where("fecha","<=",fin);
-    }
+  const ahora=new Date();
+
+  const hoy=
+    ahora.getFullYear()+"-"+
+    String(ahora.getMonth()+1).padStart(2,"0")+"-"+
+    String(ahora.getDate()).padStart(2,"0");
+
+  consulta=
+    consulta.where("fecha","==",hoy);
+
+}else{
+
+  if(inicio){
+    consulta=
+      consulta.where("fecha",">=",inicio);
+  }
+
+  if(fin){
+    consulta=
+      consulta.where("fecha","<=",fin);
+  }
+
+}
 
 
     /* =====================================================
