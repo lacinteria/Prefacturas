@@ -989,6 +989,8 @@ let currentUser = null;
 let itemsActuales = [];
 let datosRemisiones = [];
 let cacheRemisiones=null;
+let cacheUsuarios=null;
+let listenerCajaRemisiones=null;
 let logoBase64Temporal = "";
 
 /* =========================================================
@@ -2584,155 +2586,270 @@ async function procesarReportes(){
 
   try{
 
-    const datos=await obtenerRemisiones();
+    exigirFirebase();
 
-    const inicio=document.getElementById("repFechaInicio").value;
-    const fin=document.getElementById("repFechaFin").value;
-    const asesor=document.getElementById("repFiltroAsesor").value;
-    const area=document.getElementById("repFiltroArea").value;
-    const tipoDocFiltro=document.getElementById("repFiltroTipoDoc").value;
-    const formaPagoFiltro=document.getElementById("repFiltroFormaPago").value;
+    const inicio=
+      document.getElementById("repFechaInicio").value;
+
+    const fin=
+      document.getElementById("repFechaFin").value;
+
+    const asesor=
+      document.getElementById("repFiltroAsesor").value;
+
+    const area=
+      document.getElementById("repFiltroArea").value;
+
+    const tipoDocFiltro=
+      document.getElementById("repFiltroTipoDoc").value;
+
+    const formaPagoFiltro=
+      document.getElementById("repFiltroFormaPago").value;
+
     const buscarCliente=
-    document.getElementById("repBuscarCliente").value
-    .trim()
-    .toLowerCase();
-    const metaMensual=Number(currentUser?.presupuestoMensual||0);
+      document.getElementById("repBuscarCliente").value
+        .trim()
+        .toLowerCase();
 
-    const filtrados=datos.filter(r=>{
+    const metaMensual=
+      Number(currentUser?.presupuestoMensual||0);
 
-  /* =====================================================
-     RESTRICCIÓN PARA ASESORES
-     ===================================================== */
 
-  if(currentUser.role==="asesor"){
+    /* =====================================================
+       CONSULTA OPTIMIZADA A FIRESTORE
+       ===================================================== */
 
-    const nombreAsesor=
-      currentUser.nombre||
-      currentUser.username||
-      "";
+    let consulta=
+      db.collection("remisiones");
 
-    // Solo sus propias remisiones
-    if((r.asesor||"")!==nombreAsesor)
-      return false;
 
-  }
+    /* =====================================================
+       FILTRO POR FECHA
+       ===================================================== */
 
-  /* =====================================================
-     RESTRICCIÓN PARA CAJA
-     ===================================================== */
+    if(inicio){
+      consulta=
+        consulta.where("fecha",">=",inicio);
+    }
 
-  if(currentUser.role==="caja"){
+    if(fin){
+      consulta=
+        consulta.where("fecha","<=",fin);
+    }
 
-    const areaCaja=
-      String(currentUser.area||"").trim();
 
-    const areaRemision=
-      String(r.area||"").trim();
+    /* =====================================================
+       RESTRICCIÓN PARA ASESORES
+       ===================================================== */
 
-    // Caja solo puede ver remisiones de su propia área
-    if(areaRemision!==areaCaja)
-      return false;
+    if(currentUser.role==="asesor"){
 
-  }
+      const nombreAsesor=
+        currentUser.nombre||
+        currentUser.username||
+        "";
 
-      if(buscarCliente){
+      consulta=
+        consulta.where("asesor","==",nombreAsesor);
 
-  const nombreCliente=
-    String(r.nomCliente||"").toLowerCase();
+    }
 
-  const documentoCliente=
-    String(r.docCliente||"").toLowerCase();
 
-  if(
-    !nombreCliente.includes(buscarCliente) &&
-    !documentoCliente.includes(buscarCliente)
-  ){
-    return false;
-  }
+    /* =====================================================
+       RESTRICCIÓN PARA CAJA
+       ===================================================== */
+
+    if(currentUser.role==="caja"){
+
+      const areaCaja=
+        String(currentUser.area||"").trim();
+
+      consulta=
+        consulta.where("area","==",areaCaja);
+
+    }
+
+
+    /* =====================================================
+       FILTRO DE ASESOR PARA ADMIN / CAJA
+       ===================================================== */
+
+    if(
+      currentUser.role!=="asesor" &&
+      asesor!=="TODOS"
+    ){
+
+      consulta=
+        consulta.where("asesor","==",asesor);
+
+    }
+
+
+    /* =====================================================
+       FILTRO DE ÁREA
+       ===================================================== */
+
+    if(
+      currentUser.role==="admin" &&
+      area!=="TODAS"
+    ){
+
+      consulta=
+        consulta.where("area","==",area);
+
+    }
+
+
+    if(currentUser.role==="caja"){
+
+  escucharRemisionesCaja(consulta);
+
+  return;
 
 }
 
-      /* =====================================================
-         FILTROS NORMALES
-         ===================================================== */
+const snap=await consulta.get();
 
-      if(inicio&&String(r.fecha)<inicio)
-        return false;
 
-      if(fin&&String(r.fecha)>fin)
-        return false;
+    const datos=
+      snap.docs.map(d=>({
+        id:d.id,
+        ...d.data()
+      }));
 
-      if(currentUser.role!=="asesor"){
 
-        if(asesor!=="TODOS"&&(r.asesor||"")!==asesor)
+    /* =====================================================
+       FILTROS QUE SE MANTIENEN EN EL NAVEGADOR
+       ===================================================== */
+
+    const filtrados=datos.filter(r=>{
+
+
+      /* ===================================================
+         BÚSQUEDA POR CLIENTE / DOCUMENTO
+         =================================================== */
+
+      if(buscarCliente){
+
+        const nombreCliente=
+          String(r.nomCliente||"").toLowerCase();
+
+        const documentoCliente=
+          String(r.docCliente||"").toLowerCase();
+
+        if(
+          !nombreCliente.includes(buscarCliente) &&
+          !documentoCliente.includes(buscarCliente)
+        ){
           return false;
-
-        if(area!=="TODAS"&&(r.area||"")!==area)
-          return false;
+        }
 
       }
 
-      /* =====================================================
+
+      /* ===================================================
          FILTRO TIPO DE DOCUMENTO
-         ===================================================== */
+         =================================================== */
 
       if(
         tipoDocFiltro!=="TODOS" &&
         (r.tipoDoc||"Remisión")!==tipoDocFiltro
-      )
+      ){
         return false;
-        if(formaPagoFiltro!=="TODOS" && (r.formaPago||"")!==formaPagoFiltro)
-         return false;
+      }
+
+
+      /* ===================================================
+         FILTRO FORMA DE PAGO
+         =================================================== */
+
+      if(
+        formaPagoFiltro!=="TODOS" &&
+        (r.formaPago||"")!==formaPagoFiltro
+      ){
+        return false;
+      }
+
 
       return true;
 
     }).sort((a,b)=>
       String(b.fechaCreacion||b.fecha)
-        .localeCompare(String(a.fechaCreacion||a.fecha))
+        .localeCompare(
+          String(a.fechaCreacion||a.fecha)
+        )
     );
+
 
     datosRemisiones=filtrados;
 
-const datosContables=filtrados.filter(r=>
-  String(r.tipoDoc||"").trim().toLowerCase()!=="cotización" &&
-  String(r.estado||"").trim().toLowerCase()==="pagada"
-);
 
-const total=datosContables.reduce(
-  (s,r)=>s+Number(r.total||0),
-  0
-);
-    
+    /* =====================================================
+       DATOS CONTABLES
+       ===================================================== */
+
+    const datosContables=
+      filtrados.filter(r=>
+        String(r.tipoDoc||"")
+          .trim()
+          .toLowerCase()!=="cotización" &&
+
+        String(r.estado||"")
+          .trim()
+          .toLowerCase()==="pagada"
+      );
 
 
-const vendidoMensual=total;
+    const total=
+      datosContables.reduce(
+        (s,r)=>s+Number(r.total||0),
+        0
+      );
 
-const faltanteMensual=Math.max(
-  metaMensual-vendidoMensual,
-  0
-);
 
-const cumplimientoMensual=
-  metaMensual>0
-    ? Math.min((vendidoMensual/metaMensual)*100,100)
-    : 0;
+    const vendidoMensual=total;
 
-document.getElementById("kpiMetaMensual").textContent=
-  money(metaMensual);
 
-document.getElementById("kpiVendidoMensual").textContent=
-  money(vendidoMensual);
+    const faltanteMensual=
+      Math.max(
+        metaMensual-vendidoMensual,
+        0
+      );
 
-document.getElementById("kpiFaltanteMensual").textContent=
-  money(faltanteMensual);
 
-document.getElementById("kpiCumplimientoMensual").textContent=
-  cumplimientoMensual.toFixed(1)+"%";
+    const cumplimientoMensual=
+      metaMensual>0
+        ? Math.min(
+            (vendidoMensual/metaMensual)*100,
+            100
+          )
+        : 0;
 
-    document.getElementById("kpiTotalVentas").textContent=money(total);
+
+    /* =====================================================
+       KPIs
+       ===================================================== */
+
+    document.getElementById("kpiMetaMensual").textContent=
+      money(metaMensual);
+
+    document.getElementById("kpiVendidoMensual").textContent=
+      money(vendidoMensual);
+
+    document.getElementById("kpiFaltanteMensual").textContent=
+      money(faltanteMensual);
+
+    document.getElementById("kpiCumplimientoMensual").textContent=
+      cumplimientoMensual.toFixed(1)+"%";
+
+
+    document.getElementById("kpiTotalVentas").textContent=
+      money(total);
+
 
     document.getElementById("kpiCantRemisiones").textContent=
       filtrados.length;
+
 
     document.getElementById("kpiTicketPromedio").textContent=
       money(
@@ -2741,19 +2858,166 @@ document.getElementById("kpiCumplimientoMensual").textContent=
           : 0
       );
 
+
+    /* =====================================================
+       CONSOLIDADOS Y TABLA
+       ===================================================== */
+
     renderConsolidadoAsesores(datosContables);
+
     renderConsolidadoAreas(datosContables);
+
     renderConsolidadoFormaPago(datosContables);
+
     renderTablaDetalleRemisiones(filtrados);
+
 
   }catch(e){
 
     console.error(e);
 
     document.getElementById("tablaReportesBody").innerHTML=
-      `<tr><td colspan="9">Error cargando reportes: ${escapeHtml(e.message)}</td></tr>`;
+      `<tr>
+        <td colspan="9">
+          Error cargando reportes:
+          ${escapeHtml(e.message)}
+        </td>
+      </tr>`;
 
   }
+
+}
+
+function escucharRemisionesCaja(consulta){
+
+  if(listenerCajaRemisiones){
+    listenerCajaRemisiones();
+    listenerCajaRemisiones=null;
+  }
+
+  listenerCajaRemisiones =
+    consulta.onSnapshot(
+      snap=>{
+
+        const datos=
+          snap.docs.map(d=>({
+            id:d.id,
+            ...d.data()
+          }));
+
+        console.log(
+          "Caja recibió actualización:",
+          snap.docChanges().length,
+          "cambios"
+        );
+
+        actualizarReporteCajaEnPantalla(datos);
+
+      },
+      error=>{
+        console.error(
+          "Error en listener de Caja:",
+          error
+        );
+      }
+    );
+
+}
+
+function actualizarReporteCajaEnPantalla(datos){
+
+  const tipoDocFiltro=
+    document.getElementById("repFiltroTipoDoc").value;
+
+  const formaPagoFiltro=
+    document.getElementById("repFiltroFormaPago").value;
+
+  const buscarCliente=
+    document.getElementById("repBuscarCliente").value
+      .trim()
+      .toLowerCase();
+
+  const filtrados=datos.filter(r=>{
+
+    if(buscarCliente){
+
+      const nombreCliente=
+        String(r.nomCliente||"").toLowerCase();
+
+      const documentoCliente=
+        String(r.docCliente||"").toLowerCase();
+
+      if(
+        !nombreCliente.includes(buscarCliente) &&
+        !documentoCliente.includes(buscarCliente)
+      ){
+        return false;
+      }
+
+    }
+
+    if(
+      tipoDocFiltro!=="TODOS" &&
+      (r.tipoDoc||"Remisión")!==tipoDocFiltro
+    ){
+      return false;
+    }
+
+    if(
+      formaPagoFiltro!=="TODOS" &&
+      (r.formaPago||"")!==formaPagoFiltro
+    ){
+      return false;
+    }
+
+    return true;
+
+  }).sort((a,b)=>
+    String(b.fechaCreacion||b.fecha)
+      .localeCompare(
+        String(a.fechaCreacion||a.fecha)
+      )
+  );
+
+  datosRemisiones=filtrados;
+
+  const datosContables=
+    filtrados.filter(r=>
+      String(r.tipoDoc||"")
+        .trim()
+        .toLowerCase()!=="cotización" &&
+      String(r.estado||"")
+        .trim()
+        .toLowerCase()==="pagada"
+    );
+
+  const total=
+    datosContables.reduce(
+      (s,r)=>s+Number(r.total||0),
+      0
+    );
+
+  document.getElementById("kpiVendidoMensual").textContent=
+    money(total);
+
+  document.getElementById("kpiTotalVentas").textContent=
+    money(total);
+
+  document.getElementById("kpiCantRemisiones").textContent=
+    filtrados.length;
+
+  document.getElementById("kpiTicketPromedio").textContent=
+    money(
+      filtrados.length
+        ? total/filtrados.length
+        : 0
+    );
+
+  renderConsolidadoAsesores(datosContables);
+  renderConsolidadoAreas(datosContables);
+  renderConsolidadoFormaPago(datosContables);
+  renderTablaDetalleRemisiones(filtrados);
+
 }
 
 function exportarReporteExcel(){
@@ -4667,35 +4931,34 @@ async function actualizarFiltrosReportes(){
   if(!currentUser)
     return;
 
-  const datos=await obtenerRemisiones();
-const usuarios=await obtenerUsuarios();
+  const usuarios=await obtenerUsuarios();
 
-let usuariosAsesores=usuarios.filter(u=>
-  u.role==="asesor"
-);
-
-if(currentUser.role==="caja"){
-
-  const areaCaja=
-    String(currentUser.area||"").trim();
-
-  usuariosAsesores=usuariosAsesores.filter(u=>
-    String(u.area||"").trim()===areaCaja
+  let usuariosAsesores=usuarios.filter(u=>
+    u.role==="asesor"
   );
 
-}
+  if(currentUser.role==="caja"){
 
-const asesores=[
-  ...new Set(
-    usuariosAsesores
-      .map(u=>u.nombre||u.username)
-      .filter(Boolean)
-  )
-].sort();
+    const areaCaja=
+      String(currentUser.area||"").trim();
+
+    usuariosAsesores=usuariosAsesores.filter(u=>
+      String(u.area||"").trim()===areaCaja
+    );
+
+  }
+
+  const asesores=[
+    ...new Set(
+      usuariosAsesores
+        .map(u=>u.nombre||u.username)
+        .filter(Boolean)
+    )
+  ].sort();
 
   const areas=[
     ...new Set(
-      datos
+      usuarios
         .map(x=>x.area)
         .filter(Boolean)
     )
