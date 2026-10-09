@@ -34,7 +34,6 @@ main{padding:20px;max-width:1250px;margin:0 auto}.card{background:var(--surface)
 .section-title{font-size:15px;font-weight:700;color:var(--brand-dark);margin:0 0 12px;border-bottom:1px solid var(--line);padding-bottom:6px}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.grid-5{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
-.grid-6{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .field{display:flex;flex-direction:column;gap:4px;font-size:13px;margin-bottom:10px}.field label{font-weight:600;color:var(--ink)}
 .req{color:var(--required);margin-left:2px}
 input,select,textarea{padding:9px 12px;border:1px solid var(--line);border-radius:6px;font-size:13.5px;width:100%;background:#fff}
@@ -43,8 +42,8 @@ input:focus,select:focus,textarea:focus{outline:2px solid rgba(14,107,82,.15);bo
 .btn.primary{background:var(--brand);color:#fff}.btn.secondary{background:var(--surface-alt);color:var(--ink)}.btn.danger{background:#C53030;color:#fff}.btn.small{padding:5px 10px;font-size:12px}
 .btn:disabled{opacity:.55;cursor:not-allowed}
 .table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:13.5px}th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th.num,td.num{text-align:right}
-.meta-progress-track{height:10px;background:var(--surface-alt);border-radius:999px;overflow:hidden;margin-top:10px}
-.meta-progress-fill{height:100%;width:0;background:var(--brand);border-radius:inherit;transition:width .25s ease}
+.cot-materiales-tabla th,.cot-materiales-tabla td{text-align:center;vertical-align:middle}
+.cot-materiales-tabla input{text-align:center}
 .total-box{text-align:right;font-size:18px;font-weight:700;margin-top:15px;color:var(--brand-dark)}
 .kpi-card{background:var(--surface-alt);border:1px solid var(--line);padding:14px;border-radius:8px;text-align:center}.kpi-title{font-size:12px;color:var(--ink-soft);font-weight:600;text-transform:uppercase}.kpi-value{font-size:22px;font-weight:800;color:var(--brand-dark);margin-top:4px}
 .badge{
@@ -125,7 +124,6 @@ input:focus,select:focus,textarea:focus{outline:2px solid rgba(14,107,82,.15);bo
 }
 
 @media(max-width:900px){.grid-5,.grid-4,.grid-3,.grid-2{grid-template-columns:1fr}.item-grid{grid-template-columns:1fr!important}.topbar{align-items:flex-start}.tabs{width:100%}}
-@media(max-width:600px){.grid-6{grid-template-columns:1fr}}
 @media print{.no-print,.topbar,#loginModal{display:none!important}body{background:#fff}.card{border:none}}
 
 /* =========================================================
@@ -572,6 +570,7 @@ min-height:44px;
   </div>
   <nav class="tabs">
     <button type="button" class="tab-btn active" data-view="venta" onclick="showView('venta')">Nueva Remisión</button>
+    <button type="button" class="tab-btn" data-view="cotizacion" onclick="showView('cotizacion')">Nueva Cotización</button>
     <button type="button" id="tabReportes" class="tab-btn hidden" data-view="reporte" onclick="showView('reporte')">Reportes</button>
     <button type="button" id="tabUsuarios" class="tab-btn hidden" data-view="usuarios" onclick="showView('usuarios')">Gestión Usuarios</button>
     <button type="button" id="tabAjustes" class="tab-btn hidden" data-view="ajustes" onclick="showView('ajustes')">Configuración Empresa</button>
@@ -672,8 +671,8 @@ min-height:44px;
       <option value="Bordados">BORDADOS</option>
       <option value="DTF">DTF</option>
       <option value="Camisas">CAMISAS</option>
-      <option value="Cinta">CINTA METRO</option>
-      <option value="Cinta">CINTA ROLLO</option>
+      <option value="Cinta">METRO CINTA</option>
+      <option value="Cinta">ROLLO CINTA</option>
       <option value="Cinta">SATIN SENCILLO</option>
       <option value="Aplique">APLIQUE</option>
       <option value="Piro">PIROGRABADO</option>
@@ -777,6 +776,56 @@ min-height:44px;
 </div>
 </section>
 
+<section id="view-cotizacion" class="hidden">
+<div class="card">
+  <div class="section-title">Cotización y Orden de Producción</div>
+  <div class="grid-4">
+    <div class="field"><label>N.º de prefactura</label><input type="text" id="cotPrediseno" placeholder="Se asigna automáticamente" readonly></div>
+    <div class="field"><label>Fecha de solicitud</label><input type="date" id="cotFechaSolicitud" readonly></div>
+    <div class="field"><label>Fecha de entrega <span class="req">*</span></label><input type="date" id="cotFechaEntrega" required aria-required="true"></div>
+    <div class="field"><label>Asesor / Vendedor</label><input type="text" id="cotAsesor" readonly placeholder="Usuario activo"></div>
+  </div>
+  <div class="section-title" style="margin-top:15px">Datos del Cliente</div>
+  <div class="grid-3">
+    <div class="field cliente-nombre-wrap"><label>Nombre del cliente</label><input type="text" id="cotClienteNombre" autocomplete="off"><div id="cotClienteSugerenciasNombre" class="cliente-sugerencias hidden"></div></div>
+    <div class="field cliente-nombre-wrap"><label>NIT / Cédula</label><input type="text" id="cotNit" autocomplete="off"><div id="cotClienteSugerenciasDoc" class="cliente-sugerencias hidden"></div></div>
+    <div class="field"><label>Celular</label><input type="tel" id="cotCelular"></div>
+  </div>
+  <div id="cotInfoClienteBadge" class="status hidden"></div>
+  <div class="section-title" style="margin-top:15px">Tipo de Pedido</div>
+  <div class="grid-3">
+    <div class="field"><label>Venta</label><select id="cotVenta"><option value="">-- Seleccione --</option><option>Muestra</option><option>Producción</option></select></div>
+    <div class="field"><label>Diseño</label><select id="cotDiseno"><option value="">-- Seleccione --</option><option>Sí</option><option>No</option></select></div>
+    <div class="field"><label>Total del pedido</label><input type="number" id="cotTotalPedido" min="0" step="any" placeholder="$0" readonly></div>
+  </div>
+  <div class="section-title" style="margin-top:15px">Detalle del Pedido y Materiales</div>
+  <div class="table-wrap"><table class="cot-materiales-tabla" style="margin-top:0"><thead><tr><th>Tipo de material</th><th>Medida</th><th>Cant. metros</th><th>Rollos</th><th>Valor unitario</th><th>Valor total</th></tr></thead><tbody>
+    <tr><td><input aria-label="Tipo de material 1" type="text" id="cotMaterialTipo1"></td><td><input aria-label="Medida 1" type="text" id="cotMaterialMedida1"></td><td><input aria-label="Cantidad metros 1" type="number" id="cotMetros1" min="0" step="any"></td><td><input aria-label="Rollos 1" type="number" id="cotRollos1" min="0" step="any"></td><td><input aria-label="Valor unitario 1" type="number" id="cotUnitario1" min="0" step="any"></td><td><input aria-label="Valor total 1" type="number" id="cotValorTotal1" min="0" step="any" readonly></td></tr>
+    <tr><td><input aria-label="Tipo de material 2" type="text" id="cotMaterialTipo2"></td><td><input aria-label="Medida 2" type="text" id="cotMaterialMedida2"></td><td><input aria-label="Cantidad metros 2" type="number" id="cotMetros2" min="0" step="any"></td><td><input aria-label="Rollos 2" type="number" id="cotRollos2" min="0" step="any"></td><td><input aria-label="Valor unitario 2" type="number" id="cotUnitario2" min="0" step="any"></td><td><input aria-label="Valor total 2" type="number" id="cotValorTotal2" min="0" step="any" readonly></td></tr>
+    <tr><td><input aria-label="Tipo de material 3" type="text" id="cotMaterialTipo3"></td><td><input aria-label="Medida 3" type="text" id="cotMaterialMedida3"></td><td><input aria-label="Cantidad metros 3" type="number" id="cotMetros3" min="0" step="any"></td><td><input aria-label="Rollos 3" type="number" id="cotRollos3" min="0" step="any"></td><td><input aria-label="Valor unitario 3" type="number" id="cotUnitario3" min="0" step="any"></td><td><input aria-label="Valor total 3" type="number" id="cotValorTotal3" min="0" step="any" readonly></td></tr>
+    <tr><td><input aria-label="Tipo de material 4" type="text" id="cotMaterialTipo4"></td><td><input aria-label="Medida 4" type="text" id="cotMaterialMedida4"></td><td><input aria-label="Cantidad metros 4" type="number" id="cotMetros4" min="0" step="any"></td><td><input aria-label="Rollos 4" type="number" id="cotRollos4" min="0" step="any"></td><td><input aria-label="Valor unitario 4" type="number" id="cotUnitario4" min="0" step="any"></td><td><input aria-label="Valor total 4" type="number" id="cotValorTotal4" min="0" step="any" readonly></td></tr>
+    <tr><td colspan="4"></td><th>Total:</th><td><input type="number" id="cotTotalMateriales" min="0" step="any" aria-label="Total materiales" readonly></td></tr>
+  </tbody></table></div>
+  <p style="margin:5px 0;color:#b49b00;font-weight:700;font-style:italic">Nota: En pedidos por metros la producción puede variar +/- 1%-2%.</p>
+  <div class="section-title" style="margin-top:15px">Especificaciones de Corte, Color y Diseño</div>
+  <div class="grid-3">
+    <div class="field"><label>Color base</label><input type="text" id="cotColorBase"></div>
+    <div class="field"><label>Medida logo</label><input type="text" id="cotMedidaLogo"></div>
+    <div class="field"><label>Línea de corte (cm)</label><input type="text" id="cotLineaCorte"></div>
+    <div class="field"><label>Color de fondo</label><input type="text" id="cotColorFondo"></div>
+    <div class="field"><label>Orientación del logo</label><input type="text" id="cotOrientacionLogo"></div>
+    <div class="field"><label>Cantidad de cortes</label><input type="number" id="cotCantidadCortes" min="0"></div>
+    <div class="field"><label>Color del logo</label><input type="text" id="cotColorLogo"></div>
+    <div class="field"><label>Distancia entre logos (cm)</label><input type="text" id="cotDistanciaLogos"></div>
+    <div class="field"><label>Diseño</label><textarea id="cotEspecificacionDiseno" rows="1"></textarea></div>
+  </div>
+  <div class="section-title" style="margin-top:15px">Notas Importantes</div>
+  <div class="field"><label>Imagenes de referencia</label><input type="file" id="cotFotoPrediseno" accept="image/*"><input type="file" id="cotFotoPrediseno" accept="image/*"><input type="file" id="cotFotoPrediseno" accept="image/*"><input type="file" id="cotFotoPrediseno" accept="image/*"></div>
+  <div class="field"><label>Notas / indicaciones</label><textarea id="cotNotas" rows="3"></textarea></div>
+  <div style="margin-top:20px;text-align:right"><button type="button" id="btnGuardarCotizacion" class="btn primary" onclick="guardarCotizacion()">Guardar Cotización</button></div>
+</div>
+</section>
+
 <section id="view-reporte" class="hidden">
 <div class="card">
   <div class="section-title">Filtros de Búsqueda y Consolidación</div>
@@ -813,6 +862,7 @@ min-height:44px;
         <option value="TODOS">-- Todos --</option>
         <option value="Remisión">REM</option>
         <option value="Factura Electrónica">FE</option>
+        <option value="Cotización">COT</option>
       </select>
     </div>
 
@@ -823,9 +873,9 @@ min-height:44px;
     <option value="EFECTIVO">EFECTIVO</option>
     <option value="005 TRANSFERENCIA">005 TRANSFERENCIA</option>
     <option value="SAS TRANSFERENCIA">SAS TRANSFERENCIA</option>
+    <option value="TRANSFERENCIA">TRANSFERENCIA</option>
     <option value="DATAFONO">DATAFONO</option>
   </select>
-  </div>
 
   <div class="field" style="margin:0">
   <label>Buscar Cliente</label>
@@ -840,7 +890,7 @@ min-height:44px;
   </div>
 </div>
 <div style="margin-top:12px;text-align:right;display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap">
-  <button class="btn primary" onclick="procesarReportes(true)">
+  <button class="btn primary" onclick="procesarReportes()">
     Filtrar y Actualizar Consolidado
   </button>
 
@@ -848,23 +898,38 @@ min-height:44px;
     📊 Descargar Excel
   </button>
 </div>
-<div class="card" id="panelMetasReportes" style="margin-bottom:16px">
-  <div class="section-title" id="metaTituloReporte">Metas de la empresa <span id="metaPeriodoReporte" style="font-weight:400;color:var(--ink-soft)"></span></div>
-  <div class="grid-4">
-    <div class="kpi-card"><div class="kpi-title">Meta general mensual</div><div class="kpi-value" id="metaGeneralReporte">$0</div></div>
-    <div class="kpi-card"><div class="kpi-title">Vendido este mes</div><div class="kpi-value" id="metaVendidoMesReporte">$0</div></div>
-    <div class="kpi-card"><div class="kpi-title">Cumplimiento mensual</div><div class="kpi-value" id="metaPorcentajeMesReporte">0%</div></div>
-    <div class="kpi-card"><div class="kpi-title">Meta diaria / vendido hoy</div><div class="kpi-value" id="metaDiariaReporte">$0 / $0</div><small id="metaPorcentajeDiaReporte">0% de cumplimiento</small></div>
-  </div>
-  <div class="meta-progress-track" role="progressbar" aria-label="Cumplimiento de meta mensual de la empresa" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="meta-progress-fill" id="metaBarraReporte"></div></div>
-  <div id="metaEstadoReporte" style="font-size:12px;color:var(--ink-soft);margin-top:8px;text-align:center" aria-live="polite">Cargando metas...</div>
-  <div class="section-title" id="metaTablaTituloReporte" style="margin-top:16px">Presupuesto mensual por asesor</div>
-  <div class="table-wrap"><table><thead><tr><th>Asesor</th><th>Área</th><th class="num">Presupuesto mensual</th><th class="num">Vendido</th><th class="num">Faltante</th><th class="num">Cumplimiento</th></tr></thead><tbody id="tablaMetasAsesoresReporte"><tr><td colspan="6" style="text-align:center;color:var(--ink-soft)">Cargando presupuestos...</td></tr></tbody></table></div>
-</div>
 <div class="grid-3" style="margin-bottom:16px">
 <div class="kpi-card"><div class="kpi-title">Total Facturado</div><div class="kpi-value" id="kpiTotalVentas">$0</div></div>
 <div class="kpi-card"><div class="kpi-title">Remisiones / Docs Realizados</div><div class="kpi-value" id="kpiCantRemisiones">0</div></div>
 <div class="kpi-card"><div class="kpi-title">Promedio por Venta</div><div class="kpi-value" id="kpiTicketPromedio">$0</div></div>
+</div>
+<div class="card" id="cardPresupuestoMensual" style="margin-bottom:16px">
+  <div class="section-title">Presupuesto Mensual</div>
+
+  <div class="grid-3">
+
+    <div class="kpi-card">
+      <div class="kpi-title">Meta Mensual</div>
+      <div class="kpi-value" id="kpiMetaMensual">$0</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-title">Vendido</div>
+      <div class="kpi-value" id="kpiVendidoMensual">$0</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-title">Faltante</div>
+      <div class="kpi-value" id="kpiFaltanteMensual">$0</div>
+    </div>
+
+  </div>
+
+  <div style="text-align:center;margin-top:12px">
+    <strong>Cumplimiento:</strong>
+    <span id="kpiCumplimientoMensual">0%</span>
+  </div>
+
 </div>
 <div style="margin-bottom:16px">
 
@@ -927,7 +992,6 @@ min-height:44px;
 <p style="font-size:13px;color:var(--ink-soft)">Modifica la identidad visual que verán tus asesores y clientes en las remisiones.</p>
 <form id="configForm">
 <div class="field"><label>Nombre Comercial de la Empresa / App <span class="req">*</span></label><input type="text" id="cfgAppName" required placeholder="ej. Mi Empresa S.A.S."></div>
-<div class="field"><label>Meta general mensual de la empresa ($)</label><input type="number" id="cfgMetaGeneralMensual" min="0" step="1000" placeholder="ej. 50000000"></div>
 <div class="field"><label>URL de la Imagen del Logo</label><input type="url" id="cfgLogoUrl" placeholder="https://ejemplo.com/logo.png"></div>
 <div class="field"><label>O Cargar Logo desde este equipo</label><input type="file" id="cfgLogoFile" accept="image/*" onchange="convertirImagenBase64(this)"></div>
 <div class="field">
@@ -956,6 +1020,22 @@ min-height:44px;
 <div class="modal-card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><h2 style="margin-top:0">Detalle del documento</h2><button class="btn secondary" onclick="cerrarDetalle()">Cerrar</button></div><div id="detalleContenido"></div></div>
 </div>
 
+<div id="abonoCotizacionModal" class="modal hidden">
+  <div class="modal-card" style="max-width:520px">
+    <div style="display:flex;justify-content:space-between;gap:10px;align-items:center">
+      <h2 style="margin-top:0">Registrar abono</h2>
+      <button type="button" class="btn secondary" onclick="cerrarModalAbono()" aria-label="Cerrar">Cerrar</button>
+    </div>
+    <div id="abonoCotizacionResumen" class="status info"></div>
+    <div class="field"><label for="abonoCotizacionValor">Valor del abono</label><input type="number" id="abonoCotizacionValor" min="1" step="1"></div>
+    <div class="field"><label for="abonoCotizacionMetodo">Método de pago</label><select id="abonoCotizacionMetodo"><option value="">-- Seleccione --</option><option value="EFECTIVO">Efectivo</option><option value="TRANSFERENCIA">Transferencia</option></select></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:15px">
+      <button type="button" class="btn secondary" onclick="cerrarModalAbono()">Cancelar</button>
+      <button type="button" class="btn primary" id="btnConfirmarAbono" onclick="registrarAbonoCotizacion()">Registrar abono</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* =========================================================
    CONFIGURACIÓN
@@ -981,30 +1061,21 @@ let itemsActuales = [];
 let datosRemisiones = [];
 let cacheRemisiones=null;
 let cacheUsuarios=null;
-let cacheUsuariosAt=0;
-let cargaUsuariosPendiente=null;
-let cargaClientesPendiente=null;
 let listenerCajaRemisiones=null;
-let listenerMetasReporte=null;
-let temporizadorMetaReporte=null;
-let periodoMetaReporteActivo="";
-let documentosMetaReporte=[];
-let usuariosMetaReporte=[];
-let metaGeneralMensualEmpresa=0;
-let claveListenerCaja=null;
-let datosListenerCaja=null;
-const cacheConsultasReportes=new Map();
-const consultasReportesPendientes=new Map();
-const CACHE_REPORTES_TTL=15000;
-const cacheClientesPorDocumento=new Map();
-let cacheClientesBusquedaAt=0;
-let cacheConfiguracionEmpresa=null;
+let listenerCajaCotizaciones=null;
+let listenerCajaAbonos=null;
+let datosCajaRemisiones=[];
+let datosCajaCotizaciones=[];
+let datosCajaAbonos=[];
+let claveListenerCaja="";
+let cotizacionSeleccionadaAbono=null;
 let logoBase64Temporal = "";
 
 /* =========================================================
    CONTROL DE BÚSQUEDA DE CLIENTES
    ========================================================= */
 let clientesCacheBusqueda = null;
+let temporizadorBusquedaClienteCotizacion = null;
 let temporizadorBusquedaCliente = null;
 
 const LS = {
@@ -1041,27 +1112,15 @@ function exigirFirebase(){
 
 async function obtenerUsuarios(){
   exigirFirebase();
-  if(cacheUsuarios!==null && Date.now()-cacheUsuariosAt<60000)
-    return cacheUsuarios;
-  if(cargaUsuariosPendiente)
-    return cargaUsuariosPendiente;
-
-  cargaUsuariosPendiente=(async()=>{
-    const snap=await db.collection("usuarios").get();
-    if(snap.empty){
-      const admin=DEFAULT_USERS[0];
-      const data={...admin};
-      delete data.id;
-      await db.collection("usuarios").doc(admin.id).set(data);
-      cacheUsuarios=[admin];
-    }else{
-      cacheUsuarios=snap.docs.map(d=>({id:d.id,...d.data()}));
-    }
-    cacheUsuariosAt=Date.now();
-    return cacheUsuarios;
-  })();
-  try{return await cargaUsuariosPendiente;}
-  finally{cargaUsuariosPendiente=null;}
+  const snap=await db.collection("usuarios").get();
+  if(snap.empty){
+    const admin=DEFAULT_USERS[0];
+    const data={...admin};
+    delete data.id;
+    await db.collection("usuarios").doc(admin.id).set(data);
+    return [admin];
+  }
+  return snap.docs.map(d=>({id:d.id,...d.data()}));
 }
 
 async function obtenerRemisiones(){
@@ -1089,23 +1148,12 @@ async function guardarUsuarioDB(user){
   const id=user.id || db.collection("usuarios").doc().id;
   const data={...user}; delete data.id;
   await db.collection("usuarios").doc(id).set(data,{merge:true});
-  const saved={id,...data};
-  if(cacheUsuarios!==null){
-    const indice=cacheUsuarios.findIndex(u=>u.id===id);
-    if(indice<0) cacheUsuarios.push(saved);
-    else cacheUsuarios[indice]={...cacheUsuarios[indice],...saved};
-    cacheUsuariosAt=Date.now();
-  }
-  return saved;
+  return {id,...data};
 }
 
 async function eliminarUsuarioDB(id){
   exigirFirebase();
   await db.collection("usuarios").doc(id).delete();
-  if(cacheUsuarios!==null){
-    cacheUsuarios=cacheUsuarios.filter(u=>u.id!==id);
-    cacheUsuariosAt=Date.now();
-  }
 }
 
 async function guardarRemisionDB(doc){
@@ -1115,44 +1163,19 @@ async function guardarRemisionDB(doc){
 
 async function obtenerClientes(){
   exigirFirebase();
-  if(clientesCacheBusqueda && Date.now()-cacheClientesBusquedaAt<120000)
-    return clientesCacheBusqueda;
-  if(cargaClientesPendiente)
-    return cargaClientesPendiente;
-
-  cargaClientesPendiente=(async()=>{
-    const snap=await db.collection("clientes").get();
-    clientesCacheBusqueda=snap.docs.map(d=>({id:d.id,...d.data()}));
-    cacheClientesBusquedaAt=Date.now();
-    clientesCacheBusqueda.forEach(c=>cacheClientesPorDocumento.set(String(c.id),c));
-    return clientesCacheBusqueda;
-  })();
-  try{return await cargaClientesPendiente;}
-  finally{cargaClientesPendiente=null;}
+  const snap=await db.collection("clientes").get();
+  return snap.docs.map(d=>({id:d.id,...d.data()}));
 }
 
 async function obtenerCliente(doc){
   exigirFirebase();
-  const clave=String(doc||"").trim();
-  if(cacheClientesPorDocumento.has(clave))
-    return cacheClientesPorDocumento.get(clave);
   const s=await db.collection("clientes").doc(doc).get();
-  const cliente=s.exists ? {id:s.id,...s.data()} : null;
-  cacheClientesPorDocumento.set(clave,cliente);
-  return cliente;
+  return s.exists ? s.data() : null;
 }
 
 async function guardarCliente(doc,data){
   exigirFirebase();
   await db.collection("clientes").doc(doc).set(data,{merge:true});
-  const cliente={id:String(doc),...data};
-  cacheClientesPorDocumento.set(String(doc),cliente);
-  if(clientesCacheBusqueda){
-    const indice=clientesCacheBusqueda.findIndex(c=>String(c.id)===String(doc));
-    if(indice<0) clientesCacheBusqueda.push(cliente);
-    else clientesCacheBusqueda[indice]={...clientesCacheBusqueda[indice],...cliente};
-    cacheClientesBusquedaAt=Date.now();
-  }
 }
 
 /* =========================================================
@@ -1220,7 +1243,6 @@ function ocultarLogin(){ document.getElementById("loginModal").classList.add("hi
 
 function logout(){
   detenerListenerCaja();
-  detenerListenerMetaReporte();
   currentUser=null;
   sessionStorage.removeItem(LS.session);
   mostrarLogin();
@@ -1234,6 +1256,10 @@ async function aplicarSesion(){
   document.getElementById("sessionRole").textContent=String(currentUser.role||"asesor").toUpperCase();
   document.getElementById("txtAreaUsuario").textContent="Área: "+(currentUser.area||"-");
   document.getElementById("remAsesor").value=currentUser.nombre||currentUser.username||"";
+  document.getElementById("cotAsesor").value=currentUser.nombre||currentUser.username||"";
+  const hoy=new Date();
+  const fechaSolicitud=[hoy.getFullYear(),String(hoy.getMonth()+1).padStart(2,"0"),String(hoy.getDate()).padStart(2,"0")].join("-");
+  document.getElementById("cotFechaSolicitud").value=fechaSolicitud;
   const admin=currentUser.role==="admin", caja=currentUser.role==="caja";
   document.getElementById("contenedorFiltroAsesor")
   .classList.toggle("hidden",currentUser.role==="asesor");
@@ -1242,17 +1268,165 @@ async function aplicarSesion(){
   document.getElementById("contenedorConsolidadoArea")
   .classList.toggle("hidden",currentUser.role!=="admin");
   document.querySelector('[data-view="venta"]').classList.toggle("hidden",caja);
+    if(caja){
+    showView("reporte");
+    }
   document.getElementById("tabReportes").classList.toggle("hidden",false);
   document.getElementById("tabUsuarios").classList.toggle("hidden",!admin);
   document.getElementById("tabAjustes").classList.toggle("hidden",!admin);
   await cargarConfiguracion();
   await actualizarFiltrosReportes();
-  if(caja) showView("reporte");
 }
 
 /* =========================================================
    NAVEGACIÓN Y FORMULARIO
    ========================================================= */
+async function cargarSiguienteNumeroPrefactura(){
+  const campo=document.getElementById("cotPrediseno");
+  if(campo.value||window.cargandoNumeroPrefactura) return;
+  window.cargandoNumeroPrefactura=true;
+  campo.value="Consultando...";
+  try{
+    const snap=await db.collection("remisiones")
+      .where("tipoDoc","==","Cotización")
+      .orderBy("consecutivo","desc")
+      .limit(1)
+      .get();
+    const ultimo=snap.empty?null:snap.docs[0].data();
+    const siguiente=Number(ultimo?.consecutivo||0)+1;
+    campo.value=`COT-${String(siguiente).padStart(3,"0")}`;
+  }catch(error){
+    campo.value="";
+    console.error("No se pudo obtener el número de prefactura:",error);
+    alert("No se pudo consultar el siguiente número de prefactura. Verifica la conexión e inténtalo de nuevo.");
+  }finally{
+    window.cargandoNumeroPrefactura=false;
+  }
+}
+
+function calcularTotalesCotizacion(){
+  let total=0;
+  for(let i=1;i<=4;i++){
+    const metros=Number(document.getElementById(`cotMetros${i}`).value)||0;
+    const rollos=Number(document.getElementById(`cotRollos${i}`).value)||0;
+    const unitario=Number(document.getElementById(`cotUnitario${i}`).value)||0;
+    // Cada material se cotiza por metros o por rollos; si se diligencian ambos,
+    // se priorizan los metros para evitar duplicar cantidades en el renglón.
+    const cantidad=metros>0?metros:rollos;
+    const subtotal=cantidad*unitario;
+    document.getElementById(`cotValorTotal${i}`).value=subtotal.toFixed(2);
+    total+=subtotal;
+  }
+  const totalRedondeado=total.toFixed(2);
+  document.getElementById("cotTotalMateriales").value=totalRedondeado;
+  document.getElementById("cotTotalPedido").value=totalRedondeado;
+}
+
+async function guardarCotizacion(){
+  if(!currentUser || !["admin","asesor"].includes(currentUser.role)){
+    alert("No tienes permiso para guardar cotizaciones.");
+    return;
+  }
+
+  const fechaSolicitud=document.getElementById("cotFechaSolicitud").value||fechaHoy();
+  const fechaEntrega=document.getElementById("cotFechaEntrega").value;
+  const nomCliente=document.getElementById("cotClienteNombre").value.trim();
+  const docCliente=document.getElementById("cotNit").value.trim();
+  const telCliente=document.getElementById("cotCelular").value.trim();
+  const venta=document.getElementById("cotVenta").value;
+  const diseno=document.getElementById("cotDiseno").value;
+  const total=Number(document.getElementById("cotTotalPedido").value)||0;
+  const materiales=[];
+
+  for(let i=1;i<=4;i++){
+    const material={
+      tipo:document.getElementById(`cotMaterialTipo${i}`).value.trim(),
+      medida:document.getElementById(`cotMaterialMedida${i}`).value.trim(),
+      metros:Number(document.getElementById(`cotMetros${i}`).value)||0,
+      rollos:Number(document.getElementById(`cotRollos${i}`).value)||0,
+      valorUnitario:Number(document.getElementById(`cotUnitario${i}`).value)||0,
+      valorTotal:Number(document.getElementById(`cotValorTotal${i}`).value)||0
+    };
+    if(material.tipo||material.medida||material.metros||material.rollos||material.valorUnitario)
+      materiales.push(material);
+  }
+
+  if(!fechaEntrega||!nomCliente||!docCliente||!telCliente||!venta||!diseno||!materiales.length||total<=0){
+    alert("Completa la fecha de entrega, los datos del cliente, el tipo de pedido y al menos un material con valor.");
+    return;
+  }
+
+  const boton=document.getElementById("btnGuardarCotizacion");
+  boton.disabled=true;
+  try{
+    exigirFirebase();
+    const ultimoSnap=await db.collection("remisiones")
+      .where("tipoDoc","==","Cotización")
+      .orderBy("consecutivo","desc")
+      .limit(1)
+      .get();
+    const consecutivo=(Number(ultimoSnap.empty?0:ultimoSnap.docs[0].data().consecutivo)||0)+1;
+    const idDocumento=`COT-${String(consecutivo).padStart(3,"0")}`;
+    const clienteAnterior=await obtenerCliente(docCliente);
+    const ahora=new Date().toISOString();
+    await guardarCliente(docCliente,{
+      ...(clienteAnterior||{}),
+      docCliente,
+      nomCliente,
+      telCliente,
+      totalCompras:Number(clienteAnterior?.totalCompras||0),
+      totalInvertido:Number(clienteAnterior?.totalInvertido||0),
+      fechaRegistro:clienteAnterior?.fechaRegistro||ahora,
+      ultimaActualizacion:ahora
+    });
+
+    const cotizacion={
+      idDocumento,consecutivo,tipoDoc:"Cotización",estado:"Pendiente",
+      fecha:fechaSolicitud,fechaSolicitud,fechaEntrega,fechaCreacion:ahora,
+      docCliente,nomCliente,telCliente,
+      asesor:currentUser.nombre||currentUser.username||"",area:currentUser.area||"",
+      venta,diseno,materiales,
+      totalMateriales:Number(document.getElementById("cotTotalMateriales").value)||total,
+      total,totalAbonado:0,numeroAbonos:0,
+      colorBase:document.getElementById("cotColorBase").value.trim(),
+      medidaLogo:document.getElementById("cotMedidaLogo").value.trim(),
+      lineaCorte:document.getElementById("cotLineaCorte").value.trim(),
+      colorFondo:document.getElementById("cotColorFondo").value.trim(),
+      orientacionLogo:document.getElementById("cotOrientacionLogo").value.trim(),
+      cantidadCortes:Number(document.getElementById("cotCantidadCortes").value)||0,
+      colorLogo:document.getElementById("cotColorLogo").value.trim(),
+      distanciaLogos:document.getElementById("cotDistanciaLogos").value.trim(),
+      especificacionDiseno:document.getElementById("cotEspecificacionDiseno").value.trim(),
+      notas:document.getElementById("cotNotas").value.trim(),
+      esClienteNuevo:Number(clienteAnterior?.totalCompras||0)===0
+    };
+
+    await db.collection("remisiones").doc(idDocumento).set(cotizacion);
+    alert(`Cotización ${idDocumento} guardada en estado Pendiente.`);
+    document.querySelectorAll("#view-cotizacion input").forEach(input=>{
+      if(input.type==="file") input.value="";
+      else if(!["cotFechaSolicitud","cotAsesor"].includes(input.id)) input.value="";
+    });
+    document.querySelectorAll("#view-cotizacion select").forEach(select=>select.value="");
+    document.querySelectorAll("#view-cotizacion textarea").forEach(textarea=>textarea.value="");
+    document.getElementById("cotFechaSolicitud").value=fechaHoy();
+    document.getElementById("cotAsesor").value=currentUser.nombre||currentUser.username||"";
+    document.getElementById("cotInfoClienteBadge").className="status hidden";
+    calcularTotalesCotizacion();
+    window.cargandoNumeroPrefactura=false;
+    document.getElementById("cotPrediseno").value="";
+    await cargarSiguienteNumeroPrefactura();
+    if(!document.getElementById("view-reporte").classList.contains("hidden")) procesarReportes();
+  }catch(error){
+    console.error("Error guardando cotización:",error);
+    alert("No se pudo guardar la cotización: "+error.message);
+  }finally{
+    boton.disabled=false;
+  }
+}
+
+document.getElementById("view-cotizacion").addEventListener("input",calcularTotalesCotizacion);
+
 function showView(view){
 
   if(!currentUser) return;
@@ -1260,7 +1434,7 @@ function showView(view){
   document.getElementById("fechaConsolidados").textContent =
   new Date().toLocaleDateString("es-CO");
 
-  const permisos={venta:["admin","asesor"],reporte:["admin","caja","asesor"],usuarios:["admin"],ajustes:["admin"]};
+  const permisos={venta:["admin","asesor"],cotizacion:["admin","asesor"],reporte:["admin","caja","asesor"],usuarios:["admin"],ajustes:["admin"]};
 
   if(permisos[view] && !permisos[view].includes(currentUser.role)){
 
@@ -1270,12 +1444,7 @@ function showView(view){
 
   }
 
-  if(view!=="reporte"){
-    detenerListenerCaja();
-    detenerListenerMetaReporte();
-  }
-
-  ["venta","reporte","usuarios","ajustes"].forEach(v=>
+  ["venta","cotizacion","reporte","usuarios","ajustes"].forEach(v=>
 
     document.getElementById("view-"+v).classList.toggle("hidden",v!==view)
 
@@ -1287,227 +1456,14 @@ function showView(view){
 
   );
 
-  if(view==="reporte"){
-    actualizarMetaReporte();
-    procesarReportes();
-  }
+  if(view==="reporte") procesarReportes();
 
   if(view==="usuarios") renderUsuarios();
 
-}
+  if(view==="cotizacion") cargarSiguienteNumeroPrefactura();
 
-function detenerListenerMetaReporte(){
-  if(listenerMetasReporte){listenerMetasReporte();listenerMetasReporte=null;}
-  if(temporizadorMetaReporte){clearInterval(temporizadorMetaReporte);temporizadorMetaReporte=null;}
-  periodoMetaReporteActivo="";
-}
+  if(view!=="reporte"&&currentUser.role==="caja") detenerListenerCaja();
 
-function fechaMetaKey(fecha){
-  return `${fecha.getFullYear()}-${String(fecha.getMonth()+1).padStart(2,"0")}-${String(fecha.getDate()).padStart(2,"0")}`;
-}
-
-function sumarDiasMeta(fecha,cantidad){
-  const resultado=new Date(fecha.getFullYear(),fecha.getMonth(),fecha.getDate());
-  resultado.setDate(resultado.getDate()+cantidad);
-  return resultado;
-}
-
-function lunesSiguienteOMismo(fecha){
-  const dia=fecha.getDay();
-  return sumarDiasMeta(fecha,dia===1?0:(8-dia)%7);
-}
-
-function calcularPascuaMeta(anio){
-  const a=anio%19,b=Math.floor(anio/100),c=anio%100;
-  const d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25);
-  const g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30;
-  const i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7;
-  const m=Math.floor((a+11*h+22*l)/451);
-  const mes=Math.floor((h+l-7*m+114)/31);
-  const dia=((h+l-7*m+114)%31)+1;
-  return new Date(anio,mes-1,dia);
-}
-
-function obtenerFestivosColombia(anio){
-  const festivos=new Set();
-  const agregar=(fecha)=>festivos.add(fechaMetaKey(fecha));
-  const fijo=(mes,dia)=>agregar(new Date(anio,mes-1,dia));
-  ["01-01","05-01","07-20","08-07","12-08","12-25"].forEach(fecha=>{
-    const [mes,dia]=fecha.split("-").map(Number);
-    fijo(mes,dia);
-  });
-  [[1,6],[3,19],[6,29],[8,15],[10,12],[11,1],[11,11]].forEach(([mes,dia])=>
-    agregar(lunesSiguienteOMismo(new Date(anio,mes-1,dia)))
-  );
-  const pascua=calcularPascuaMeta(anio);
-  agregar(sumarDiasMeta(pascua,-3));
-  agregar(sumarDiasMeta(pascua,-2));
-  agregar(lunesSiguienteOMismo(sumarDiasMeta(pascua,39)));
-  agregar(lunesSiguienteOMismo(sumarDiasMeta(pascua,60)));
-  agregar(lunesSiguienteOMismo(sumarDiasMeta(pascua,68)));
-  return festivos;
-}
-
-function obtenerPeriodoMetaActual(){
-  const ahora=new Date();
-  const anio=ahora.getFullYear();
-  const mes=ahora.getMonth();
-  const inicio=new Date(anio,mes,1);
-  const fin=new Date(anio,mes+1,0);
-  const festivos=obtenerFestivosColombia(anio);
-  let diasLaborales=0;
-  for(let dia=1;dia<=fin.getDate();dia++){
-    const fecha=new Date(anio,mes,dia);
-    if(fecha.getDay()!==0&&!festivos.has(fechaMetaKey(fecha))) diasLaborales++;
-  }
-  return {
-    inicio:fechaMetaKey(inicio),
-    fin:fechaMetaKey(fin),
-    hoy:fechaMetaKey(ahora),
-    anio,
-    festivos,
-    diasLaborales,
-    hoyLaboral:ahora.getDay()!==0&&!festivos.has(fechaMetaKey(ahora)),
-    etiqueta:ahora.toLocaleDateString("es-CO",{month:"long",year:"numeric"})
-  };
-}
-
-function claveConsultaReporte(inicio,fin,asesor,area){
-  return JSON.stringify({
-    usuario:currentUser.id||currentUser.username,
-    rol:currentUser.role,
-    nombre:currentUser.nombre||"",
-    areaUsuario:currentUser.area||"",
-    inicio,fin,asesor,area
-  });
-}
-
-async function cargarDatosConsultaReporte(consulta,clave,forzarRecarga=false){
-  const cacheados=cacheConsultasReportes.get(clave);
-  if(!forzarRecarga && cacheados && Date.now()-cacheados.at<CACHE_REPORTES_TTL)
-    return cacheados.datos;
-
-  let pendiente=consultasReportesPendientes.get(clave);
-  if(!pendiente){
-    pendiente=consulta.get().then(snap=>{
-      const datos=snap.docs.map(d=>({id:d.id,...d.data()}));
-      cacheConsultasReportes.set(clave,{at:Date.now(),datos});
-      while(cacheConsultasReportes.size>20)
-        cacheConsultasReportes.delete(cacheConsultasReportes.keys().next().value);
-      return datos;
-    }).finally(()=>consultasReportesPendientes.delete(clave));
-    consultasReportesPendientes.set(clave,pendiente);
-  }
-  return pendiente;
-}
-
-async function actualizarMetaReporte(){
-  if(!currentUser) return;
-  const periodo=obtenerPeriodoMetaActual();
-  if(listenerMetasReporte&&periodoMetaReporteActivo===periodo.inicio){
-    renderizarMetaReporte(documentosMetaReporte,periodo);
-    return;
-  }
-  detenerListenerMetaReporte();
-  periodoMetaReporteActivo=periodo.inicio;
-  document.getElementById("metaEstadoReporte").textContent="Cargando metas y ventas del mes...";
-  document.getElementById("tablaMetasAsesoresReporte").innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--ink-soft)">Cargando presupuestos...</td></tr>';
-  try{
-    exigirFirebase();
-    if(currentUser.role==="asesor"){
-      const nombreAsesor=currentUser.nombre||currentUser.username||"";
-      usuariosMetaReporte=[currentUser];
-      const consultaMeta=db.collection("remisiones")
-        .where("fecha",">=",periodo.inicio)
-        .where("fecha","<=",periodo.hoy)
-        .where("asesor","==",nombreAsesor);
-      const asesorFiltro=document.getElementById("repFiltroAsesor").value;
-      const areaFiltro=document.getElementById("repFiltroArea").value;
-      const claveMeta=claveConsultaReporte(periodo.inicio,periodo.hoy,asesorFiltro,areaFiltro);
-      documentosMetaReporte=await cargarDatosConsultaReporte(consultaMeta,claveMeta);
-      renderizarMetaReporte(documentosMetaReporte,periodo);
-      return;
-    }
-
-    usuariosMetaReporte=(await obtenerUsuarios()).filter(u=>u.role==="asesor");
-    const consulta=db.collection("remisiones")
-      .where("fecha",">=",periodo.inicio)
-      .where("fecha","<=",periodo.fin);
-    listenerMetasReporte=consulta.onSnapshot(snap=>{
-      documentosMetaReporte=snap.docs.map(doc=>doc.data());
-      renderizarMetaReporte(documentosMetaReporte,obtenerPeriodoMetaActual());
-    },error=>{
-      console.error("No se pudieron actualizar las metas:",error);
-      document.getElementById("metaEstadoReporte").textContent="No se pudieron cargar las metas. Verifica la conexión.";
-    });
-    temporizadorMetaReporte=setInterval(()=>{
-      const periodoActual=obtenerPeriodoMetaActual();
-      if(periodoActual.inicio!==periodoMetaReporteActivo)
-        actualizarMetaReporte();
-      else
-        renderizarMetaReporte(documentosMetaReporte,periodoActual);
-    },60000);
-  }catch(error){
-    console.error("No se pudieron cargar las metas:",error);
-    document.getElementById("metaEstadoReporte").textContent="No se pudieron cargar las metas. Verifica la conexión.";
-  }
-}
-
-function renderizarMetaReporte(documentos,periodo=obtenerPeriodoMetaActual()){
-  const esAsesor=currentUser?.role==="asesor";
-  const meta=Math.max(0,Number(esAsesor?currentUser.presupuestoMensual:metaGeneralMensualEmpresa)||0);
-  const esVentaPagada=doc=>String(doc.tipoDoc||"").trim().toLowerCase()!=="cotización"&&String(doc.estado||"").trim().toLowerCase()==="pagada";
-  const vendidas=documentos.filter(esVentaPagada);
-  const vendidoMes=vendidas.reduce((s,doc)=>s+Number(doc.total||0),0);
-  const vendidoHoy=vendidas.filter(doc=>doc.fecha===periodo.hoy).reduce((s,doc)=>s+Number(doc.total||0),0);
-  const metaDiaria=periodo.diasLaborales>0?meta/periodo.diasLaborales:0;
-  const metaDeHoy=periodo.hoyLaboral?metaDiaria:0;
-  const cumplimientoMes=meta>0?vendidoMes/meta*100:0;
-  const cumplimientoDia=metaDeHoy>0?vendidoHoy/metaDeHoy*100:0;
-  const barra=document.getElementById("metaBarraReporte");
-  const progreso=barra?.parentElement;
-  const porcentajeBarra=Math.min(cumplimientoMes,100);
-  document.getElementById("metaTituloReporte").firstChild.textContent=esAsesor?"Mi avance mensual ":"Metas de la empresa ";
-  document.getElementById("metaTablaTituloReporte").textContent=esAsesor?"Mi presupuesto mensual":"Presupuesto mensual por asesor";
-  document.getElementById("metaGeneralReporte").previousElementSibling.textContent=esAsesor?"Mi presupuesto mensual":"Meta general mensual";
-  document.getElementById("metaVendidoMesReporte").previousElementSibling.textContent=esAsesor?"Vendido por mí este mes":"Vendido este mes";
-  document.getElementById("metaPorcentajeMesReporte").previousElementSibling.textContent=esAsesor?"Mi cumplimiento mensual":"Cumplimiento mensual";
-  document.getElementById("metaPeriodoReporte").textContent=`· ${periodo.etiqueta}`;
-  document.getElementById("metaGeneralReporte").textContent=money(meta);
-  document.getElementById("metaVendidoMesReporte").textContent=money(vendidoMes);
-  document.getElementById("metaPorcentajeMesReporte").textContent=meta>0?`${cumplimientoMes.toFixed(1)}%`:"Sin meta";
-  document.getElementById("metaDiariaReporte").textContent=`${money(metaDeHoy)} / ${money(vendidoHoy)}`;
-  document.getElementById("metaPorcentajeDiaReporte").textContent=periodo.hoyLaboral
-    ? (metaDeHoy>0?`${cumplimientoDia.toFixed(1)}% de cumplimiento hoy`:"Meta diaria sin configurar")
-    : "Hoy no es día laboral; no aplica meta diaria";
-  if(barra) barra.style.width=`${porcentajeBarra}%`;
-  if(progreso) progreso.setAttribute("aria-valuenow",String(Math.round(porcentajeBarra)));
-  if(progreso) progreso.setAttribute("aria-label",esAsesor?"Cumplimiento de mi meta mensual":"Cumplimiento de meta mensual de la empresa");
-  document.getElementById("metaEstadoReporte").textContent=meta>0
-    ? (esAsesor?"Avance personal actualizado al consultar el reporte. Se cuentan tus documentos pagados; se excluyen las cotizaciones.":"Avance actualizado en tiempo real. Se cuentan documentos pagados; se excluyen las cotizaciones.")
-    : (esAsesor?"No tienes un presupuesto mensual configurado.":"La empresa aún no ha configurado su meta general mensual.");
-
-  let asesores=usuariosMetaReporte;
-  if(currentUser.role==="asesor")
-    asesores=asesores.filter(u=>u.id===currentUser.id);
-  else if(currentUser.role==="caja"){
-    const areaCaja=String(currentUser.area||"").trim().toLowerCase();
-    asesores=asesores.filter(u=>String(u.area||"").trim().toLowerCase()===areaCaja);
-  }
-  const tabla=document.getElementById("tablaMetasAsesoresReporte");
-  if(!asesores.length){
-    tabla.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--ink-soft)">No hay asesores asignados a tu área.</td></tr>';
-    return;
-  }
-  tabla.innerHTML=asesores.map(asesor=>{
-    const nombre=asesor.nombre||asesor.username||"Asesor";
-    const presupuesto=Math.max(0,Number(asesor.presupuestoMensual||0));
-    const vendido=vendidas.filter(doc=>String(doc.asesor||"").trim().toLowerCase()===String(nombre).trim().toLowerCase())
-      .reduce((s,doc)=>s+Number(doc.total||0),0);
-    const faltante=Math.max(presupuesto-vendido,0);
-    const porcentaje=presupuesto>0?vendido/presupuesto*100:0;
-    return `<tr><td>${escapeHtml(nombre)}</td><td>${escapeHtml(asesor.area||"-")}</td><td class="num">${money(presupuesto)}</td><td class="num">${money(vendido)}</td><td class="num">${money(faltante)}</td><td class="num">${presupuesto>0?porcentaje.toFixed(1)+"%":"Sin meta"}</td></tr>`;
-  }).join("");
 }
 
 function toggleLoginPassword(){
@@ -1534,15 +1490,6 @@ function actualizarEtiquetasPersona(){
 function actualizarCamposProducto(){
 
   const tipo=document.getElementById("itemTipoProducto").value;
-  const campoCantidad=document.getElementById("itemCant");
-  const campoPrecio=document.getElementById("itemPrecio");
-
-  if(campoCantidad){
-    campoCantidad.min="0.01";
-    campoCantidad.step="any";
-    campoCantidad.placeholder="1";
-  }
-  if(campoPrecio) campoPrecio.readOnly=tipo==="Moños";
 
   const contenedor=document.getElementById("camposProducto");
 
@@ -1657,7 +1604,7 @@ function obtenerPrecioMoño(cantidad, tamano){
       return null;
     }
 
-    return 240;
+    return (cantidad / 50) * 240;
   }
 
   /*
@@ -1699,22 +1646,9 @@ function actualizarPrecioMoño(){
   const tamano=document.getElementById("itemTamano")?.value;
 
   const campoPrecio=document.getElementById("itemPrecio");
-  const campoCantidad=document.getElementById("itemCant");
 
   if(!campoPrecio || !tamano){
     return;
-  }
-
-  if(campoCantidad){
-    if(tamano==="6MM"){
-      campoCantidad.min="50";
-      campoCantidad.step="50";
-      campoCantidad.placeholder="50, 100, 150...";
-    }else{
-      campoCantidad.min="0.01";
-      campoCantidad.step="any";
-      campoCantidad.placeholder="1";
-    }
   }
 
   const precio=obtenerPrecioMoño(cantidad,tamano);
@@ -1935,7 +1869,6 @@ function editarItem(index){
   cantidad.value = item.cantidad ?? 1;
 
   precio.value = item.precioBase ?? 0;
-  if(item.tipoProducto==="Moños") actualizarPrecioMoño();
 
   /*
    * =========================================================
@@ -1984,7 +1917,7 @@ function actualizarItem(){
   const cant =
     Number(document.getElementById("itemCant").value);
 
-  let precioBase =
+  const precioBase =
     Number(document.getElementById("itemPrecio").value);
 
   const aplicarIva =
@@ -2044,16 +1977,6 @@ function actualizarItem(){
 
       return;
     }
-
-    const precioMoño=obtenerPrecioMoño(cant,tamano);
-    if(precioMoño===null){
-      if(tamano==="6MM")
-        alert("Los moños de 6MM solo se venden en múltiplos de 50. Ejemplo: 50, 100, 150...");
-      else
-        alert("No se pudo determinar el precio del moño.");
-      return;
-    }
-    precioBase=precioMoño;
 
     descripcion =
       `Moño ${tamano} ${color}`;
@@ -2658,6 +2581,94 @@ function seleccionarClientePorNombre(cliente){
   ocultarSugerenciasClientes();
 }
 
+async function buscarClientesCotizacion(campo){
+  const input=document.getElementById(campo==="nombre" ? "cotClienteNombre" : "cotNit");
+  const contenedor=document.getElementById(campo==="nombre" ? "cotClienteSugerenciasNombre" : "cotClienteSugerenciasDoc");
+  const texto=input.value.trim();
+
+  if(texto.length<2){
+    contenedor.classList.add("hidden");
+    return;
+  }
+
+  clearTimeout(temporizadorBusquedaClienteCotizacion);
+  temporizadorBusquedaClienteCotizacion=setTimeout(async()=>{
+    const clientes=await cargarClientesParaBusqueda();
+    const busqueda=normalizarTexto(texto);
+    const resultados=clientes
+      .filter(cliente=>{
+        const valor=campo==="nombre" ? cliente.nomCliente : cliente.docCliente;
+        return normalizarTexto(valor).includes(busqueda);
+      })
+      .sort((a,b)=>normalizarTexto(a.nomCliente).localeCompare(normalizarTexto(b.nomCliente)))
+      .slice(0,10);
+
+    if(!resultados.length){
+      contenedor.innerHTML="";
+      contenedor.classList.add("hidden");
+      return;
+    }
+
+    contenedor.innerHTML=resultados.map((cliente,index)=>`
+      <div class="cliente-sugerencia" data-cliente-index="${index}">
+        <strong>${escapeHtml(cliente.nomCliente||"Sin nombre")}</strong>
+        <small>Documento: ${escapeHtml(cliente.docCliente||"N/A")}${cliente.telCliente ? ` · ${escapeHtml(cliente.telCliente)}` : ""}</small>
+      </div>
+    `).join("");
+    contenedor.querySelectorAll(".cliente-sugerencia").forEach((elemento,index)=>{
+      elemento.addEventListener("mousedown",event=>{
+        event.preventDefault();
+        seleccionarClienteCotizacion(resultados[index]);
+      });
+    });
+    contenedor.classList.remove("hidden");
+  },150);
+}
+
+async function buscarClienteCotizacionPorDocumento(){
+  const documento=document.getElementById("cotNit").value.trim();
+  if(!documento) return;
+
+  try{
+    const clientes=await cargarClientesParaBusqueda();
+    const busqueda=normalizarTexto(documento);
+    const cliente=clientes.find(item=>normalizarTexto(item.docCliente)===busqueda);
+    if(cliente){
+      seleccionarClienteCotizacion(cliente);
+    }else{
+      mostrarEstadoClienteCotizacion(null);
+    }
+  }catch(error){
+    console.error("Error buscando cliente para cotización:",error);
+  }
+}
+
+function seleccionarClienteCotizacion(cliente){
+  if(!cliente) return;
+  document.getElementById("cotClienteNombre").value=cliente.nomCliente||"";
+  document.getElementById("cotNit").value=cliente.docCliente||"";
+  document.getElementById("cotCelular").value=cliente.telCliente||"";
+  document.getElementById("cotClienteSugerenciasNombre").classList.add("hidden");
+  document.getElementById("cotClienteSugerenciasDoc").classList.add("hidden");
+  mostrarEstadoClienteCotizacion(cliente);
+}
+
+function mostrarEstadoClienteCotizacion(cliente){
+  const badge=document.getElementById("cotInfoClienteBadge");
+  if(cliente&&Number(cliente.totalCompras||0)>0){
+    badge.innerHTML=`⭐ <strong>Cliente recurrente:</strong> ${Number(cliente.totalCompras||1)} compras · ${money(cliente.totalInvertido||0)} acumulado`;
+    badge.className="status ok";
+  }else{
+    badge.innerHTML="🆕 <strong>Cliente nuevo</strong>";
+    badge.className="status warn";
+  }
+}
+
+function ocultarSugerenciasClienteCotizacion(){
+  document.getElementById("cotClienteSugerenciasNombre").classList.add("hidden");
+  document.getElementById("cotClienteSugerenciasDoc").classList.add("hidden");
+}
+
 function ocultarSugerenciasClientes(){
 
   const contenedor=document.getElementById("clienteSugerencias");
@@ -2809,6 +2820,9 @@ if(window.documentoEditandoId){
      * Actualizar caché de clientes para que una nueva búsqueda
      * por nombre lo encuentre inmediatamente.
      */
+    clientesCacheBusqueda=null;
+
+
 const documento={
 
   idDocumento:customId,
@@ -2865,7 +2879,6 @@ const documento={
     await guardarRemisionDB(documento);
 
     cacheRemisiones=null;
-    cacheConsultasReportes.clear();
 
     window.documentoEditandoId=null;
 
@@ -2888,7 +2901,62 @@ const documento={
 /* =========================================================
    REPORTES
    ========================================================= */
-async function procesarReportes(forzarRecarga=false){
+function crearConsultaAbonos(inicio,fin,asesor="TODOS",area="TODAS"){
+  let consulta=db.collection("abonosCotizaciones");
+  if(inicio) consulta=consulta.where("fecha",">=",inicio);
+  if(fin) consulta=consulta.where("fecha","<=",fin);
+  if(currentUser.role==="asesor"){
+    consulta=consulta.where("asesor","==",currentUser.nombre||currentUser.username||"");
+  }else if(asesor!=="TODOS"){
+    consulta=consulta.where("asesor","==",asesor);
+  }
+  if(currentUser.role==="caja"){
+    consulta=consulta.where("area","==",String(currentUser.area||"").trim());
+  }else if(currentUser.role==="admin"&&area!=="TODAS"){
+    consulta=consulta.where("area","==",area);
+  }
+  return consulta;
+}
+
+function crearConsultaCotizacionesActivas(asesor="TODOS",area="TODAS"){
+  let consulta=db.collection("remisiones")
+    .where("tipoDoc","==","Cotización")
+    .where("estado","in",["Pendiente","Abonada"]);
+  if(currentUser.role==="asesor"){
+    consulta=consulta.where("asesor","==",currentUser.nombre||currentUser.username||"");
+  }else if(asesor!=="TODOS"){
+    consulta=consulta.where("asesor","==",asesor);
+  }
+  if(currentUser.role==="caja"){
+    consulta=consulta.where("area","==",String(currentUser.area||"").trim());
+  }else if(currentUser.role==="admin"&&area!=="TODAS"){
+    consulta=consulta.where("area","==",area);
+  }
+  return consulta;
+}
+
+function crearFilaReporteAbono(abono){
+  return {
+    ...abono,
+    id:abono.id,
+    claveReporte:`abono-${abono.id}`,
+    idDocumento:abono.idDocumento,
+    tipoDoc:"Cotización",
+    estado:abono.estado||"Abonada",
+    formaPago:abono.formaPago||"",
+    total:Number(abono.valor||0),
+    esAbonoCotizacion:true,
+    fechaCreacion:abono.fechaHora||abono.fecha
+  };
+}
+
+function esIngresoContable(documento){
+  if(documento.esAbonoCotizacion) return true;
+  return String(documento.tipoDoc||"").trim().toLowerCase()!=="cotización"&&
+    String(documento.estado||"").trim().toLowerCase()==="pagada";
+}
+
+async function procesarReportes(){
 
   if(!currentUser)
     return;
@@ -2919,6 +2987,10 @@ async function procesarReportes(forzarRecarga=false){
       document.getElementById("repBuscarCliente").value
         .trim()
         .toLowerCase();
+
+    const metaMensual=
+      Number(currentUser?.presupuestoMensual||0);
+
 
     /* =====================================================
        CONSULTA OPTIMIZADA A FIRESTORE
@@ -3023,24 +3095,33 @@ async function procesarReportes(forzarRecarga=false){
 
     if(currentUser.role==="caja"){
 
-  const claveCaja=JSON.stringify({
-    fecha:fechaHoy(),
-    area:String(currentUser.area||"").trim(),
-    asesor:asesor==="TODOS"?"TODOS":asesor
-  });
-  escucharRemisionesCaja(consulta,claveCaja);
+  escucharRemisionesCaja(consulta,asesor);
 
   return;
 
 }
 
-const claveConsulta=claveConsultaReporte(inicio,fin,asesor,area);
-const datos=await cargarDatosConsultaReporte(consulta,claveConsulta,forzarRecarga);
+const snap=await consulta.get();
 
-if(currentUser.role==="asesor"&&inicio===obtenerPeriodoMetaActual().inicio&&fin===fechaHoy()){
-  documentosMetaReporte=datos;
-  renderizarMetaReporte(documentosMetaReporte,obtenerPeriodoMetaActual());
-}
+    let datos=
+      snap.docs.map(d=>({
+        id:d.id,
+        ...d.data()
+      }));
+
+    const consultaAbonos=crearConsultaAbonos(inicio,fin,asesor,area);
+    const consultaCotizaciones=crearConsultaCotizacionesActivas(asesor,area);
+    const [snapAbonos,snapCotizaciones]=await Promise.all([
+      consultaAbonos.get(),
+      consultaCotizaciones.get()
+    ]);
+    const registrosAbono=snapAbonos.docs.map(d=>crearFilaReporteAbono({id:d.id,...d.data()}));
+    const cotizacionesActivas=snapCotizaciones.docs.map(d=>({id:d.id,...d.data()}));
+    const porId=new Map();
+    [...datos,...cotizacionesActivas,...registrosAbono].forEach(doc=>{
+      porId.set(doc.claveReporte||doc.idDocumento||doc.id,doc);
+    });
+    datos=[...porId.values()];
 
 
     /* =====================================================
@@ -3113,16 +3194,7 @@ if(currentUser.role==="asesor"&&inicio===obtenerPeriodoMetaActual().inicio&&fin=
        DATOS CONTABLES
        ===================================================== */
 
-    const datosContables=
-      filtrados.filter(r=>
-        String(r.tipoDoc||"")
-          .trim()
-          .toLowerCase()!=="cotización" &&
-
-        String(r.estado||"")
-          .trim()
-          .toLowerCase()==="pagada"
-      );
+    const datosContables=filtrados.filter(esIngresoContable);
 
 
     const total=
@@ -3130,6 +3202,44 @@ if(currentUser.role==="asesor"&&inicio===obtenerPeriodoMetaActual().inicio&&fin=
         (s,r)=>s+Number(r.total||0),
         0
       );
+
+    const totalMeta=filtrados.reduce((s,r)=>{
+      if(r.esAbonoCotizacion) return s+Number(r.totalMeta||0);
+      return esIngresoContable(r)?s+Number(r.total||0):s;
+    },0);
+
+
+    const faltanteMensual=
+      Math.max(
+        metaMensual-totalMeta,
+        0
+      );
+
+
+    const cumplimientoMensual=
+      metaMensual>0
+        ? Math.min(
+            (totalMeta/metaMensual)*100,
+            100
+          )
+        : 0;
+
+
+    /* =====================================================
+       KPIs
+       ===================================================== */
+
+    document.getElementById("kpiMetaMensual").textContent=
+      money(metaMensual);
+
+    document.getElementById("kpiVendidoMensual").textContent=
+      money(totalMeta);
+
+    document.getElementById("kpiFaltanteMensual").textContent=
+      money(faltanteMensual);
+
+    document.getElementById("kpiCumplimientoMensual").textContent=
+      cumplimientoMensual.toFixed(1)+"%";
 
 
     document.getElementById("kpiTotalVentas").textContent=
@@ -3142,8 +3252,8 @@ if(currentUser.role==="asesor"&&inicio===obtenerPeriodoMetaActual().inicio&&fin=
 
     document.getElementById("kpiTicketPromedio").textContent=
       money(
-        filtrados.length
-          ? total/filtrados.length
+        datosContables.length
+          ? total/datosContables.length
           : 0
       );
 
@@ -3178,49 +3288,54 @@ if(currentUser.role==="asesor"&&inicio===obtenerPeriodoMetaActual().inicio&&fin=
 }
 
 function detenerListenerCaja(){
-  if(listenerCajaRemisiones) listenerCajaRemisiones();
+  [listenerCajaRemisiones,listenerCajaCotizaciones,listenerCajaAbonos].forEach(detener=>{
+    if(detener) detener();
+  });
   listenerCajaRemisiones=null;
-  claveListenerCaja=null;
-  datosListenerCaja=null;
+  listenerCajaCotizaciones=null;
+  listenerCajaAbonos=null;
+  datosCajaRemisiones=[];
+  datosCajaCotizaciones=[];
+  datosCajaAbonos=[];
+  claveListenerCaja="";
 }
 
-function escucharRemisionesCaja(consulta,clave){
+function actualizarReporteCajaConFuentes(){
+  const porId=new Map();
+  [
+    ...datosCajaRemisiones,
+    ...datosCajaCotizaciones,
+    ...datosCajaAbonos.map(crearFilaReporteAbono)
+  ].forEach(doc=>porId.set(doc.claveReporte||doc.idDocumento||doc.id,doc));
+  actualizarReporteCajaEnPantalla([...porId.values()]);
+}
 
-  if(listenerCajaRemisiones && claveListenerCaja===clave){
-    if(datosListenerCaja) actualizarReporteCajaEnPantalla(datosListenerCaja);
+function escucharRemisionesCaja(consulta,asesor){
+  const clave=JSON.stringify({area:currentUser.area||"",asesor});
+  if(listenerCajaRemisiones&&claveListenerCaja===clave){
+    actualizarReporteCajaConFuentes();
     return;
   }
   detenerListenerCaja();
   claveListenerCaja=clave;
+  const hoy=fechaHoy();
+  const consultasActivas=crearConsultaCotizacionesActivas(asesor,"TODAS");
+  const consultaAbonos=crearConsultaAbonos(hoy,hoy,asesor,"TODAS");
 
-  listenerCajaRemisiones =
-    consulta.onSnapshot(
-      snap=>{
+  listenerCajaRemisiones=consulta.onSnapshot(snap=>{
+    datosCajaRemisiones=snap.docs.map(d=>({id:d.id,...d.data()}));
+    actualizarReporteCajaConFuentes();
+  },error=>console.error("Error cargando documentos de caja:",error));
 
-        const datos=
-          snap.docs.map(d=>({
-            id:d.id,
-            ...d.data()
-          }));
+  listenerCajaCotizaciones=consultasActivas.onSnapshot(snap=>{
+    datosCajaCotizaciones=snap.docs.map(d=>({id:d.id,...d.data()}));
+    actualizarReporteCajaConFuentes();
+  },error=>console.error("Error cargando cotizaciones pendientes de caja:",error));
 
-        console.log(
-          "Caja recibió actualización:",
-          snap.docChanges().length,
-          "cambios"
-        );
-
-        datosListenerCaja=datos;
-        actualizarReporteCajaEnPantalla(datos);
-
-      },
-      error=>{
-        console.error(
-          "Error en listener de Caja:",
-          error
-        );
-      }
-    );
-
+  listenerCajaAbonos=consultaAbonos.onSnapshot(snap=>{
+    datosCajaAbonos=snap.docs.map(d=>({id:d.id,...d.data()}));
+    actualizarReporteCajaConFuentes();
+  },error=>console.error("Error cargando abonos de caja:",error));
 }
 
 function actualizarReporteCajaEnPantalla(datos){
@@ -3280,21 +3395,21 @@ function actualizarReporteCajaEnPantalla(datos){
 
   datosRemisiones=filtrados;
 
-  const datosContables=
-    filtrados.filter(r=>
-      String(r.tipoDoc||"")
-        .trim()
-        .toLowerCase()!=="cotización" &&
-      String(r.estado||"")
-        .trim()
-        .toLowerCase()==="pagada"
-    );
+  const datosContables=filtrados.filter(esIngresoContable);
 
   const total=
     datosContables.reduce(
       (s,r)=>s+Number(r.total||0),
       0
     );
+
+  const totalMeta=filtrados.reduce((s,r)=>{
+    if(r.esAbonoCotizacion) return s+Number(r.totalMeta||0);
+    return esIngresoContable(r)?s+Number(r.total||0):s;
+  },0);
+
+  document.getElementById("kpiVendidoMensual").textContent=
+    money(totalMeta);
 
   document.getElementById("kpiTotalVentas").textContent=
     money(total);
@@ -3304,8 +3419,8 @@ function actualizarReporteCajaEnPantalla(datos){
 
   document.getElementById("kpiTicketPromedio").textContent=
     money(
-      filtrados.length
-        ? total/filtrados.length
+      datosContables.length
+        ? total/datosContables.length
         : 0
     );
 
@@ -3335,9 +3450,9 @@ function exportarReporteExcel(){
 
   try{
 
-    const totalVentas=datosRemisiones.reduce(
-      (s,r)=>s+Number(r.total||0),0
-    );
+    const totalVentas=datosRemisiones
+      .filter(esIngresoContable)
+      .reduce((s,r)=>s+Number(r.total||0),0);
 
     const resumen=[
       ["REPORTE DE REMISIONES Y FACTURACIÓN"],
@@ -3833,8 +3948,8 @@ function renderTablaDetalleRemisiones(datos){
 
   tbody.innerHTML=datos.map(r=>`<tr>
   <td>
-    <strong>${escapeHtml(r.idDocumento||"Sin ID")}</strong><br>
-    <small>${escapeHtml(r.fecha||"")} · ${escapeHtml(r.tipoDoc||"Remisión")}</small>
+    <strong>${escapeHtml(r.esAbonoCotizacion?`${r.idDocumento||"COT"} · Abono ${r.numeroAbono||""}`:(r.idDocumento||"Sin ID"))}</strong><br>
+    <small>${escapeHtml(r.fecha||"")} · ${escapeHtml(r.esAbonoCotizacion?"Abono de cotización":(r.tipoDoc||"Remisión"))}</small>
   </td>
 
   <td>
@@ -3875,13 +3990,17 @@ function renderTablaDetalleRemisiones(datos){
   <td>
 
   ${
-    currentUser.role==="asesor"
+    r.esAbonoCotizacion
+    ? ""
+    : currentUser.role==="asesor"
 
     ? `
       <div style="display:flex;gap:5px;flex-wrap:wrap">
 
         ${
-          r.estado==="Pendiente" && r.tipoDoc!=="Cotización"
+          r.tipoDoc==="Cotización" && ["Pendiente","Abonada"].includes(r.estado) && puedeGestionarCotizacion(r)
+            ? `<button class="btn small secondary" onclick="verDetalleDoc('${escapeAttr(r.idDocumento||"")}')">Detalle</button><button class="btn small primary" onclick="abrirModalAbono('${escapeAttr(r.idDocumento||"")}')">Abonar</button>`
+            : r.estado==="Pendiente" && r.tipoDoc!=="Cotización"
             ? `
               <button
                 class="btn small primary"
@@ -3900,16 +4019,13 @@ function renderTablaDetalleRemisiones(datos){
 
       <div style="display:flex;gap:5px;flex-wrap:wrap">
 
-        <button
-          class="btn small secondary"
-          onclick="verDetalleDoc('${escapeAttr(r.idDocumento||r.id||"")}')"
-        >
-          Detalle
-        </button>
+        ${!r.esAbonoCotizacion?`<button class="btn small secondary" onclick="verDetalleDoc('${escapeAttr(r.idDocumento||r.id||"")}')">Detalle</button>`:""}
 
         ${
           r.tipoDoc==="Cotización"
-            ? ""
+            ? (["Pendiente","Abonada"].includes(r.estado)&&puedeGestionarCotizacion(r)
+              ? `<button class="btn small primary" onclick="abrirModalAbono('${escapeAttr(r.idDocumento||"")}')">Abonar</button>`
+              : "")
 
             : `
 
@@ -3959,6 +4075,145 @@ function renderTablaDetalleRemisiones(datos){
   </tr>`).join("");
 }
 
+function abrirModalAbono(id){
+  const cotizacion=datosRemisiones.find(doc=>
+    (doc.idDocumento||doc.id)===id && doc.tipoDoc==="Cotización"
+  );
+  if(!cotizacion){
+    alert("No se encontró la cotización seleccionada.");
+    return;
+  }
+  if(!puedeGestionarCotizacion(cotizacion)){
+    alert("No tienes permiso para registrar abonos en esta cotización.");
+    return;
+  }
+  cotizacionSeleccionadaAbono=cotizacion;
+  const saldo=Math.max(0,Number(cotizacion.total||0)-Number(cotizacion.totalAbonado||0));
+  document.getElementById("abonoCotizacionResumen").innerHTML=
+    `<strong>${escapeHtml(cotizacion.idDocumento)}</strong> · ${escapeHtml(cotizacion.nomCliente||"Cliente")}<br>Total: ${money(cotizacion.total)} · Abonado: ${money(cotizacion.totalAbonado||0)} · Saldo: ${money(saldo)}`;
+  document.getElementById("abonoCotizacionValor").value=saldo?String(saldo):"";
+  document.getElementById("abonoCotizacionValor").max=String(saldo);
+  document.getElementById("abonoCotizacionMetodo").value="";
+  document.getElementById("abonoCotizacionModal").classList.remove("hidden");
+}
+
+function cerrarModalAbono(){
+  document.getElementById("abonoCotizacionModal").classList.add("hidden");
+  cotizacionSeleccionadaAbono=null;
+}
+
+function puedeGestionarCotizacion(cotizacion){
+  if(!currentUser||!cotizacion||cotizacion.tipoDoc!=="Cotización") return false;
+  if(currentUser.role==="admin") return true;
+  if(currentUser.role==="asesor")
+    return String(cotizacion.asesor||"").trim()===String(currentUser.nombre||currentUser.username||"").trim();
+  if(currentUser.role==="caja")
+    return String(cotizacion.area||"").trim()===String(currentUser.area||"").trim();
+  return false;
+}
+
+async function registrarAbonoCotizacion(){
+  const cotizacion=cotizacionSeleccionadaAbono;
+  const valor=Number(document.getElementById("abonoCotizacionValor").value);
+  const formaPago=document.getElementById("abonoCotizacionMetodo").value;
+  if(!cotizacion||!puedeGestionarCotizacion(cotizacion)){
+    alert("No tienes permiso para registrar este abono.");
+    return;
+  }
+  if(!Number.isFinite(valor)||valor<=0||!["EFECTIVO","TRANSFERENCIA"].includes(formaPago)){
+    alert("Ingresa un valor válido y selecciona Efectivo o Transferencia.");
+    return;
+  }
+
+  const boton=document.getElementById("btnConfirmarAbono");
+  boton.disabled=true;
+  try{
+    exigirFirebase();
+    const refCotizacion=db.collection("remisiones").doc(cotizacion.idDocumento);
+    const refAbono=db.collection("abonosCotizaciones").doc();
+    const usuarioActual=currentUser.nombre||currentUser.username||"";
+    const fecha=fechaHoy();
+    const resultado=await db.runTransaction(async tx=>{
+      const snap=await tx.get(refCotizacion);
+      if(!snap.exists) throw new Error("La cotización ya no existe.");
+      const actual={id:snap.id,...snap.data()};
+      if(!puedeGestionarCotizacion(actual)) throw new Error("No tienes permiso para modificar esta cotización.");
+      if(!["Pendiente","Abonada"].includes(actual.estado)) throw new Error("La cotización ya no está pendiente de pago.");
+      const saldo=Math.max(0,Number(actual.total||0)-Number(actual.totalAbonado||0));
+      if(valor>saldo+0.001) throw new Error(`El abono supera el saldo pendiente de ${money(saldo)}.`);
+      const abonado=Number(actual.totalAbonado||0)+valor;
+      const pagada=abonado>=Number(actual.total||0)-0.001;
+      const refCliente=actual.docCliente
+        ? db.collection("clientes").doc(actual.docCliente)
+        : null;
+      const clienteSnap=pagada&&refCliente?await tx.get(refCliente):null;
+      const abono={
+        id:refAbono.id,
+        valor,
+        formaPago,
+        fecha,
+        fechaHora:new Date().toISOString(),
+        usuario:usuarioActual,
+        estadoResultante:pagada?"Pagada":"Abonada"
+      };
+      const numeroAbono=Number(actual.numeroAbonos||0)+1;
+      tx.update(refCotizacion,{
+        totalAbonado:abonado,
+        numeroAbonos:numeroAbono,
+        estado:pagada?"Pagada":"Abonada",
+        formaPago,
+        fechaUltimoAbono:fecha,
+        fechaActualizacion:new Date().toISOString()
+      });
+      tx.set(refAbono,{
+        id:refAbono.id,
+        idDocumento:actual.idDocumento,
+        tipoDoc:"Cotización",
+        docCliente:actual.docCliente||"",
+        nomCliente:actual.nomCliente||"",
+        telCliente:actual.telCliente||"",
+        asesor:actual.asesor||"",
+        area:actual.area||"",
+        fecha,
+        fechaHora:abono.fechaHora,
+        valor,
+        formaPago,
+        estado:abono.estadoResultante,
+        numeroAbono,
+        totalMeta:pagada?Number(actual.total||0):0,
+        saldo:Math.max(0,Number(actual.total||0)-abonado),
+        registradoPor:usuarioActual
+      });
+      if(pagada&&refCliente){
+        const cliente=clienteSnap?.exists?clienteSnap.data():{};
+        tx.set(refCliente,{
+          ...cliente,
+          docCliente:actual.docCliente,
+          nomCliente:actual.nomCliente||cliente.nomCliente||"",
+          telCliente:actual.telCliente||cliente.telCliente||"",
+          totalCompras:Number(cliente.totalCompras||0)+1,
+          totalInvertido:Number(cliente.totalInvertido||0)+Number(actual.total||0),
+          primeraCompra:cliente.primeraCompra||fecha,
+          ultimaCompra:fecha,
+          fechaRegistro:cliente.fechaRegistro||new Date().toISOString(),
+          ultimaActualizacion:new Date().toISOString()
+        },{merge:true});
+      }
+      return {actual,abono,abonado,pagada};
+    });
+
+    if(resultado.pagada) clientesCacheBusqueda=null;
+    cerrarModalAbono();
+    alert(resultado.pagada?"Abono registrado y cotización marcada como Pagada.":"Abono registrado. La cotización continúa Abonada.");
+    await procesarReportes(true);
+  }catch(error){
+    console.error("Error registrando abono de cotización:",error);
+    alert("No se pudo registrar el abono: "+error.message);
+  }finally{
+    boton.disabled=false;
+  }
+}
+
 async function verDetalleDoc(id){
 
   const doc =
@@ -3968,7 +4223,30 @@ async function verDetalleDoc(id){
 
   if(!doc)return;
 
-  const items=Array.isArray(doc.items)?doc.items:[];
+  const esCotizacion=doc.tipoDoc==="Cotización";
+  const items=esCotizacion
+    ? (Array.isArray(doc.materiales)?doc.materiales:[]).map(material=>({
+        descripcion:[material.tipo,material.medida].filter(Boolean).join(" · "),
+        cantidad:material.metros||material.rollos||0,
+        precioUnitario:material.valorUnitario||0,
+        descuento:0,
+        subtotal:material.valorTotal||0
+      }))
+    : (Array.isArray(doc.items)?doc.items:[]);
+  let historialAbonos=Array.isArray(doc.abonos)?doc.abonos:[];
+  if(esCotizacion){
+    try{
+      const snapAbonos=await db.collection("abonosCotizaciones")
+        .where("idDocumento","==",doc.idDocumento)
+        .get();
+      if(!snapAbonos.empty){
+        historialAbonos=snapAbonos.docs.map(abono=>abono.data())
+          .sort((a,b)=>String(a.fechaHora||a.fecha).localeCompare(String(b.fechaHora||b.fecha)));
+      }
+    }catch(error){
+      console.error("No se pudo cargar el historial de abonos:",error);
+    }
+  }
 
   document.getElementById("detalleContenido").innerHTML=`
  <div class="grid-2">
@@ -3983,6 +4261,7 @@ async function verDetalleDoc(id){
   <div><strong>Forma de pago:</strong> ${escapeHtml(doc.formaPago)}</div>
   <div><strong>Tipo:</strong> ${escapeHtml(doc.tipoDoc)}</div>
   <div><strong>Estado:</strong> ${escapeHtml(doc.estado||"Pendiente")}</div>
+  ${esCotizacion?`<div><strong>Entrega:</strong> ${escapeHtml(doc.fechaEntrega||"N/A")}</div><div><strong>Asesor:</strong> ${escapeHtml(doc.asesor||"N/A")}</div><div><strong>Saldo pendiente:</strong> ${money(Math.max(0,Number(doc.total||0)-Number(doc.totalAbonado||0)))}</div>`:""}
 </div>
 
   <div class="table-wrap">
@@ -4013,6 +4292,14 @@ async function verDetalleDoc(id){
 
   <div class="total-box">Total: ${money(doc.total||0)}</div>
 
+  ${esCotizacion?`
+    <h3>Historial de abonos</h3>
+    <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Método</th><th>Registrado por</th><th class="num">Valor</th></tr></thead><tbody>
+      ${historialAbonos.map(abono=>`<tr><td>${escapeHtml(abono.fecha||"")}</td><td>${escapeHtml(abono.formaPago||"")}</td><td>${escapeHtml(abono.usuario||abono.registradoPor||"")}</td><td class="num">${money(abono.valor||0)}</td></tr>`).join("")||'<tr><td colspan="4">Sin abonos registrados.</td></tr>'}
+    </tbody></table></div>
+    ${doc.notas?`<p><strong>Indicaciones:</strong> ${escapeHtml(doc.notas)}</p>`:""}
+  `:""}
+
   ${doc.observaciones
     ? `<p><strong>Observaciones:</strong> ${escapeHtml(doc.observaciones)}</p>`
     : ""}
@@ -4032,8 +4319,10 @@ async function verDetalleDoc(id){
    <div style="text-align:right;margin-top:15px">
 
   ${
+    !esCotizacion &&
     doc.estado !== "Pagada" &&
     doc.estado !== "Anulada" &&
+    (!esCotizacion||Number(doc.totalAbonado||0)===0) &&
     currentUser &&
     ["admin","caja"].includes(currentUser.role)
     ? `
@@ -4057,6 +4346,12 @@ async function verDetalleDoc(id){
         Anular
       </button>
     `
+    : ""
+  }
+
+  ${
+    esCotizacion && ["Pendiente","Abonada"].includes(doc.estado) && puedeGestionarCotizacion(doc)
+    ? `<button class="btn primary" onclick="abrirModalAbono('${escapeAttr(doc.idDocumento)}')">Abonar</button>`
     : ""
   }
 
@@ -4099,7 +4394,6 @@ async function marcarComoPagada(id){
     await db.collection("remisiones").doc(id).update({
       estado:"Pagada"
     });
-    cacheConsultasReportes.clear();
 
     alert("Documento marcado como pagado.");
 
@@ -4176,17 +4470,12 @@ async function anularDocumento(id){
        OBTENER CÓDIGO CONFIGURADO POR ADMINISTRACIÓN
        ========================================= */
 
-    let configuracion=cacheConfiguracionEmpresa;
-    if(!configuracion){
-      const snapConfig=await db
-        .collection("configuracion")
-        .doc("empresa")
-        .get();
-      configuracion=snapConfig.exists?snapConfig.data():null;
-      if(configuracion) cacheConfiguracionEmpresa=configuracion;
-    }
+    const snapConfig=await db
+      .collection("configuracion")
+      .doc("empresa")
+      .get();
 
-    if(!configuracion){
+    if(!snapConfig.exists){
 
       alert(
         "No existe una configuración de empresa."
@@ -4194,6 +4483,8 @@ async function anularDocumento(id){
 
       return;
     }
+
+    const configuracion=snapConfig.data();
 
     const codigoConfigurado=
       String(configuracion.codigoAnulacion||"").trim();
@@ -4337,7 +4628,6 @@ if(documentoActualizado){
           new Date().toISOString(),
 
       });
-    cacheConsultasReportes.clear();
 
 
     /* =========================================
@@ -4369,6 +4659,16 @@ function cerrarDetalle(){
   document.getElementById("detalleModal").classList.add("hidden");
 }
 
+function obtenerItemsDocumentoImpresion(doc){
+  if(doc.tipoDoc!=="Cotización") return Array.isArray(doc.items)?doc.items:[];
+  return (Array.isArray(doc.materiales)?doc.materiales:[]).map(material=>({
+    descripcion:[material.tipo,material.medida].filter(Boolean).join(" · "),
+    cantidad:material.metros?`${formatNumber(material.metros)} m`:material.rollos?`${formatNumber(material.rollos)} rollos`:"1",
+    precioUnitario:material.valorUnitario||0,
+    subtotal:material.valorTotal||0
+  }));
+}
+
 async function imprimirDocumento(id){
 
 const doc=datosRemisiones.find(r=>r.idDocumento===id);
@@ -4377,7 +4677,7 @@ if(!doc)return;
 
 const w=window.open("","_blank","width=400,height=700");
 
-const items=(doc.items||[])
+const items=obtenerItemsDocumentoImpresion(doc)
 .map(i=>`
 <div class="item">
 
@@ -4515,7 +4815,7 @@ w.document.write(`
   <div class="center">
 
     <div class="titulo">
-      PREFACTURA
+      ${doc.tipoDoc==="Cotización"?"COTIZACIÓN":"PREFACTURA"}
     </div>
 
     <div class="numero">
@@ -4577,7 +4877,7 @@ w.document.write(`
 
     <div class="total-line">
       <span>SUBTOTAL</span>
-      <strong>${money(doc.subtotal||0)}</strong>
+      <strong>${money(doc.subtotal||doc.totalMateriales||doc.total||0)}</strong>
     </div>
 
     <div class="total-line">
@@ -4597,17 +4897,17 @@ w.document.write(`
   <div class="datos">
 
     <strong>MEDIO DE PAGO:</strong>
-    ${escapeHtml(doc.formaPago||"")}
+      ${escapeHtml(doc.formaPago||"")}
 
   </div>
 
   ${
-    doc.observaciones
+    (doc.observaciones||doc.notas)
     ?
     `
     <div class="observaciones">
       <strong>OBSERVACIONES:</strong><br>
-      ${escapeHtml(doc.observaciones)}
+      ${escapeHtml(doc.observaciones||doc.notas)}
     </div>
     `
     :
@@ -4641,7 +4941,7 @@ async function generarPDFDocumento(id){
 
   const w=window.open("","_blank","width=900,height=900");
 
-  const items=(doc.items||[])
+  const items=obtenerItemsDocumentoImpresion(doc)
     .map(i=>`
       <div class="item">
 
@@ -5074,8 +5374,7 @@ async function cargarConfiguracion(){
   const cfgDefault={
   nombre:"Remisionario y Facturación",
   logo:"",
-  codigoAnulacion:"",
-  metaGeneralMensual:0
+  codigoAnulacion:""
 };
 
   let cfg={...cfgDefault};
@@ -5084,18 +5383,13 @@ async function cargarConfiguracion(){
 
     exigirFirebase();
 
-    if(cacheConfiguracionEmpresa){
-      cfg={...cfgDefault,...cacheConfiguracionEmpresa};
-    }else{
-      const snap=await db
-        .collection("configuracion")
-        .doc("empresa")
-        .get();
-      if(snap.exists){
-        cacheConfiguracionEmpresa=snap.data();
-        cfg={...cfgDefault,...cacheConfiguracionEmpresa};
-      }
-    }
+    const snap=await db
+      .collection("configuracion")
+      .doc("empresa")
+      .get();
+
+    if(snap.exists)
+      cfg={...cfgDefault,...snap.data()};
 
   }catch(e){
 
@@ -5111,13 +5405,11 @@ async function cargarConfiguracion(){
 
   document.getElementById("docTitle").textContent=
     cfg.nombre||"Sistema de Remisiones y Facturación POS";
-  metaGeneralMensualEmpresa=Math.max(0,Number(cfg.metaGeneralMensual||0));
 
   aplicarLogo(cfg.logo||"");
 
   document.getElementById("cfgAppName").value=
     cfg.nombre||cfgDefault.nombre;
-  document.getElementById("cfgMetaGeneralMensual").value=metaGeneralMensualEmpresa;
 
   document.getElementById("cfgLogoUrl").value=
   (cfg.logo||"").startsWith("data:")
@@ -5145,7 +5437,6 @@ async function guardarConfiguracionEmpresa(event){
 
   const codigoAnulacion=
     document.getElementById("cfgCodigoAnulacion").value.trim();
-  const metaGeneralMensual=Math.max(0,Number(document.getElementById("cfgMetaGeneralMensual").value||0));
 
   if(!/^\d{6}$/.test(codigoAnulacion)){
     alert("El código de anulación debe tener exactamente 6 dígitos.");
@@ -5163,14 +5454,10 @@ async function guardarConfiguracionEmpresa(event){
         nombre,
         logo,
         codigoAnulacion,
-        metaGeneralMensual,
         fechaActualizacion:new Date().toISOString()
       },{
         merge:true
       });
-    cacheConfiguracionEmpresa={nombre,logo,codigoAnulacion,metaGeneralMensual,fechaActualizacion:new Date().toISOString()};
-    metaGeneralMensualEmpresa=metaGeneralMensual;
-    renderizarMetaReporte(documentosMetaReporte,obtenerPeriodoMetaActual());
 
     aplicarLogo(logo);
 
@@ -5377,6 +5664,21 @@ window.addEventListener("DOMContentLoaded",async()=>{
   document.getElementById("remClienteNombre")
     .addEventListener("input",buscarClientesPorNombre);
 
+  document.getElementById("cotClienteNombre")
+    .addEventListener("input",()=>buscarClientesCotizacion("nombre"));
+
+  document.getElementById("cotNit")
+    .addEventListener("input",()=>buscarClientesCotizacion("documento"));
+
+  document.getElementById("cotNit")
+    .addEventListener("blur",buscarClienteCotizacionPorDocumento);
+
+  ["cotClienteNombre","cotNit"].forEach(id=>{
+    document.getElementById(id).addEventListener("blur",()=>{
+      setTimeout(ocultarSugerenciasClienteCotizacion,200);
+    });
+  });
+
   /*
    * Ocultar las sugerencias al salir del campo.
    */
@@ -5410,14 +5712,6 @@ window.addEventListener("DOMContentLoaded",async()=>{
   });
 
   document.getElementById("remFecha").value=fechaHoy();
-
-  const primerDiaMes=new Date();
-  primerDiaMes.setDate(1);
-  const fechaInicioMes=`${primerDiaMes.getFullYear()}-${String(primerDiaMes.getMonth()+1).padStart(2,"0")}-${String(primerDiaMes.getDate()).padStart(2,"0")}`;
-  if(!document.getElementById("repFechaInicio").value)
-    document.getElementById("repFechaInicio").value=fechaInicioMes;
-  if(!document.getElementById("repFechaFin").value)
-    document.getElementById("repFechaFin").value=fechaHoy();
 
   document.getElementById("itemCant").value="1";
 
