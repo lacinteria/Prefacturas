@@ -1414,13 +1414,10 @@ async function actualizarMetaReporte(){
     let consulta;
     if(currentUser.role==="caja"){
       currentUser.area=resolverAreaCaja(currentUser.area,usuarios);
-      const inicioMeta=new Date(`${periodo.inicio}T00:00:00`).toISOString();
-      const finMeta=new Date(`${periodo.fin}T00:00:00`);
-      finMeta.setDate(finMeta.getDate()+1);
       consulta=db.collection("remisiones")
         .where("area","==",String(currentUser.area||"").trim())
-        .where("fechaCreacion",">=",inicioMeta)
-        .where("fechaCreacion","<",finMeta.toISOString());
+        .where("fecha",">=",periodo.inicio)
+        .where("fecha","<=",periodo.fin);
     }else{
       consulta=db.collection("remisiones")
         .where("fecha",">=",periodo.inicio)
@@ -2958,33 +2955,12 @@ async function procesarReportes(forzarRecarga=false){
        FILTRO POR FECHA
        ===================================================== */
 
-    if(currentUser.role==="caja"){
+    if(inicio){
+      consulta=consulta.where("fecha",">=",inicio);
+    }
 
-      // Caja sigue el período seleccionado. Se consulta por fechaCreacion
-      // para incluir los documentos guardados antes de agregar "fecha".
-      if(inicio){
-        const inicioPeriodo=new Date(`${inicio}T00:00:00`).toISOString();
-        consulta=consulta.where("fechaCreacion",">=",inicioPeriodo);
-      }
-
-      if(fin){
-        const finPeriodo=new Date(`${fin}T00:00:00`);
-        finPeriodo.setDate(finPeriodo.getDate()+1);
-        consulta=consulta.where("fechaCreacion","<",finPeriodo.toISOString());
-      }
-
-    }else{
-
-      if(inicio){
-        consulta=
-          consulta.where("fecha",">=",inicio);
-      }
-
-      if(fin){
-        consulta=
-          consulta.where("fecha","<=",fin);
-      }
-
+    if(fin){
+      consulta=consulta.where("fecha","<=",fin);
     }
 
 
