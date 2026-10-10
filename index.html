@@ -983,7 +983,6 @@ let cacheRemisiones=null;
 let cacheUsuarios=null;
 let cacheUsuariosAt=0;
 let cargaUsuariosPendiente=null;
-let cargaClientesPendiente=null;
 let listenerCajaRemisiones=null;
 let listenerMetasReporte=null;
 let temporizadorMetaReporte=null;
@@ -997,14 +996,14 @@ const cacheConsultasReportes=new Map();
 const consultasReportesPendientes=new Map();
 const CACHE_REPORTES_TTL=15000;
 const cacheClientesPorDocumento=new Map();
-let cacheClientesBusquedaAt=0;
+const cacheResultadosClientesBusqueda=new Map();
+const consultasClientesBusquedaPendientes=new Map();
 let cacheConfiguracionEmpresa=null;
 let logoBase64Temporal = "";
 
 /* =========================================================
    CONTROL DE BÚSQUEDA DE CLIENTES
    ========================================================= */
-let clientesCacheBusqueda = null;
 let temporizadorBusquedaCliente = null;
 
 const LS = {
@@ -1113,24 +1112,6 @@ async function guardarRemisionDB(doc){
   await db.collection("remisiones").doc(doc.idDocumento).set(doc);
 }
 
-async function obtenerClientes(){
-  exigirFirebase();
-  if(clientesCacheBusqueda && Date.now()-cacheClientesBusquedaAt<120000)
-    return clientesCacheBusqueda;
-  if(cargaClientesPendiente)
-    return cargaClientesPendiente;
-
-  cargaClientesPendiente=(async()=>{
-    const snap=await db.collection("clientes").get();
-    clientesCacheBusqueda=snap.docs.map(d=>({id:d.id,...d.data()}));
-    cacheClientesBusquedaAt=Date.now();
-    clientesCacheBusqueda.forEach(c=>cacheClientesPorDocumento.set(String(c.id),c));
-    return clientesCacheBusqueda;
-  })();
-  try{return await cargaClientesPendiente;}
-  finally{cargaClientesPendiente=null;}
-}
-
 async function obtenerCliente(doc){
   exigirFirebase();
   const clave=String(doc||"").trim();
@@ -1144,15 +1125,14 @@ async function obtenerCliente(doc){
 
 async function guardarCliente(doc,data){
   exigirFirebase();
-  await db.collection("clientes").doc(doc).set(data,{merge:true});
-  const cliente={id:String(doc),...data};
+  const clienteData={
+    ...data,
+    nomClienteNormalizado:normalizarTexto(data.nomCliente)
+  };
+  await db.collection("clientes").doc(doc).set(clienteData,{merge:true});
+  const cliente={id:String(doc),...clienteData};
   cacheClientesPorDocumento.set(String(doc),cliente);
-  if(clientesCacheBusqueda){
-    const indice=clientesCacheBusqueda.findIndex(c=>String(c.id)===String(doc));
-    if(indice<0) clientesCacheBusqueda.push(cliente);
-    else clientesCacheBusqueda[indice]={...clientesCacheBusqueda[indice],...cliente};
-    cacheClientesBusquedaAt=Date.now();
-  }
+  cacheResultadosClientesBusqueda.clear();
 }
 
 /* =========================================================
@@ -1429,10 +1409,23 @@ async function actualizarMetaReporte(){
       return;
     }
 
-    usuariosMetaReporte=(await obtenerUsuarios()).filter(u=>u.role==="asesor");
-    const consulta=db.collection("remisiones")
-      .where("fecha",">=",periodo.inicio)
-      .where("fecha","<=",periodo.fin);
+    const usuarios=await obtenerUsuarios();
+    usuariosMetaReporte=usuarios.filter(u=>u.role==="asesor");
+    let consulta;
+    if(currentUser.role==="caja"){
+      currentUser.area=resolverAreaCaja(currentUser.area,usuarios);
+      const inicioMeta=new Date(`${periodo.inicio}T00:00:00`).toISOString();
+      const finMeta=new Date(`${periodo.fin}T00:00:00`);
+      finMeta.setDate(finMeta.getDate()+1);
+      consulta=db.collection("remisiones")
+        .where("area","==",String(currentUser.area||"").trim())
+        .where("fechaCreacion",">=",inicioMeta)
+        .where("fechaCreacion","<",finMeta.toISOString());
+    }else{
+      consulta=db.collection("remisiones")
+        .where("fecha",">=",periodo.inicio)
+        .where("fecha","<=",periodo.fin);
+    }
     listenerMetasReporte=consulta.onSnapshot(snap=>{
       documentosMetaReporte=snap.docs.map(doc=>doc.data());
       renderizarMetaReporte(documentosMetaReporte,obtenerPeriodoMetaActual());
@@ -2517,26 +2510,6 @@ async function buscarCliente(){
  * =========================================================
  */
 
-async function cargarClientesParaBusqueda(){
-
-  if(clientesCacheBusqueda)
-    return clientesCacheBusqueda;
-
-  try{
-
-    clientesCacheBusqueda=await obtenerClientes();
-
-    return clientesCacheBusqueda;
-
-  }catch(e){
-
-    console.error("Error cargando clientes para búsqueda:",e);
-
-    return [];
-
-  }
-}
-
 function normalizarTexto(texto){
 
   return String(texto||"")
@@ -2546,6 +2519,71 @@ function normalizarTexto(texto){
     .trim();
 }
 
+async function cargarClientesParaBusqueda(texto){
+  exigirFirebase();
+  const busqueda=normalizarTexto(texto);
+  if(busqueda.length<3)return [];
+
+  const cacheado=cacheResultadosClientesBusqueda.get(busqueda);
+  if(cacheado&&Date.now()-cacheado.at<30000)return cacheado.datos;
+  if(consultasClientesBusquedaPendientes.has(busqueda))
+    return consultasClientesBusquedaPendientes.get(busqueda);
+
+  const tarea=(async()=>{
+    const variantes=new Set([
+      texto.trim(),
+      texto.trim().toLocaleUpperCase("es"),
+      texto.trim().split(/\s+/).map(palabra=>
+        palabra.charAt(0).toLocaleUpperCase("es")+
+        palabra.slice(1).toLocaleLowerCase("es")
+      ).join(" ")
+    ]);
+    const consultas=[...variantes]
+      .filter(prefijo=>prefijo.length>=2)
+      .map(prefijo=>db.collection("clientes")
+        .orderBy("nomCliente")
+        .startAt(prefijo)
+        .endAt(prefijo+"\uf8ff")
+        .limit(3)
+        .get());
+
+    // Clientes guardados desde esta versión también permiten búsqueda
+    // sin distinguir mayúsculas ni tildes.
+    consultas.push(db.collection("clientes")
+      .orderBy("nomClienteNormalizado")
+      .startAt(busqueda)
+      .endAt(busqueda+"\uf8ff")
+      .limit(5)
+      .get());
+
+    const snapshots=await Promise.allSettled(consultas);
+    const encontrados=new Map();
+    snapshots.forEach(resultado=>{
+      if(resultado.status!=="fulfilled"){
+        console.warn("Una variante de búsqueda de clientes falló:",resultado.reason);
+        return;
+      }
+      resultado.value.docs.forEach(doc=>{
+        const cliente={id:doc.id,...doc.data()};
+        const clave=String(cliente.docCliente||cliente.id);
+        encontrados.set(clave,cliente);
+        cacheClientesPorDocumento.set(clave,cliente);
+      });
+    });
+    const datos=[...encontrados.values()]
+      .sort((a,b)=>normalizarTexto(a.nomCliente)
+        .localeCompare(normalizarTexto(b.nomCliente)))
+      .slice(0,10);
+    cacheResultadosClientesBusqueda.set(busqueda,{at:Date.now(),datos});
+    while(cacheResultadosClientesBusqueda.size>80)
+      cacheResultadosClientesBusqueda.delete(cacheResultadosClientesBusqueda.keys().next().value);
+    return datos;
+  })().finally(()=>consultasClientesBusquedaPendientes.delete(busqueda));
+
+  consultasClientesBusquedaPendientes.set(busqueda,tarea);
+  return tarea;
+}
+
 async function buscarClientesPorNombre(){
 
   const input=document.getElementById("remClienteNombre");
@@ -2553,7 +2591,7 @@ async function buscarClientesPorNombre(){
 
   const texto=input.value.trim();
 
-  if(texto.length<2){
+  if(texto.length<3){
 
     ocultarSugerenciasClientes();
     return;
@@ -2563,24 +2601,12 @@ async function buscarClientesPorNombre(){
 
   temporizadorBusquedaCliente=setTimeout(async()=>{
 
-    const clientes=await cargarClientesParaBusqueda();
+    const clientes=await cargarClientesParaBusqueda(texto);
 
-    const busqueda=normalizarTexto(texto);
+    if(input.value.trim()===texto)
+      mostrarSugerenciasClientes(clientes);
 
-    const resultados=clientes
-      .filter(cliente=>{
-        const nombre=normalizarTexto(cliente.nomCliente);
-        return nombre.includes(busqueda);
-      })
-      .sort((a,b)=>
-        normalizarTexto(a.nomCliente)
-          .localeCompare(normalizarTexto(b.nomCliente))
-      )
-      .slice(0,10);
-
-    mostrarSugerenciasClientes(resultados);
-
-  },150);
+  },400);
 }
 
 function mostrarSugerenciasClientes(clientes){
@@ -2934,29 +2960,32 @@ async function procesarReportes(forzarRecarga=false){
 
     if(currentUser.role==="caja"){
 
-  const ahora=new Date();
+      // Caja sigue el período seleccionado. Se consulta por fechaCreacion
+      // para incluir los documentos guardados antes de agregar "fecha".
+      if(inicio){
+        const inicioPeriodo=new Date(`${inicio}T00:00:00`).toISOString();
+        consulta=consulta.where("fechaCreacion",">=",inicioPeriodo);
+      }
 
-  const hoy=
-    ahora.getFullYear()+"-"+
-    String(ahora.getMonth()+1).padStart(2,"0")+"-"+
-    String(ahora.getDate()).padStart(2,"0");
+      if(fin){
+        const finPeriodo=new Date(`${fin}T00:00:00`);
+        finPeriodo.setDate(finPeriodo.getDate()+1);
+        consulta=consulta.where("fechaCreacion","<",finPeriodo.toISOString());
+      }
 
-  consulta=
-    consulta.where("fecha","==",hoy);
+    }else{
 
-}else{
+      if(inicio){
+        consulta=
+          consulta.where("fecha",">=",inicio);
+      }
 
-  if(inicio){
-    consulta=
-      consulta.where("fecha",">=",inicio);
-  }
+      if(fin){
+        consulta=
+          consulta.where("fecha","<=",fin);
+      }
 
-  if(fin){
-    consulta=
-      consulta.where("fecha","<=",fin);
-  }
-
-}
+    }
 
 
     /* =====================================================
@@ -3024,7 +3053,8 @@ async function procesarReportes(forzarRecarga=false){
     if(currentUser.role==="caja"){
 
   const claveCaja=JSON.stringify({
-    fecha:fechaHoy(),
+    inicio,
+    fin,
     area:String(currentUser.area||"").trim(),
     asesor:asesor==="TODOS"?"TODOS":asesor
   });
@@ -3169,7 +3199,7 @@ if(currentUser.role==="asesor"&&inicio===obtenerPeriodoMetaActual().inicio&&fin=
       `<tr>
         <td colspan="9">
           Error cargando reportes:
-          ${escapeHtml(e.message)}
+          ${mensajeErrorFirestore(e)}
         </td>
       </tr>`;
 
@@ -3218,6 +3248,8 @@ function escucharRemisionesCaja(consulta,clave){
           "Error en listener de Caja:",
           error
         );
+        document.getElementById("tablaReportesBody").innerHTML=
+          `<tr><td colspan="9">Error cargando remisiones: ${mensajeErrorFirestore(error)}</td></tr>`;
       }
     );
 
@@ -5247,17 +5279,20 @@ async function actualizarFiltrosReportes(){
 
   const usuarios=await obtenerUsuarios();
 
+  if(currentUser.role==="caja"){
+    currentUser.area=resolverAreaCaja(currentUser.area,usuarios);
+  }
+
   let usuariosAsesores=usuarios.filter(u=>
     u.role==="asesor"
   );
 
   if(currentUser.role==="caja"){
 
-    const areaCaja=
-      String(currentUser.area||"").trim();
+    const areaCaja=normalizarArea(currentUser.area);
 
     usuariosAsesores=usuariosAsesores.filter(u=>
-      String(u.area||"").trim()===areaCaja
+      normalizarArea(u.area)===areaCaja
     );
 
   }
@@ -5305,6 +5340,36 @@ async function actualizarFiltrosReportes(){
 
   if(areas.includes(oldAr))
     ar.value=oldAr;
+}
+
+function normalizarArea(area){
+  return String(area||"")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g,"")
+    .trim()
+    .replace(/\s+/g," ")
+    .toLocaleLowerCase("es");
+}
+
+function mensajeErrorFirestore(error){
+  const mensaje=String(error?.message||error||"");
+  const coincidencia=mensaje.match(/https:\/\/console\.firebase\.google\.com\/[^\s]+/i);
+  if(!coincidencia)return escapeHtml(mensaje);
+
+  const url=coincidencia[0].replace(/[),.;]+$/g,"");
+  const esConsoleFirebase=url.startsWith("https://console.firebase.google.com/");
+  const texto=mensaje.replace(coincidencia[0],"").trim();
+  if(!esConsoleFirebase)return escapeHtml(mensaje);
+  return `${escapeHtml(texto)} <a href="${escapeAttr(url)}" target="_blank" rel="noopener noreferrer">Abrir y crear el índice requerido</a>`;
+}
+
+function resolverAreaCaja(area,usuarios){
+  const clave=normalizarArea(area);
+  if(!clave)return String(area||"").trim();
+  const asesor=usuarios.find(u=>
+    u.role==="asesor"&&normalizarArea(u.area)===clave
+  );
+  return asesor?String(asesor.area||"").trim():String(area||"").trim();
 }
 
 function money(n){
