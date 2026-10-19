@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title id="docTitle">Sistema de Remisiones y Facturación POS</title>
 
-<!-- Firebase SDKs. Si no configuras Firebase, el sistema funciona con almacenamiento local. -->
+<!-- Supabase SDK: conexión exclusiva del entorno de pruebas. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
@@ -547,19 +548,34 @@ min-height:44px;
 <div id="loginModal" class="login-overlay">
   <div class="login-card">
     <h2 style="margin:0 0 6px;text-align:center;">Acceso al Sistema</h2>
-    <p style="margin:0 0 16px;text-align:center;font-size:13px;color:var(--ink-soft)">Ingresa tu usuario y contraseña</p>
-    <form id="loginForm">
-      <div class="field"><label>Usuario <span class="req">*</span></label><input type="text" id="loginUser" required autocomplete="username" placeholder="ej. admin"></div>
+    <p style="margin:0 0 16px;text-align:center;font-size:13px;color:var(--ink-soft)">Ingresa tu usuario o correo y contraseña</p>
+    <form id="loginForm" novalidate>
+      <div class="field"><label>Usuario o correo <span class="req">*</span></label><input type="text" id="loginUser" required autocomplete="username" placeholder="Ej. trabajosdhr o tu correo"></div>
       <div class="field">
   <label>Contraseña <span class="req">*</span></label>
   <div class="password-wrapper">
     <input type="password" id="loginPass" required autocomplete="current-password" placeholder="••••••••">
-    <button type="button" class="password-eye" onclick="toggleLoginPassword()" aria-label="Mostrar contraseña">👁</button>
+    <button type="button" class="password-eye" id="toggleLoginPassword" aria-label="Mostrar contraseña" aria-pressed="false">👁</button>
   </div>
 </div>
       <button type="submit" class="btn primary" style="width:100%;margin-top:10px">Iniciar Sesión</button>
     </form>
-    <p id="loginError" class="hidden" style="color:var(--required);font-size:12px;margin-top:10px;text-align:center"></p>
+    <p id="loginError" role="alert" aria-live="polite" style="color:var(--required);font-size:12px;margin-top:10px;text-align:center"></p>
+    <button type="button" class="btn secondary" id="btnMostrarRecuperacion" style="width:100%;margin-top:8px">Olvidé mi contraseña</button>
+    <section id="recoveryRequestPanel" class="hidden" style="margin-top:14px">
+      <p style="font-size:12px;color:var(--ink-soft)">Escribe tu usuario o correo. Si la cuenta existe, enviaremos un enlace para crear una contraseña nueva.</p>
+      <div class="field"><label>Usuario o correo</label><input type="text" id="recoveryUser" autocomplete="username"></div>
+      <button type="button" class="btn primary" id="btnEnviarRecuperacion" style="width:100%">Enviar enlace</button>
+      <p id="recoveryMessage" role="status" aria-live="polite" style="font-size:12px;text-align:center"></p>
+      <button type="button" class="btn secondary" id="btnCancelarRecuperacion" style="width:100%">Volver al inicio de sesión</button>
+    </section>
+    <section id="recoveryPasswordPanel" class="hidden" style="margin-top:14px">
+      <p style="font-size:12px;color:var(--ink-soft)">Escribe y confirma tu nueva contraseña.</p>
+      <div class="field"><label>Nueva contraseña</label><input type="password" id="recoveryNewPassword" autocomplete="new-password"></div>
+      <div class="field"><label>Confirmar contraseña</label><input type="password" id="recoveryConfirmPassword" autocomplete="new-password"></div>
+      <button type="button" class="btn primary" id="btnGuardarNuevaPassword" style="width:100%">Guardar contraseña</button>
+      <p id="recoveryPasswordMessage" role="status" aria-live="polite" style="font-size:12px;text-align:center"></p>
+    </section>
   </div>
 </div>
 
@@ -780,32 +796,36 @@ min-height:44px;
 <div class="card">
   <div class="section-title">Cotización y Orden de Producción</div>
   <div class="grid-4">
-    <div class="field"><label>N.º de prefactura</label><input type="text" id="cotPrediseno" placeholder="Se asigna automáticamente" readonly></div>
+    <div class="field"><label>N.º de Cotización</label><input type="text" id="cotPrediseno" placeholder="Se asigna automáticamente" readonly></div>
     <div class="field"><label>Fecha de solicitud</label><input type="date" id="cotFechaSolicitud" readonly></div>
     <div class="field"><label>Fecha de entrega <span class="req">*</span></label><input type="date" id="cotFechaEntrega" required aria-required="true"></div>
     <div class="field"><label>Asesor / Vendedor</label><input type="text" id="cotAsesor" readonly placeholder="Usuario activo"></div>
   </div>
   <div class="section-title" style="margin-top:15px">Datos del Cliente</div>
   <div class="grid-3">
-    <div class="field cliente-nombre-wrap"><label>Nombre del cliente</label><input type="text" id="cotClienteNombre" autocomplete="off"><div id="cotClienteSugerenciasNombre" class="cliente-sugerencias hidden"></div></div>
-    <div class="field cliente-nombre-wrap"><label>NIT / Cédula</label><input type="text" id="cotNit" autocomplete="off"><div id="cotClienteSugerenciasDoc" class="cliente-sugerencias hidden"></div></div>
-    <div class="field"><label>Celular</label><input type="tel" id="cotCelular"></div>
+    <div class="field cliente-nombre-wrap"><label>Nombre del cliente <span class="req">*</span></label><input type="text" id="cotClienteNombre" autocomplete="off" required aria-required="true"><div id="cotClienteSugerenciasNombre" class="cliente-sugerencias hidden"></div></div>
+    <div class="field cliente-nombre-wrap"><label>NIT / Cédula <span class="req">*</span></label><input type="text" id="cotNit" autocomplete="off" required aria-required="true"><div id="cotClienteSugerenciasDoc" class="cliente-sugerencias hidden"></div></div>
+    <div class="field"><label>Celular <span class="req">*</span></label><input type="tel" id="cotCelular" required aria-required="true"></div>
+    <div class="field"><label>¿De dónde viene el cliente? <span class="req">*</span></label><select id="cotOrigenCliente" required aria-required="true" onchange="actualizarOtroOrigenCotizacion()"><option value="">-- Seleccione --</option><option>WhatsApp</option><option>Instagram</option><option>Publicidad</option><option>Referido del punto</option><option>Referido por cliente</option><option>Facebook</option><option>TikTok</option><option>Google / buscador</option><option>Cliente recurrente</option><option>Otro</option></select></div>
+    <div class="field hidden" id="cotOtroOrigenWrap"><label>Especifica el origen <span class="req">*</span></label><input type="text" id="cotOtroOrigen" aria-required="true" disabled></div>
+    <div class="field"><label>Ciudad / País del cliente <span class="req">*</span></label><input type="text" id="cotCiudadPais" placeholder="ej. Medellín, Colombia" required aria-required="true"></div>
   </div>
   <div id="cotInfoClienteBadge" class="status hidden"></div>
   <div class="section-title" style="margin-top:15px">Tipo de Pedido</div>
   <div class="grid-3">
-    <div class="field"><label>Venta</label><select id="cotVenta"><option value="">-- Seleccione --</option><option>Muestra</option><option>Producción</option></select></div>
-    <div class="field"><label>Diseño</label><select id="cotDiseno"><option value="">-- Seleccione --</option><option>Sí</option><option>No</option></select></div>
-    <div class="field"><label>Total del pedido</label><input type="number" id="cotTotalPedido" min="0" step="any" placeholder="$0" readonly></div>
+    <div class="field"><label>Venta <span class="req">*</span></label><select id="cotVenta" required aria-required="true"><option value="">-- Seleccione --</option><option>Muestra</option><option>Producción</option></select></div>
+    <div class="field"><label>Diseño <span class="req">*</span></label><select id="cotDiseno" required aria-required="true"><option value="">-- Seleccione --</option><option>Sí</option><option>No</option></select></div>
+    <div class="field"><label>Total del pedido <span class="req">*</span></label><input type="number" id="cotTotalPedido" min="0" step="any" placeholder="$0" readonly aria-required="true"></div>
   </div>
   <div class="section-title" style="margin-top:15px">Detalle del Pedido y Materiales</div>
-  <div class="table-wrap"><table class="cot-materiales-tabla" style="margin-top:0"><thead><tr><th>Tipo de material</th><th>Medida</th><th>Cant. metros</th><th>Rollos</th><th>Valor unitario</th><th>Valor total</th></tr></thead><tbody>
-    <tr><td><input aria-label="Tipo de material 1" type="text" id="cotMaterialTipo1"></td><td><input aria-label="Medida 1" type="text" id="cotMaterialMedida1"></td><td><input aria-label="Cantidad metros 1" type="number" id="cotMetros1" min="0" step="any"></td><td><input aria-label="Rollos 1" type="number" id="cotRollos1" min="0" step="any"></td><td><input aria-label="Valor unitario 1" type="number" id="cotUnitario1" min="0" step="any"></td><td><input aria-label="Valor total 1" type="number" id="cotValorTotal1" min="0" step="any" readonly></td></tr>
-    <tr><td><input aria-label="Tipo de material 2" type="text" id="cotMaterialTipo2"></td><td><input aria-label="Medida 2" type="text" id="cotMaterialMedida2"></td><td><input aria-label="Cantidad metros 2" type="number" id="cotMetros2" min="0" step="any"></td><td><input aria-label="Rollos 2" type="number" id="cotRollos2" min="0" step="any"></td><td><input aria-label="Valor unitario 2" type="number" id="cotUnitario2" min="0" step="any"></td><td><input aria-label="Valor total 2" type="number" id="cotValorTotal2" min="0" step="any" readonly></td></tr>
-    <tr><td><input aria-label="Tipo de material 3" type="text" id="cotMaterialTipo3"></td><td><input aria-label="Medida 3" type="text" id="cotMaterialMedida3"></td><td><input aria-label="Cantidad metros 3" type="number" id="cotMetros3" min="0" step="any"></td><td><input aria-label="Rollos 3" type="number" id="cotRollos3" min="0" step="any"></td><td><input aria-label="Valor unitario 3" type="number" id="cotUnitario3" min="0" step="any"></td><td><input aria-label="Valor total 3" type="number" id="cotValorTotal3" min="0" step="any" readonly></td></tr>
-    <tr><td><input aria-label="Tipo de material 4" type="text" id="cotMaterialTipo4"></td><td><input aria-label="Medida 4" type="text" id="cotMaterialMedida4"></td><td><input aria-label="Cantidad metros 4" type="number" id="cotMetros4" min="0" step="any"></td><td><input aria-label="Rollos 4" type="number" id="cotRollos4" min="0" step="any"></td><td><input aria-label="Valor unitario 4" type="number" id="cotUnitario4" min="0" step="any"></td><td><input aria-label="Valor total 4" type="number" id="cotValorTotal4" min="0" step="any" readonly></td></tr>
-    <tr><td colspan="4"></td><th>Total:</th><td><input type="number" id="cotTotalMateriales" min="0" step="any" aria-label="Total materiales" readonly></td></tr>
+  <div class="table-wrap"><table class="cot-materiales-tabla" style="margin-top:0"><thead><tr><th>Tipo de material</th><th>Medida</th><th>Cant. metros</th><th>Rollos</th><th>IVA</th><th>Valor unitario</th><th>Valor total</th><th></th></tr></thead><tbody id="cotMaterialesBody">
+    <tr data-material-row="1"><td><input aria-label="Tipo de material 1" type="text" id="cotMaterialTipo1"></td><td><input aria-label="Medida 1" type="text" id="cotMaterialMedida1"></td><td><input aria-label="Cantidad metros 1" type="number" id="cotMetros1" min="0" step="any"></td><td><input aria-label="Rollos 1" type="number" id="cotRollos1" min="0" step="any"></td><td><label style="display:flex;align-items:center;gap:5px;white-space:nowrap"><input aria-label="Sumar IVA 19% al material 1" type="checkbox" id="cotAplicarIva1" style="width:auto;margin:0">19%</label></td><td><input aria-label="Valor unitario 1" type="number" id="cotUnitario1" min="0" step="any"></td><td><input aria-label="Valor total 1" type="number" id="cotValorTotal1" min="0" step="any" readonly></td><td></td></tr>
+    <tr data-material-row="2"><td><input aria-label="Tipo de material 2" type="text" id="cotMaterialTipo2"></td><td><input aria-label="Medida 2" type="text" id="cotMaterialMedida2"></td><td><input aria-label="Cantidad metros 2" type="number" id="cotMetros2" min="0" step="any"></td><td><input aria-label="Rollos 2" type="number" id="cotRollos2" min="0" step="any"></td><td><label style="display:flex;align-items:center;gap:5px;white-space:nowrap"><input aria-label="Sumar IVA 19% al material 2" type="checkbox" id="cotAplicarIva2" style="width:auto;margin:0">19%</label></td><td><input aria-label="Valor unitario 2" type="number" id="cotUnitario2" min="0" step="any"></td><td><input aria-label="Valor total 2" type="number" id="cotValorTotal2" min="0" step="any" readonly></td><td></td></tr>
+    <tr data-material-row="3"><td><input aria-label="Tipo de material 3" type="text" id="cotMaterialTipo3"></td><td><input aria-label="Medida 3" type="text" id="cotMaterialMedida3"></td><td><input aria-label="Cantidad metros 3" type="number" id="cotMetros3" min="0" step="any"></td><td><input aria-label="Rollos 3" type="number" id="cotRollos3" min="0" step="any"></td><td><label style="display:flex;align-items:center;gap:5px;white-space:nowrap"><input aria-label="Sumar IVA 19% al material 3" type="checkbox" id="cotAplicarIva3" style="width:auto;margin:0">19%</label></td><td><input aria-label="Valor unitario 3" type="number" id="cotUnitario3" min="0" step="any"></td><td><input aria-label="Valor total 3" type="number" id="cotValorTotal3" min="0" step="any" readonly></td><td></td></tr>
+    <tr data-material-row="4"><td><input aria-label="Tipo de material 4" type="text" id="cotMaterialTipo4"></td><td><input aria-label="Medida 4" type="text" id="cotMaterialMedida4"></td><td><input aria-label="Cantidad metros 4" type="number" id="cotMetros4" min="0" step="any"></td><td><input aria-label="Rollos 4" type="number" id="cotRollos4" min="0" step="any"></td><td><label style="display:flex;align-items:center;gap:5px;white-space:nowrap"><input aria-label="Sumar IVA 19% al material 4" type="checkbox" id="cotAplicarIva4" style="width:auto;margin:0">19%</label></td><td><input aria-label="Valor unitario 4" type="number" id="cotUnitario4" min="0" step="any"></td><td><input aria-label="Valor total 4" type="number" id="cotValorTotal4" min="0" step="any" readonly></td><td></td></tr>
+    <tr id="cotFilaTotalMateriales"><td colspan="5"></td><th>Total:</th><td><input type="number" id="cotTotalMateriales" min="0" step="any" aria-label="Total materiales" readonly></td><td></td></tr>
   </tbody></table></div>
+  <button type="button" class="btn secondary" style="margin-top:10px" onclick="agregarFilaMaterialCotizacion()">＋ Agregar material</button>
   <p style="margin:5px 0;color:#b49b00;font-weight:700;font-style:italic">Nota: En pedidos por metros la producción puede variar +/- 1%-2%.</p>
   <div class="section-title" style="margin-top:15px">Especificaciones de Corte, Color y Diseño</div>
   <div class="grid-3">
@@ -819,8 +839,14 @@ min-height:44px;
     <div class="field"><label>Distancia entre logos (cm)</label><input type="text" id="cotDistanciaLogos"></div>
     <div class="field"><label>Diseño</label><textarea id="cotEspecificacionDiseno" rows="1"></textarea></div>
   </div>
-  <div class="section-title" style="margin-top:15px">Notas Importantes</div>
-  <div class="field"><label>Imagenes de referencia</label><input type="file" id="cotFotoPrediseno" accept="image/*"><input type="file" id="cotFotoPrediseno" accept="image/*"><input type="file" id="cotFotoPrediseno" accept="image/*"><input type="file" id="cotFotoPrediseno" accept="image/*"></div>
+  <div class="section-title" style="margin-top:15px">Especificaciones Importantes</div>
+   <p style="margin:5px 0;color:#001bb4;font-weight:700;font-style:italic">Tener en cuenta guardar los archivos con nombres claros</p>
+  <div class="grid-2" id="cotImagenesReferencia">
+    <div class="field"><label for="cotFotoPrediseno1">Imagen de referencia 1</label><input type="file" id="cotFotoPrediseno1" accept="image/jpeg,image/png,image/webp" onchange="actualizarNombreImagenCotizacion(1)"><small id="cotFotoNombre1">Opcional · JPG, PNG o WebP</small></div>
+    <div class="field"><label for="cotFotoPrediseno2">Imagen de referencia 2</label><input type="file" id="cotFotoPrediseno2" accept="image/jpeg,image/png,image/webp" onchange="actualizarNombreImagenCotizacion(2)"><small id="cotFotoNombre2">Opcional · JPG, PNG o WebP</small></div>
+    <div class="field"><label for="cotFotoPrediseno3">Imagen de referencia 3</label><input type="file" id="cotFotoPrediseno3" accept="image/jpeg,image/png,image/webp" onchange="actualizarNombreImagenCotizacion(3)"><small id="cotFotoNombre3">Opcional · JPG, PNG o WebP</small></div>
+    <div class="field"><label for="cotFotoPrediseno4">Imagen de referencia 4</label><input type="file" id="cotFotoPrediseno4" accept="image/jpeg,image/png,image/webp" onchange="actualizarNombreImagenCotizacion(4)"><small id="cotFotoNombre4">Opcional · JPG, PNG o WebP</small></div>
+  </div>
   <div class="field"><label>Notas / indicaciones</label><textarea id="cotNotas" rows="3"></textarea></div>
   <div style="margin-top:20px;text-align:right"><button type="button" id="btnGuardarCotizacion" class="btn primary" onclick="guardarCotizacion()">Guardar Cotización</button></div>
 </div>
@@ -977,13 +1003,14 @@ min-height:44px;
 <input type="hidden" id="usrId">
 <div class="field"><label>Nombre Completo <span class="req">*</span></label><input type="text" id="usrNombre" required placeholder="ej. Duvan"></div>
 <div class="field"><label>Usuario (Login) <span class="req">*</span></label><input type="text" id="usrUsername" required placeholder="ej. duvan"></div>
-<div class="field"><label>Contraseña <span class="req">*</span></label><input type="text" id="usrPass" placeholder="••••••••"></div>
+<div class="field"><label>Correo de acceso <span class="req">*</span></label><input type="email" id="usrEmail" required placeholder="usuario@empresa.com"></div>
+<div class="field"><label>Contraseña <span class="req">*</span></label><input type="password" id="usrPass" autocomplete="new-password" placeholder="Mínimo 8 caracteres"><small id="usrPassAyuda">La contraseña la define el administrador para esta cuenta.</small></div>
 <div class="field"><label>Rol <span class="req">*</span></label><select id="usrRole"><option value="asesor">Asesor</option><option value="caja">Caja</option><option value="admin">Administrador</option></select></div>
 <div class="field"><label>Área asignada <span class="req">*</span></label><input type="text" id="usrArea" placeholder="ej. General, Bordados, Ventas..." required></div>
 <div class="field"><label>Presupuesto Mensual</label><input type="number" id="usrPresupuestoMensual" min="0" step="1000" placeholder="ej. 20000000"></div>
 <button type="submit" class="btn primary">Guardar Usuario</button><button type="button" class="btn secondary hidden" id="btnCancelarEdicion" onclick="cancelarEdicionUsuario()">Cancelar edición</button>
 </form></div>
-<div class="card"><h2 style="margin-top:0">Usuarios Registrados</h2><div class="table-wrap"><table><thead><tr><th>Usuario</th><th>Clave</th><th>Rol / Área</th><th>Acción</th></tr></thead><tbody id="tablaUsuariosBody"></tbody></table></div></div>
+<div class="card"><h2 style="margin-top:0">Migración desde Firebase</h2><p style="font-size:13px;color:var(--ink-soft)">Copia a Pruebas las cuentas, clientes, remisiones, cotizaciones, abonos, configuración y consecutivos. Firebase oficial se conserva intacto.</p><button type="button" class="btn secondary" id="btnMigrarUsuariosFirebase" onclick="migrarUsuariosFirebase()">Importar / sincronizar usuarios</button><div id="estadoMigracionUsuarios" role="status" style="margin:10px 0"></div><ul id="detalleErroresMigracionUsuarios" class="hidden" style="margin:0 0 14px;padding-left:20px;color:#9b2c2c;font-size:13px"></ul><div class="field" style="margin:12px 0 8px"><label for="passwordAlternativaAdmin">Nueva contraseña para ADMIN (mínimo 6 caracteres)</label><input type="password" id="passwordAlternativaAdmin" minlength="6" autocomplete="new-password" placeholder="La defines aquí; no se cambia en Firebase"></div><button type="button" class="btn secondary" id="btnMigrarSoloAdminFirebase" onclick="migrarSoloAdminFirebase()">Importar solo el usuario ADMIN</button><div id="estadoMigracionAdmin" role="status" style="margin:10px 0"></div><button type="button" class="btn secondary" id="btnMigrarDatosFirebase" onclick="migrarDatosFirebase()">Migrar el resto de los datos</button><div id="estadoMigracionDatos" role="status" style="margin:10px 0"></div><small>Haz primero la importación de usuarios. La migración de datos se puede repetir: actualiza registros con la misma clave y no elimina información de Pruebas.</small><div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>Usuario</th><th>Correo</th><th>Rol / Área</th><th>Acción</th></tr></thead><tbody id="tablaUsuariosBody"></tbody></table></div></div>
 </div>
 </section>
 
@@ -1027,8 +1054,8 @@ min-height:44px;
       <button type="button" class="btn secondary" onclick="cerrarModalAbono()" aria-label="Cerrar">Cerrar</button>
     </div>
     <div id="abonoCotizacionResumen" class="status info"></div>
-    <div class="field"><label for="abonoCotizacionValor">Valor del abono</label><input type="number" id="abonoCotizacionValor" min="1" step="1"></div>
-    <div class="field"><label for="abonoCotizacionMetodo">Método de pago</label><select id="abonoCotizacionMetodo"><option value="">-- Seleccione --</option><option value="EFECTIVO">Efectivo</option><option value="TRANSFERENCIA">Transferencia</option></select></div>
+    <div class="field"><label for="abonoCotizacionValor">Valor del abono</label><input type="number" id="abonoCotizacionValor" min="1" step="1"></div><div class="field"><label for="abonoCotizacionMetodo">Método de pago</label><select id="abonoCotizacionMetodo"><option value="">-- Seleccione --</option><option value="EFECTIVO">EFECTIVO</option><option value="005 TRANSFERENCIA">005 TRANSFERENCIA</option><option value="SAS TRANSFERENCIA">SAS TRANSFERENCIA</option></select></div>
+
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:15px">
       <button type="button" class="btn secondary" onclick="cerrarModalAbono()">Cancelar</button>
       <button type="button" class="btn primary" id="btnConfirmarAbono" onclick="registrarAbonoCotizacion()">Registrar abono</button>
@@ -1043,7 +1070,10 @@ min-height:44px;
 const JSONBIN_BIN_ID = "AQUI_TU_BIN_ID";
 const JSONBIN_API_KEY = "AQUI_TU_SECRET_KEY";
 
-/* Firebase: proyecto Remisionario */
+/* Proyecto Supabase aislado para pruebas. La llave publishable es pública; RLS protege los datos. */
+const SUPABASE_URL = "https://aryjbqyxuvybzcqhxdau.supabase.co";
+const STORAGE_COTIZACIONES="cotizaciones-referencias";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_QhZNct59CHxydCxRvyYKwg_CPI5S6-J";
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyDEgNx5Ix7EFR_imZH_oNMXuTitlzg6Bbs",
   authDomain: "remisionario.firebaseapp.com",
@@ -1055,7 +1085,8 @@ const FIREBASE_CONFIG = {
 };
 
 let db = null;
-let firebaseActivo = false;
+let supabaseClient = null;
+let supabaseActivo = false;
 let currentUser = null;
 let itemsActuales = [];
 let datosRemisiones = [];
@@ -1077,54 +1108,170 @@ let logoBase64Temporal = "";
 let clientesCacheBusqueda = null;
 let temporizadorBusquedaClienteCotizacion = null;
 let temporizadorBusquedaCliente = null;
+let siguienteFilaMaterialCotizacion=5;
 
-const LS = {
-  session: "remisionario_session_v2"
-};
+const LS = { session: "remisionario_supabase_session_v1" };
 
-const DEFAULT_USERS = [
-  {id:"usr-admin",nombre:"Administrador",username:"admin",pass:"admin123",role:"admin",area:"Administración"}
-];
-
-function initFirebase(){
+function initSupabase(){
   try{
-    if(!window.firebase) throw new Error("No se cargó el SDK de Firebase.");
-    if(!FIREBASE_CONFIG.apiKey || !FIREBASE_CONFIG.projectId){
-      throw new Error("La configuración de Firebase está incompleta.");
+    if(!window.supabase?.createClient) throw new Error("No se cargó el cliente de Supabase.");
+    if(!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY){
+      throw new Error("La configuración de Supabase está incompleta.");
     }
-    if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
-    db=firebase.firestore();
-    firebaseActivo=true;
-    console.log("Firebase conectado:",FIREBASE_CONFIG.projectId);
+    supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+    db=crearAdaptadorSupabase();
+    supabaseActivo=true;
+    console.log("Supabase conectado:",new URL(SUPABASE_URL).host);
   }catch(e){
-    console.error("Firebase no pudo inicializarse:",e);
+    console.error("Supabase no pudo inicializarse:",e);
     db=null;
-    firebaseActivo=false;
+    supabaseActivo=false;
   }
 }
 
-function exigirFirebase(){
-  if(!firebaseActivo || !db){
-    throw new Error("Firebase no está conectado. Los datos de la empresa no se guardarán localmente.");
+function exigirSupabase(){
+  if(!supabaseActivo || !db){
+    throw new Error("Supabase no está conectado. No se guardarán datos localmente ni en Firebase.");
   }
   return db;
 }
 
-async function obtenerUsuarios(){
-  exigirFirebase();
-  const snap=await db.collection("usuarios").get();
-  if(snap.empty){
-    const admin=DEFAULT_USERS[0];
-    const data={...admin};
-    delete data.id;
-    await db.collection("usuarios").doc(admin.id).set(data);
-    return [admin];
+const TABLAS_SUPABASE={usuarios:"perfiles",remisiones:"remisiones",clientes:"clientes",abonosCotizaciones:"abonos_cotizaciones",configuracion:"configuracion_empresa",configuracionEmpresa:"configuracion_empresa"};
+const CAMPOS_DB={
+  perfiles:{role:"rol",presupuestoMensual:"presupuesto_mensual",username:"usuario"},
+  remisiones:{idDocumento:"id_documento",tipoDoc:"tipo_doc",fechaCreacion:"fecha_creacion",docCliente:"documento_cliente",formaPago:"forma_pago"},
+  clientes:{docCliente:"documento",nomCliente:"nombre",telCliente:"telefono",totalCompras:"total_compras",totalInvertido:"total_invertido",fechaRegistro:"fecha_registro",ultimaActualizacion:"ultima_actualizacion"},
+  abonos_cotizaciones:{idDocumento:"id_documento",tipoDoc:"tipo_doc",docCliente:"documento_cliente",nomCliente:"nombre_cliente",telCliente:"telefono_cliente",formaPago:"forma_pago",fechaHora:"fecha_hora",numeroAbono:"numero_abono",totalMeta:"total_meta",registradoPor:"registrado_por",estadoResultante:"estado_resultante"},
+  configuracion_empresa:{codigoAnulacion:"codigo_anulacion"}
+};
+const CAMPOS_INDEXADOS={
+  perfiles:new Set(["id","usuario","nombre","rol","area","activo","presupuesto_mensual","created_at","email"]),
+  remisiones:new Set(["id_documento","consecutivo","tipo_doc","fecha","fecha_creacion","asesor","area","estado","forma_pago","documento_cliente","total","updated_at"]),
+  clientes:new Set(["documento","nombre","telefono","total_compras","total_invertido","fecha_registro","ultima_actualizacion"]),
+  abonos_cotizaciones:new Set(["id","id_documento","fecha","asesor","area","forma_pago","valor","created_at"]),
+  configuracion_empresa:new Set(["id","nombre","logo","codigo_anulacion","updated_at"])
+};
+function campoDb(tabla,campo){return CAMPOS_DB[tabla]?.[campo]||campo;}
+function datosDesdeFila(tabla,fila){
+  if(!fila)return null;
+  const doc={...(fila.datos||{})};
+  const mapa=CAMPOS_DB[tabla]||{};
+  Object.entries(fila).forEach(([k,v])=>{
+    if(k==="datos"||k==="updated_at"||k==="created_at")return;
+    const original=Object.keys(mapa).find(key=>mapa[key]===k)||k;
+    doc[original]=v;
+  });
+  if(tabla==="perfiles"){doc.role=fila.rol;doc.username=fila.usuario;doc.email=fila.email||doc.email||"";}
+  if(tabla==="remisiones")doc.id=fila.id_documento;
+  if(tabla==="clientes")doc.id=fila.documento;
+  if(tabla==="abonos_cotizaciones")doc.id=fila.id;
+  return doc;
+}
+function filaDesdeDatos(tabla,id,doc){
+  const datos={...doc};
+  delete datos.id;
+  if(tabla==="perfiles"){
+    delete datos.pass; delete datos.password;
+    return {id:id||doc.id,usuario:doc.username||doc.usuario||doc.email,nombre:doc.nombre||"",rol:doc.role||doc.rol||"asesor",area:doc.area||"",activo:doc.activo!==false,presupuesto_mensual:Number(doc.presupuestoMensual||doc.presupuesto_mensual||0),email:doc.email||null,datos};
   }
+  const fila={datos};
+  Object.entries(doc).forEach(([k,v])=>{
+    if(k==="id"||v===undefined)return;
+    const col=campoDb(tabla,k);
+    if(CAMPOS_INDEXADOS[tabla]?.has(col))fila[col]=v;
+  });
+  if(tabla==="remisiones"){
+    fila.id_documento=id||doc.idDocumento;
+    fila.consecutivo=Number(doc.consecutivo||0); fila.tipo_doc=doc.tipoDoc||"Remisión";
+    fila.fecha=doc.fecha||fechaHoy(); fila.fecha_creacion=doc.fechaCreacion||null;
+    fila.asesor=doc.asesor||""; fila.area=doc.area||""; fila.estado=doc.estado||"";
+    fila.forma_pago=doc.formaPago||""; fila.documento_cliente=doc.docCliente||"";
+    fila.total=Number(doc.total||0); fila.updated_at=new Date().toISOString();
+  }else if(tabla==="clientes"){
+    fila.documento=id||doc.docCliente||doc.documento; fila.nombre=doc.nomCliente||doc.nombre||"";
+    fila.telefono=doc.telCliente||doc.telefono||""; fila.total_compras=Number(doc.totalCompras||doc.total_compras||0);
+    fila.total_invertido=Number(doc.totalInvertido||doc.total_invertido||0);
+  }else if(tabla==="abonos_cotizaciones"){
+    fila.id=id||doc.id||crypto.randomUUID(); fila.id_documento=doc.idDocumento;
+    fila.fecha=doc.fecha||fechaHoy(); fila.asesor=doc.asesor||""; fila.area=doc.area||"";
+    fila.forma_pago=doc.formaPago||""; fila.valor=Number(doc.valor||0);
+  }else if(tabla==="configuracion_empresa"){
+    fila.id="empresa"; fila.nombre=doc.nombre||"Remisionario y Facturación";
+    fila.logo=doc.logo||""; fila.codigo_anulacion=doc.codigoAnulacion||"";
+  }
+  return fila;
+}
+function crearAdaptadorSupabase(){
+  function snapshot(tabla,rows){
+    const docs=(rows||[]).map(row=>({id:row.id_documento||row.documento||row.id,data:()=>datosDesdeFila(tabla,row)}));
+    return {docs,empty:docs.length===0,size:docs.length};
+  }
+  function consulta(tabla,filtros=[],orden=null,max=null){
+    const api={
+      where(campo,op,valor){return consulta(tabla,[...filtros,{campo,op,valor}],orden,max);},
+      orderBy(campo,direccion="asc"){return consulta(tabla,filtros,{campo,direccion},max);},
+      limit(n){return consulta(tabla,filtros,orden,n);},
+      async get(){
+        const tablaDb=TABLAS_SUPABASE[tabla];
+        const llavePrimaria={perfiles:"id",remisiones:"id_documento",clientes:"documento",abonos_cotizaciones:"id",configuracion_empresa:"id"}[tablaDb];
+        const filas=[];
+        const tamanoPagina=500;
+        while(max==null||filas.length<max){
+          const tomar=max==null?tamanoPagina:Math.min(tamanoPagina,max-filas.length);
+          if(tomar<=0)break;
+          let q=supabaseClient.from(tablaDb).select("*");
+          for(const f of filtros){
+            const col=campoDb(tablaDb,f.campo);
+            const target=CAMPOS_INDEXADOS[tablaDb]?.has(col)?col:`datos->>${f.campo}`;
+            const op={"==":"eq","===":"eq","!=":"neq",">":"gt",">=":"gte","<":"lt","<=":"lte","in":"in"}[f.op]||f.op;
+            if(op==="in"&&Array.isArray(f.valor))q=q.in(target,f.valor);
+            else q=q.filter(target,op,f.valor);
+          }
+          if(orden){
+            const columnaOrden=campoDb(tablaDb,orden.campo);
+            q=q.order(columnaOrden,{ascending:orden.direccion!=="desc"});
+            if(llavePrimaria&&columnaOrden!==llavePrimaria)q=q.order(llavePrimaria,{ascending:true});
+          }else if(llavePrimaria){
+            q=q.order(llavePrimaria,{ascending:true});
+          }
+          const {data,error}=await q.range(filas.length,filas.length+tomar-1);
+          if(error)throw error;
+          filas.push(...(data||[]));
+          if(!data||data.length<tomar)break;
+        }
+        return snapshot(tablaDb,filas);
+      },
+      onSnapshot(next,errorFn){
+        let activo=true;
+        const cargar=()=>api.get().then(s=>{if(activo)next(s);}).catch(e=>{if(activo)errorFn?.(e);});
+        cargar();
+        const canal=supabaseClient.channel(`app-${TABLAS_SUPABASE[tabla]}-${crypto.randomUUID()}`).on("postgres_changes",{event:"*",schema:"public",table:TABLAS_SUPABASE[tabla]},cargar).subscribe();
+        return ()=>{activo=false;supabaseClient.removeChannel(canal);};
+      }
+    };
+    return api;
+  }
+  return {collection(nombre){
+    const tabla=nombre==="configuracionEmpresa"?"configuracion_empresa":nombre;
+    const api=consulta(tabla);
+    api.doc=(id)=>({id,
+      async get(){let q=supabaseClient.from(TABLAS_SUPABASE[tabla]).select("*").eq(tabla==="remisiones"?"id_documento":tabla==="clientes"?"documento":tabla==="configuracion_empresa"?"id":tabla==="perfiles"?"id":"id",id).maybeSingle();const {data,error}=await q;if(error)throw error;return {id,exists:!!data,data:()=>datosDesdeFila(TABLAS_SUPABASE[tabla],data)};},
+      async set(doc,opts={}){const row=filaDesdeDatos(TABLAS_SUPABASE[tabla],id,doc);const {error}=await supabaseClient.from(TABLAS_SUPABASE[tabla]).upsert(row,{onConflict:tabla==="remisiones"?"id_documento":tabla==="clientes"?"documento":"id"});if(error)throw error;},
+      async update(doc){const key=tabla==="remisiones"?"id_documento":tabla==="clientes"?"documento":tabla==="configuracion_empresa"?"id":"id";const {data:actual,error:readError}=await supabaseClient.from(TABLAS_SUPABASE[tabla]).select("*").eq(key,id).single();if(readError)throw readError;const combinado={...datosDesdeFila(TABLAS_SUPABASE[tabla],actual),...doc};const cambios=filaDesdeDatos(TABLAS_SUPABASE[tabla],id,combinado);delete cambios[key];const {error}=await supabaseClient.from(TABLAS_SUPABASE[tabla]).update(cambios).eq(key,id);if(error)throw error;},
+      async delete(){const {error}=await supabaseClient.from(TABLAS_SUPABASE[tabla]).delete().eq(tabla==="remisiones"?"id_documento":tabla==="clientes"?"documento":"id",id);if(error)throw error;}
+    });
+    return api;
+  }};
+}
+
+async function obtenerUsuarios(){
+  exigirSupabase();
+  const snap=await db.collection("usuarios").get();
   return snap.docs.map(d=>({id:d.id,...d.data()}));
 }
 
 async function obtenerRemisiones(){
-  exigirFirebase();
+  exigirSupabase();
 
   if(cacheRemisiones!==null)
     return cacheRemisiones;
@@ -1144,37 +1291,40 @@ async function obtenerRemisiones(){
 }
 
 async function guardarUsuarioDB(user){
-  exigirFirebase();
-  const id=user.id || db.collection("usuarios").doc().id;
-  const data={...user}; delete data.id;
-  await db.collection("usuarios").doc(id).set(data,{merge:true});
-  return {id,...data};
+  exigirSupabase();
+  const {data,error}=await supabaseClient.functions.invoke("admin-users",{body:{...user,action:user.id?"update":"create"}});
+  if(error){let detalle=error.message;try{const body=await error.context?.clone?.().json();detalle=body?.error||detalle;}catch{}throw new Error(detalle);}
+  if(data?.error)throw new Error(data.error);
+  const {password,...perfil}=user;
+  return {id:data.id,...perfil};
 }
 
 async function eliminarUsuarioDB(id){
-  exigirFirebase();
-  await db.collection("usuarios").doc(id).delete();
+  exigirSupabase();
+  const {data,error}=await supabaseClient.functions.invoke("admin-users",{body:{action:"delete",id}});
+  if(error){let detalle=error.message;try{const body=await error.context?.clone?.().json();detalle=body?.error||detalle;}catch{}throw new Error(detalle);}
+  if(data?.error)throw new Error(data.error);
 }
 
 async function guardarRemisionDB(doc){
-  exigirFirebase();
+  exigirSupabase();
   await db.collection("remisiones").doc(doc.idDocumento).set(doc);
 }
 
 async function obtenerClientes(){
-  exigirFirebase();
+  exigirSupabase();
   const snap=await db.collection("clientes").get();
   return snap.docs.map(d=>({id:d.id,...d.data()}));
 }
 
 async function obtenerCliente(doc){
-  exigirFirebase();
+  exigirSupabase();
   const s=await db.collection("clientes").doc(doc).get();
   return s.exists ? s.data() : null;
 }
 
 async function guardarCliente(doc,data){
-  exigirFirebase();
+  exigirSupabase();
   await db.collection("clientes").doc(doc).set(data,{merge:true});
 }
 
@@ -1209,40 +1359,70 @@ async function handleLogin(event){
   const username=document.getElementById("loginUser").value.trim().toLowerCase();
   const pass=document.getElementById("loginPass").value;
   const error=document.getElementById("loginError");
+  const button=event.submitter||document.querySelector('#loginForm button[type="submit"]');
+  const buttonText=button?.textContent||"Iniciar Sesión";
+  error.textContent="";
+  if(!username||!pass){
+    error.textContent="Escribe tu usuario y contraseña para continuar.";
+    return;
+  }
+  if(button){button.disabled=true;button.textContent="Verificando…";}
   try{
-    const users=await obtenerUsuarios();
-    const user=users.find(u=>String(u.username||"").toLowerCase()===username && String(u.pass||"")===pass);
-    if(!user){
-      error.textContent="Usuario o contraseña incorrectos.";
-      error.classList.remove("hidden"); return;
-    }
-    currentUser=user;
-    sessionStorage.setItem(LS.session,JSON.stringify({id:user.id}));
-    aplicarSesion();
+    exigirSupabase();
+    let timeoutId;
+    let result;
+    try{
+      result=await Promise.race([
+        supabaseClient.functions.invoke("admin-users",{body:{action:"login",username,password:pass}}),
+        new Promise((_,reject)=>{timeoutId=setTimeout(()=>reject(new Error("Supabase no respondió en 15 segundos. Revisa tu conexión e inténtalo de nuevo.")),15000);})
+      ]);
+    }finally{clearTimeout(timeoutId);}
+    const {data,error:loginError}=result;
+    if(loginError){let detalle=loginError.message;try{const body=await loginError.context?.clone?.().json();detalle=body?.error||detalle;}catch{}throw new Error(detalle);}
+    if(data?.error)throw new Error(data.error);
+    if(!data?.session?.access_token||!data?.session?.refresh_token)throw new Error("No se pudo crear una sesión válida.");
+    const {data:sessionData,error:sessionError}=await supabaseClient.auth.setSession({access_token:data.session.access_token,refresh_token:data.session.refresh_token});
+    if(sessionError)throw sessionError;
+    currentUser=await cargarPerfil(sessionData.user.id);
+    if(!currentUser){await supabaseClient.auth.signOut();throw new Error("La cuenta inició sesión, pero aún no tiene un perfil de acceso configurado. Contacta al administrador.");}
+    sessionStorage.setItem(LS.session,JSON.stringify({id:currentUser.id}));
+    await aplicarSesion();
     error.classList.add("hidden");
   }catch(e){
-    error.textContent="No se pudo iniciar sesión: "+e.message;
-    error.classList.remove("hidden");
+    const detalle=String(e?.message||"").trim();
+    error.textContent=detalle.includes("incorrectos")
+      ? "El usuario o la contraseña no coinciden. Verifica los datos e inténtalo de nuevo."
+      : "No se pudo iniciar sesión. "+(detalle||"Revisa tu conexión e inténtalo de nuevo.");
+  }finally{
+    if(button){button.disabled=false;button.textContent=buttonText;}
   }
 }
 
 async function checkSession(){
-  const raw=sessionStorage.getItem(LS.session);
-  if(!raw){ mostrarLogin(); return; }
   try{
-    const session=JSON.parse(raw);
-    const users=await obtenerUsuarios();
-    currentUser=users.find(u=>u.id===session.id) || null;
-    if(currentUser) aplicarSesion(); else mostrarLogin();
-  }catch(e){ mostrarLogin(); }
+    exigirSupabase();
+    const {data:{session}}=await supabaseClient.auth.getSession();
+    if(!session?.user){mostrarLogin();return;}
+    currentUser=await cargarPerfil(session.user.id);
+    if(currentUser)await aplicarSesion();else{await supabaseClient.auth.signOut();mostrarLogin();}
+  }catch(e){console.error("No se pudo restaurar la sesión Supabase:",e);mostrarLogin();}
+}
+
+async function cargarPerfil(id){
+  const {data,error}=await supabaseClient.from("perfiles").select("*").eq("id",id).maybeSingle();
+  if(error)throw error;
+  if(!data||data.activo===false)return null;
+  const {data:{user}}=await supabaseClient.auth.getUser();
+  return {...datosDesdeFila("perfiles",data),id:data.id,email:user?.email||"",username:data.usuario||user?.email||"",role:data.rol,presupuestoMensual:Number(data.presupuesto_mensual||0)};
 }
 
 function mostrarLogin(){ document.getElementById("loginModal").classList.remove("hidden"); }
 
 function ocultarLogin(){ document.getElementById("loginModal").classList.add("hidden"); }
 
-function logout(){
+async function logout(){
   detenerListenerCaja();
+  if(supabaseClient)await supabaseClient.auth.signOut();
   currentUser=null;
   sessionStorage.removeItem(LS.session);
   mostrarLogin();
@@ -1257,9 +1437,10 @@ async function aplicarSesion(){
   document.getElementById("txtAreaUsuario").textContent="Área: "+(currentUser.area||"-");
   document.getElementById("remAsesor").value=currentUser.nombre||currentUser.username||"";
   document.getElementById("cotAsesor").value=currentUser.nombre||currentUser.username||"";
-  const hoy=new Date();
-  const fechaSolicitud=[hoy.getFullYear(),String(hoy.getMonth()+1).padStart(2,"0"),String(hoy.getDate()).padStart(2,"0")].join("-");
-  document.getElementById("cotFechaSolicitud").value=fechaSolicitud;
+  const fechaActual=fechaHoy();
+  document.getElementById("cotFechaSolicitud").value=fechaActual;
+  document.getElementById("repFechaInicio").value=fechaActual;
+  document.getElementById("repFechaFin").value=fechaActual;
   const admin=currentUser.role==="admin", caja=currentUser.role==="caja";
   document.getElementById("contenedorFiltroAsesor")
   .classList.toggle("hidden",currentUser.role==="asesor");
@@ -1268,6 +1449,7 @@ async function aplicarSesion(){
   document.getElementById("contenedorConsolidadoArea")
   .classList.toggle("hidden",currentUser.role!=="admin");
   document.querySelector('[data-view="venta"]').classList.toggle("hidden",caja);
+  document.querySelector('[data-view="cotizacion"]').classList.toggle("hidden",caja);
     if(caja){
     showView("reporte");
     }
@@ -1287,13 +1469,10 @@ async function cargarSiguienteNumeroPrefactura(){
   window.cargandoNumeroPrefactura=true;
   campo.value="Consultando...";
   try{
-    const snap=await db.collection("remisiones")
-      .where("tipoDoc","==","Cotización")
-      .orderBy("consecutivo","desc")
-      .limit(1)
-      .get();
-    const ultimo=snap.empty?null:snap.docs[0].data();
-    const siguiente=Number(ultimo?.consecutivo||0)+1;
+    exigirSupabase();
+    const {data:secuencia,error}=await supabaseClient.from("consecutivos").select("siguiente").eq("tipo_doc","Cotización").maybeSingle();
+    if(error)throw error;
+    const siguiente=Number(secuencia?.siguiente||1);
     campo.value=`COT-${String(siguiente).padStart(3,"0")}`;
   }catch(error){
     campo.value="";
@@ -1304,19 +1483,115 @@ async function cargarSiguienteNumeroPrefactura(){
   }
 }
 
+function agregarFilaMaterialCotizacion(){
+  const numero=siguienteFilaMaterialCotizacion++;
+  const fila=document.createElement("tr");
+  fila.dataset.materialRow=String(numero);
+  fila.innerHTML=`
+    <td><input aria-label="Tipo de material ${numero}" type="text" id="cotMaterialTipo${numero}"></td>
+    <td><input aria-label="Medida ${numero}" type="text" id="cotMaterialMedida${numero}"></td>
+    <td><input aria-label="Cantidad metros ${numero}" type="number" id="cotMetros${numero}" min="0" step="any"></td>
+    <td><input aria-label="Rollos ${numero}" type="number" id="cotRollos${numero}" min="0" step="any"></td>
+    <td><label style="display:flex;align-items:center;gap:5px;white-space:nowrap"><input aria-label="Sumar IVA 19% al material ${numero}" type="checkbox" id="cotAplicarIva${numero}" style="width:auto;margin:0">19%</label></td>
+    <td><input aria-label="Valor unitario ${numero}" type="number" id="cotUnitario${numero}" min="0" step="any"></td>
+    <td><input aria-label="Valor total ${numero}" type="number" id="cotValorTotal${numero}" min="0" step="any" readonly></td>
+    <td><button type="button" class="btn small danger" aria-label="Quitar material ${numero}" onclick="eliminarFilaMaterialCotizacion(this)">×</button></td>`;
+  document.getElementById("cotMaterialesBody").insertBefore(
+    fila,
+    document.getElementById("cotFilaTotalMateriales")
+  );
+}
+
+function eliminarFilaMaterialCotizacion(boton){
+  boton.closest("tr[data-material-row]")?.remove();
+  calcularTotalesCotizacion();
+}
+
+function actualizarNombreImagenCotizacion(numero){
+  const campo=document.getElementById(`cotFotoPrediseno${numero}`);
+  const etiqueta=document.getElementById(`cotFotoNombre${numero}`);
+  const archivo=campo?.files?.[0];
+  if(etiqueta) etiqueta.textContent=archivo?archivo.name:"Opcional · JPG, PNG o WebP";
+}
+
+async function prepararImagenCotizacion(archivo){
+  if(!archivo?.type?.startsWith("image/")) throw new Error("Selecciona un archivo de imagen JPG, PNG o WebP.");
+  if(typeof createImageBitmap!=="function") throw new Error("Este navegador no permite preparar imágenes. Usa una versión reciente de Chrome o Edge.");
+  let bitmap;
+  try{bitmap=await createImageBitmap(archivo);}catch{throw new Error(`No pude abrir “${archivo.name}”. Usa una imagen JPG, PNG o WebP.`);}
+  try{
+    const escala=Math.min(1,1600/Math.max(bitmap.width,bitmap.height));
+    const canvas=document.createElement("canvas");
+    canvas.width=Math.max(1,Math.round(bitmap.width*escala));
+    canvas.height=Math.max(1,Math.round(bitmap.height*escala));
+    const contexto=canvas.getContext("2d");
+    contexto.fillStyle="#fff";
+    contexto.fillRect(0,0,canvas.width,canvas.height);
+    contexto.drawImage(bitmap,0,0,canvas.width,canvas.height);
+    const blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/jpeg",0.82));
+    if(!blob) throw new Error(`No pude preparar “${archivo.name}”.`);
+    if(blob.size>5*1024*1024) throw new Error(`“${archivo.name}” supera el máximo de 5 MB después de comprimirla.`);
+    return {blob,nombre:archivo.name.replace(/\.[^.]+$/,""),size:blob.size};
+  }finally{bitmap.close?.();}
+}
+
+async function eliminarImagenesCotizacion(paths){
+  if(!paths?.length) return;
+  const {error}=await supabaseClient.storage.from(STORAGE_COTIZACIONES).remove(paths);
+  if(error) console.warn("No se pudieron limpiar las imágenes cargadas:",error.message);
+}
+
+async function subirImagenesCotizacion(idDocumento,imagenes){
+  const cargadas=[];
+  try{
+    for(let i=0;i<imagenes.length;i++){
+      const imagen=imagenes[i];
+      const path=`${idDocumento}/${currentUser.id}/${String(i+1).padStart(2,"0")}-${crypto.randomUUID()}.jpg`;
+      const {error}=await supabaseClient.storage.from(STORAGE_COTIZACIONES).upload(path,imagen.blob,{
+        contentType:"image/jpeg",cacheControl:"3600",upsert:false
+      });
+      if(error){
+        if(/bucket not found|does not exist/i.test(error.message)) throw new Error("Falta habilitar el almacenamiento privado de imágenes en Supabase. Aplica la migración 004_imagenes_cotizaciones.sql y vuelve a intentarlo.");
+        throw new Error(`No se pudo subir la imagen ${i+1}: ${error.message}`);
+      }
+      cargadas.push({path,nombre:imagen.nombre,contentType:"image/jpeg",size:imagen.size});
+    }
+    return cargadas;
+  }catch(error){
+    await eliminarImagenesCotizacion(cargadas.map(imagen=>imagen.path));
+    throw error;
+  }
+}
+
+async function obtenerImagenesCotizacionFirmadas(imagenes){
+  if(!Array.isArray(imagenes)||!supabaseClient) return {imagenes:[],errores:[]};
+  const resultados=await Promise.all(imagenes.filter(imagen=>imagen?.path).map(async imagen=>{
+    const {data,error}=await supabaseClient.storage.from(STORAGE_COTIZACIONES).createSignedUrl(imagen.path,3600);
+    if(error){console.warn("No se pudo abrir una imagen de la cotización:",error.message);return {error:error.message};}
+    return {imagen:{...imagen,url:data.signedUrl}};
+  }));
+  return {
+    imagenes:resultados.filter(resultado=>resultado.imagen).map(resultado=>resultado.imagen),
+    errores:resultados.filter(resultado=>resultado.error).map(resultado=>resultado.error)
+  };
+}
+
 function calcularTotalesCotizacion(){
   let total=0;
-  for(let i=1;i<=4;i++){
+  document.querySelectorAll("#cotMaterialesBody tr[data-material-row]").forEach(fila=>{
+    const i=fila.dataset.materialRow;
     const metros=Number(document.getElementById(`cotMetros${i}`).value)||0;
     const rollos=Number(document.getElementById(`cotRollos${i}`).value)||0;
     const unitario=Number(document.getElementById(`cotUnitario${i}`).value)||0;
+    const ivaAplicado=document.getElementById(`cotAplicarIva${i}`).checked;
     // Cada material se cotiza por metros o por rollos; si se diligencian ambos,
     // se priorizan los metros para evitar duplicar cantidades en el renglón.
     const cantidad=metros>0?metros:rollos;
-    const subtotal=cantidad*unitario;
+    const subtotalBase=cantidad*unitario;
+    const subtotal=Number((subtotalBase*(ivaAplicado?1.19:1)).toFixed(2));
     document.getElementById(`cotValorTotal${i}`).value=subtotal.toFixed(2);
     total+=subtotal;
-  }
+  });
   const totalRedondeado=total.toFixed(2);
   document.getElementById("cotTotalMateriales").value=totalRedondeado;
   document.getElementById("cotTotalPedido").value=totalRedondeado;
@@ -1333,40 +1608,52 @@ async function guardarCotizacion(){
   const nomCliente=document.getElementById("cotClienteNombre").value.trim();
   const docCliente=document.getElementById("cotNit").value.trim();
   const telCliente=document.getElementById("cotCelular").value.trim();
+  const origenCliente=document.getElementById("cotOrigenCliente").value;
+  const detalleOrigenCliente=document.getElementById("cotOtroOrigen").value.trim();
+  const ciudadPais=document.getElementById("cotCiudadPais").value.trim();
   const venta=document.getElementById("cotVenta").value;
   const diseno=document.getElementById("cotDiseno").value;
   const total=Number(document.getElementById("cotTotalPedido").value)||0;
   const materiales=[];
 
-  for(let i=1;i<=4;i++){
+  document.querySelectorAll("#cotMaterialesBody tr[data-material-row]").forEach(fila=>{
+    const i=fila.dataset.materialRow;
     const material={
       tipo:document.getElementById(`cotMaterialTipo${i}`).value.trim(),
       medida:document.getElementById(`cotMaterialMedida${i}`).value.trim(),
       metros:Number(document.getElementById(`cotMetros${i}`).value)||0,
       rollos:Number(document.getElementById(`cotRollos${i}`).value)||0,
       valorUnitario:Number(document.getElementById(`cotUnitario${i}`).value)||0,
+      ivaIncluido:!document.getElementById(`cotAplicarIva${i}`).checked,
+      ivaAplicado:document.getElementById(`cotAplicarIva${i}`).checked,
+      ivaPct:document.getElementById(`cotAplicarIva${i}`).checked?19:0,
       valorTotal:Number(document.getElementById(`cotValorTotal${i}`).value)||0
     };
+    const cantidad=material.metros>0?material.metros:material.rollos;
+    material.valorIva=material.ivaAplicado?Number((cantidad*material.valorUnitario*0.19).toFixed(2)):0;
     if(material.tipo||material.medida||material.metros||material.rollos||material.valorUnitario)
       materiales.push(material);
-  }
+  });
 
-  if(!fechaEntrega||!nomCliente||!docCliente||!telCliente||!venta||!diseno||!materiales.length||total<=0){
-    alert("Completa la fecha de entrega, los datos del cliente, el tipo de pedido y al menos un material con valor.");
+  if(!fechaEntrega||!nomCliente||!docCliente||!telCliente||!origenCliente||(origenCliente==="Otro"&&!detalleOrigenCliente)||!ciudadPais||!venta||!diseno||!materiales.length||total<=0){
+    alert("Completa la fecha de entrega, los datos del cliente, su origen, ciudad/país, el tipo de pedido y al menos un material con valor.");
     return;
   }
 
   const boton=document.getElementById("btnGuardarCotizacion");
   boton.disabled=true;
+  let rutasImagenesSubidas=[];
+  let cotizacionGuardada=false;
   try{
-    exigirFirebase();
-    const ultimoSnap=await db.collection("remisiones")
-      .where("tipoDoc","==","Cotización")
-      .orderBy("consecutivo","desc")
-      .limit(1)
-      .get();
-    const consecutivo=(Number(ultimoSnap.empty?0:ultimoSnap.docs[0].data().consecutivo)||0)+1;
+    exigirSupabase();
+    const archivosImagenes=[1,2,3,4]
+      .map(numero=>document.getElementById(`cotFotoPrediseno${numero}`).files?.[0])
+      .filter(Boolean);
+    const imagenesPreparadas=await Promise.all(archivosImagenes.map(prepararImagenCotizacion));
+    const {data:consecutivo,error:consecutivoError}=await supabaseClient.rpc("reservar_consecutivo",{p_tipo_doc:"Cotización"});
+    if(consecutivoError)throw consecutivoError;
     const idDocumento=`COT-${String(consecutivo).padStart(3,"0")}`;
+    rutasImagenesSubidas=await subirImagenesCotizacion(idDocumento,imagenesPreparadas);
     const clienteAnterior=await obtenerCliente(docCliente);
     const ahora=new Date().toISOString();
     await guardarCliente(docCliente,{
@@ -1374,6 +1661,9 @@ async function guardarCotizacion(){
       docCliente,
       nomCliente,
       telCliente,
+      ciudadPais,
+      origenCliente,
+      detalleOrigenCliente:origenCliente==="Otro"?detalleOrigenCliente:"",
       totalCompras:Number(clienteAnterior?.totalCompras||0),
       totalInvertido:Number(clienteAnterior?.totalInvertido||0),
       fechaRegistro:clienteAnterior?.fechaRegistro||ahora,
@@ -1383,9 +1673,11 @@ async function guardarCotizacion(){
     const cotizacion={
       idDocumento,consecutivo,tipoDoc:"Cotización",estado:"Pendiente",
       fecha:fechaSolicitud,fechaSolicitud,fechaEntrega,fechaCreacion:ahora,
-      docCliente,nomCliente,telCliente,
+      docCliente,nomCliente,telCliente,ciudadPais,origenCliente,detalleOrigenCliente:origenCliente==="Otro"?detalleOrigenCliente:"",
       asesor:currentUser.nombre||currentUser.username||"",area:currentUser.area||"",
-      venta,diseno,materiales,
+      venta,diseno,materiales,imagenesReferencia:rutasImagenesSubidas,
+      subtotalMaterialesBase:Number(materiales.reduce((s,m)=>s+(m.metros>0?m.metros:m.rollos)*m.valorUnitario,0).toFixed(2)),
+      totalIva:materiales.reduce((s,m)=>s+Number(m.valorIva||0),0),
       totalMateriales:Number(document.getElementById("cotTotalMateriales").value)||total,
       total,totalAbonado:0,numeroAbonos:0,
       colorBase:document.getElementById("cotColorBase").value.trim(),
@@ -1402,16 +1694,24 @@ async function guardarCotizacion(){
     };
 
     await db.collection("remisiones").doc(idDocumento).set(cotizacion);
+    cotizacionGuardada=true;
     alert(`Cotización ${idDocumento} guardada en estado Pendiente.`);
     document.querySelectorAll("#view-cotizacion input").forEach(input=>{
       if(input.type==="file") input.value="";
+      else if(input.type==="checkbox") input.checked=false;
       else if(!["cotFechaSolicitud","cotAsesor"].includes(input.id)) input.value="";
     });
+    document.querySelectorAll("#cotMaterialesBody tr[data-material-row]").forEach(fila=>{
+      if(Number(fila.dataset.materialRow)>4) fila.remove();
+    });
+    siguienteFilaMaterialCotizacion=5;
     document.querySelectorAll("#view-cotizacion select").forEach(select=>select.value="");
     document.querySelectorAll("#view-cotizacion textarea").forEach(textarea=>textarea.value="");
+    [1,2,3,4].forEach(actualizarNombreImagenCotizacion);
     document.getElementById("cotFechaSolicitud").value=fechaHoy();
     document.getElementById("cotAsesor").value=currentUser.nombre||currentUser.username||"";
     document.getElementById("cotInfoClienteBadge").className="status hidden";
+    actualizarOtroOrigenCotizacion();
     calcularTotalesCotizacion();
     window.cargandoNumeroPrefactura=false;
     document.getElementById("cotPrediseno").value="";
@@ -1419,6 +1719,7 @@ async function guardarCotizacion(){
     if(!document.getElementById("view-reporte").classList.contains("hidden")) procesarReportes();
   }catch(error){
     console.error("Error guardando cotización:",error);
+    if(!cotizacionGuardada) await eliminarImagenesCotizacion(rutasImagenesSubidas.map(imagen=>imagen.path));
     alert("No se pudo guardar la cotización: "+error.message);
   }finally{
     boton.disabled=false;
@@ -1426,6 +1727,7 @@ async function guardarCotizacion(){
 }
 
 document.getElementById("view-cotizacion").addEventListener("input",calcularTotalesCotizacion);
+document.getElementById("view-cotizacion").addEventListener("change",calcularTotalesCotizacion);
 
 function showView(view){
 
@@ -1467,12 +1769,67 @@ function showView(view){
 }
 
 function toggleLoginPassword(){
-
   const campo=document.getElementById("loginPass");
-
   if(!campo) return;
-
   campo.type = campo.type === "password" ? "text" : "password";
+  const boton=document.getElementById("toggleLoginPassword");
+  const visible=campo.type==="text";
+  if(boton){boton.setAttribute("aria-pressed",String(visible));boton.setAttribute("aria-label",visible?"Ocultar contraseña":"Mostrar contraseña");boton.textContent=visible?"🙈":"👁";}
+}
+
+function mostrarPanelRecuperacion(){
+  document.getElementById("loginForm").classList.add("hidden");
+  document.getElementById("loginError").textContent="";
+  document.getElementById("btnMostrarRecuperacion").classList.add("hidden");
+  document.getElementById("recoveryPasswordPanel").classList.add("hidden");
+  document.getElementById("recoveryRequestPanel").classList.remove("hidden");
+  document.getElementById("recoveryUser").value=document.getElementById("loginUser").value.trim();
+}
+
+function volverAlLogin(){
+  document.getElementById("recoveryRequestPanel").classList.add("hidden");
+  document.getElementById("recoveryPasswordPanel").classList.add("hidden");
+  document.getElementById("btnMostrarRecuperacion").classList.remove("hidden");
+  document.getElementById("loginForm").classList.remove("hidden");
+}
+
+async function solicitarRecuperacion(){
+  const mensaje=document.getElementById("recoveryMessage");
+  const identificador=document.getElementById("recoveryUser").value.trim().toLowerCase();
+  mensaje.style.color="var(--required)";
+  if(!identificador){mensaje.textContent="Escribe tu usuario o correo.";return;}
+  if(!/^https?:$/.test(location.protocol)){mensaje.textContent="Abre la aplicación desde su dirección web para solicitar el enlace.";return;}
+  const boton=document.getElementById("btnEnviarRecuperacion");
+  boton.disabled=true;boton.textContent="Enviando…";mensaje.textContent="";
+  try{
+    exigirSupabase();
+    const redirectTo=location.origin+location.pathname;
+    const {data,error}=await supabaseClient.functions.invoke("admin-users",{body:{action:"request-password-reset",username:identificador,redirectTo}});
+    if(error){let detalle=error.message;try{const body=await error.context?.clone?.().json();detalle=body?.error||detalle;}catch{}throw new Error(detalle);}
+    if(data?.error)throw new Error(data.error);
+    mensaje.style.color="var(--brand-dark)";
+    mensaje.textContent="Si encontramos la cuenta, enviaremos un enlace al correo registrado. Revisa también correo no deseado.";
+  }catch(e){mensaje.textContent="No se pudo enviar el enlace. "+(e?.message||"Inténtalo de nuevo.");}
+  finally{boton.disabled=false;boton.textContent="Enviar enlace";}
+}
+
+async function guardarNuevaPassword(){
+  const mensaje=document.getElementById("recoveryPasswordMessage");
+  const password=document.getElementById("recoveryNewPassword").value;
+  const confirmacion=document.getElementById("recoveryConfirmPassword").value;
+  if(password.length<8){mensaje.textContent="La contraseña debe tener al menos 8 caracteres.";return;}
+  if(password!==confirmacion){mensaje.textContent="Las contraseñas no coinciden.";return;}
+  const boton=document.getElementById("btnGuardarNuevaPassword");
+  boton.disabled=true;mensaje.textContent="";
+  try{
+    const {error}=await supabaseClient.auth.updateUser({password});
+    if(error)throw error;
+    mensaje.style.color="var(--brand-dark)";
+    mensaje.textContent="Contraseña actualizada. Ya puedes iniciar sesión con ella.";
+    await supabaseClient.auth.signOut();
+    setTimeout(volverAlLogin,1200);
+  }catch(e){mensaje.style.color="var(--required)";mensaje.textContent="No se pudo actualizar la contraseña. "+(e?.message||"Abre nuevamente el enlace recibido.");}
+  finally{boton.disabled=false;}
 }
 
 function toggleFacturaOptions(){
@@ -2292,7 +2649,7 @@ function limpiarFormulario(){
 
 async function editarDocumento(id){
 
-  const doc =
+  let doc =
     datosRemisiones.find(
       r=>(r.idDocumento||r.id)===id
     );
@@ -2648,9 +3005,23 @@ function seleccionarClienteCotizacion(cliente){
   document.getElementById("cotClienteNombre").value=cliente.nomCliente||"";
   document.getElementById("cotNit").value=cliente.docCliente||"";
   document.getElementById("cotCelular").value=cliente.telCliente||"";
+  document.getElementById("cotCiudadPais").value=cliente.ciudadPais||cliente.ciudadCliente||"";
+  document.getElementById("cotOrigenCliente").value=cliente.origenCliente||"";
+  document.getElementById("cotOtroOrigen").value=cliente.detalleOrigenCliente||"";
+  actualizarOtroOrigenCotizacion();
   document.getElementById("cotClienteSugerenciasNombre").classList.add("hidden");
   document.getElementById("cotClienteSugerenciasDoc").classList.add("hidden");
   mostrarEstadoClienteCotizacion(cliente);
+}
+
+function actualizarOtroOrigenCotizacion(){
+  const esOtro=document.getElementById("cotOrigenCliente").value==="Otro";
+  const campo=document.getElementById("cotOtroOrigen");
+  document.getElementById("cotOtroOrigenWrap").classList.toggle("hidden",!esOtro);
+  campo.disabled=!esOtro;
+  campo.required=esOtro;
+  campo.setAttribute("aria-required",String(esOtro));
+  if(!esOtro)campo.value="";
 }
 
 function mostrarEstadoClienteCotizacion(cliente){
@@ -2769,21 +3140,9 @@ if(window.documentoEditandoId){
 
 }else{
 
-  const snapUltimo =
-    await db
-      .collection("remisiones")
-      .where("tipoDoc","==",tipoDoc)
-      .orderBy("consecutivo","desc")
-      .limit(1)
-      .get();
-
-  const ultimo =
-    snapUltimo.empty
-      ? null
-      : snapUltimo.docs[0].data();
-
-  consecutivo =
-    Number(ultimo?.consecutivo||0)+1;
+  const {data:reservado,error:consecutivoError}=await supabaseClient.rpc("reservar_consecutivo",{p_tipo_doc:tipoDoc});
+  if(consecutivoError)throw consecutivoError;
+  consecutivo=Number(reservado);
 
   const prefijo =
     tipoDoc==="Cotización"
@@ -2918,10 +3277,12 @@ function crearConsultaAbonos(inicio,fin,asesor="TODOS",area="TODAS"){
   return consulta;
 }
 
-function crearConsultaCotizacionesActivas(asesor="TODOS",area="TODAS"){
+function crearConsultaCotizacionesActivas(asesor="TODOS",area="TODAS",inicio="",fin=""){
   let consulta=db.collection("remisiones")
     .where("tipoDoc","==","Cotización")
     .where("estado","in",["Pendiente","Abonada"]);
+  if(inicio) consulta=consulta.where("fecha",">=",inicio);
+  if(fin) consulta=consulta.where("fecha","<=",fin);
   if(currentUser.role==="asesor"){
     consulta=consulta.where("asesor","==",currentUser.nombre||currentUser.username||"");
   }else if(asesor!=="TODOS"){
@@ -2945,6 +3306,9 @@ function crearFilaReporteAbono(abono){
     estado:abono.estado||"Abonada",
     formaPago:abono.formaPago||"",
     total:Number(abono.valor||0),
+    // Caja y metas deben reflejar el dinero recibido en este abono, aunque
+    // la cotización todavía tenga saldo pendiente.
+    totalMeta:Number(abono.valor||0),
     esAbonoCotizacion:true,
     fechaCreacion:abono.fechaHora||abono.fecha
   };
@@ -2963,7 +3327,7 @@ async function procesarReportes(){
 
   try{
 
-    exigirFirebase();
+    exigirSupabase();
 
     const inicio=
       document.getElementById("repFechaInicio").value;
@@ -3004,20 +3368,6 @@ async function procesarReportes(){
        FILTRO POR FECHA
        ===================================================== */
 
-    if(currentUser.role==="caja"){
-
-  const ahora=new Date();
-
-  const hoy=
-    ahora.getFullYear()+"-"+
-    String(ahora.getMonth()+1).padStart(2,"0")+"-"+
-    String(ahora.getDate()).padStart(2,"0");
-
-  consulta=
-    consulta.where("fecha","==",hoy);
-
-}else{
-
   if(inicio){
     consulta=
       consulta.where("fecha",">=",inicio);
@@ -3027,8 +3377,6 @@ async function procesarReportes(){
     consulta=
       consulta.where("fecha","<=",fin);
   }
-
-}
 
 
     /* =====================================================
@@ -3095,7 +3443,7 @@ async function procesarReportes(){
 
     if(currentUser.role==="caja"){
 
-  escucharRemisionesCaja(consulta,asesor);
+  escucharRemisionesCaja(consulta,asesor,inicio,fin);
 
   return;
 
@@ -3110,7 +3458,7 @@ const snap=await consulta.get();
       }));
 
     const consultaAbonos=crearConsultaAbonos(inicio,fin,asesor,area);
-    const consultaCotizaciones=crearConsultaCotizacionesActivas(asesor,area);
+    const consultaCotizaciones=crearConsultaCotizacionesActivas(asesor,area,inicio,fin);
     const [snapAbonos,snapCotizaciones]=await Promise.all([
       consultaAbonos.get(),
       consultaCotizaciones.get()
@@ -3310,17 +3658,16 @@ function actualizarReporteCajaConFuentes(){
   actualizarReporteCajaEnPantalla([...porId.values()]);
 }
 
-function escucharRemisionesCaja(consulta,asesor){
-  const clave=JSON.stringify({area:currentUser.area||"",asesor});
+function escucharRemisionesCaja(consulta,asesor,inicio,fin){
+  const clave=JSON.stringify({area:currentUser.area||"",asesor,inicio,fin});
   if(listenerCajaRemisiones&&claveListenerCaja===clave){
     actualizarReporteCajaConFuentes();
     return;
   }
   detenerListenerCaja();
   claveListenerCaja=clave;
-  const hoy=fechaHoy();
-  const consultasActivas=crearConsultaCotizacionesActivas(asesor,"TODAS");
-  const consultaAbonos=crearConsultaAbonos(hoy,hoy,asesor,"TODAS");
+  const consultasActivas=crearConsultaCotizacionesActivas(asesor,"TODAS",inicio,fin);
+  const consultaAbonos=crearConsultaAbonos(inicio,fin,asesor,"TODAS");
 
   listenerCajaRemisiones=consulta.onSnapshot(snap=>{
     datosCajaRemisiones=snap.docs.map(d=>({id:d.id,...d.data()}));
@@ -3559,26 +3906,46 @@ function exportarReporteExcel(){
 
 datosRemisiones.forEach(r=>{
 
+  if(r.esAbonoCotizacion)return;
+
+  if(r.tipoDoc==="Cotización"){
+    obtenerMaterialesCotizacion(r).forEach(material=>{
+      const metros=Number(material.metros||0);
+      const rollos=Number(material.rollos||0);
+      const ivaIncluido=material.ivaIncluido??!material.ivaAplicado;
+      productos.push([
+        r.idDocumento||"",
+        r.fecha||"",
+        r.nomCliente||"",
+        r.asesor||"",
+        r.area||"",
+        [material.tipo,material.medida].filter(Boolean).join(" - "),
+        metros||rollos,
+        Number(material.valorUnitario||0),
+        ivaIncluido?"Sí":"No",
+        Number(material.ivaPct||0),
+        Number(material.valorUnitario||0),
+        Number(material.valorTotal||((metros||rollos)*Number(material.valorUnitario||0)))
+      ]);
+    });
+    return;
+  }
+
   const items=Array.isArray(r.items)?r.items:[];
-
-  items.forEach(item=>{
-
-    productos.push([
-      r.idDocumento||"",
-      r.fecha||"",
-      r.nomCliente||"",
-      r.asesor||"",
-      r.area||"",
-      item.descripcion||"",
-      Number(item.cantidad||0),
-      Number(item.precioBase||0),
-      item.ivaAplicado?"Sí":"No",
-      Number(item.ivaPct||0),
-      Number(item.precioUnitario||0),
-      Number(item.subtotal||0)
-    ]);
-
-  });
+  items.forEach(item=>productos.push([
+    r.idDocumento||"",
+    r.fecha||"",
+    r.nomCliente||"",
+    r.asesor||"",
+    r.area||"",
+    item.descripcion||"",
+    Number(item.cantidad||0),
+    Number(item.precioBase||0),
+    item.ivaAplicado?"Sí":"No",
+    Number(item.ivaPct||0),
+    Number(item.precioUnitario||0),
+    Number(item.subtotal||0)
+  ]));
 
 });
 
@@ -4120,89 +4487,23 @@ async function registrarAbonoCotizacion(){
     alert("No tienes permiso para registrar este abono.");
     return;
   }
-  if(!Number.isFinite(valor)||valor<=0||!["EFECTIVO","TRANSFERENCIA"].includes(formaPago)){
+  const mediosPagoAbono=["EFECTIVO","TRANSFERENCIA","005 TRANSFERENCIA","SAS TRANSFERENCIA"];
+  if(!Number.isFinite(valor)||valor<=0||!mediosPagoAbono.includes(formaPago)){
     alert("Ingresa un valor válido y selecciona Efectivo o Transferencia.");
     return;
   }
-
   const boton=document.getElementById("btnConfirmarAbono");
   boton.disabled=true;
   try{
-    exigirFirebase();
-    const refCotizacion=db.collection("remisiones").doc(cotizacion.idDocumento);
-    const refAbono=db.collection("abonosCotizaciones").doc();
-    const usuarioActual=currentUser.nombre||currentUser.username||"";
-    const fecha=fechaHoy();
-    const resultado=await db.runTransaction(async tx=>{
-      const snap=await tx.get(refCotizacion);
-      if(!snap.exists) throw new Error("La cotización ya no existe.");
-      const actual={id:snap.id,...snap.data()};
-      if(!puedeGestionarCotizacion(actual)) throw new Error("No tienes permiso para modificar esta cotización.");
-      if(!["Pendiente","Abonada"].includes(actual.estado)) throw new Error("La cotización ya no está pendiente de pago.");
-      const saldo=Math.max(0,Number(actual.total||0)-Number(actual.totalAbonado||0));
-      if(valor>saldo+0.001) throw new Error(`El abono supera el saldo pendiente de ${money(saldo)}.`);
-      const abonado=Number(actual.totalAbonado||0)+valor;
-      const pagada=abonado>=Number(actual.total||0)-0.001;
-      const refCliente=actual.docCliente
-        ? db.collection("clientes").doc(actual.docCliente)
-        : null;
-      const clienteSnap=pagada&&refCliente?await tx.get(refCliente):null;
-      const abono={
-        id:refAbono.id,
-        valor,
-        formaPago,
-        fecha,
-        fechaHora:new Date().toISOString(),
-        usuario:usuarioActual,
-        estadoResultante:pagada?"Pagada":"Abonada"
-      };
-      const numeroAbono=Number(actual.numeroAbonos||0)+1;
-      tx.update(refCotizacion,{
-        totalAbonado:abonado,
-        numeroAbonos:numeroAbono,
-        estado:pagada?"Pagada":"Abonada",
-        formaPago,
-        fechaUltimoAbono:fecha,
-        fechaActualizacion:new Date().toISOString()
-      });
-      tx.set(refAbono,{
-        id:refAbono.id,
-        idDocumento:actual.idDocumento,
-        tipoDoc:"Cotización",
-        docCliente:actual.docCliente||"",
-        nomCliente:actual.nomCliente||"",
-        telCliente:actual.telCliente||"",
-        asesor:actual.asesor||"",
-        area:actual.area||"",
-        fecha,
-        fechaHora:abono.fechaHora,
-        valor,
-        formaPago,
-        estado:abono.estadoResultante,
-        numeroAbono,
-        totalMeta:pagada?Number(actual.total||0):0,
-        saldo:Math.max(0,Number(actual.total||0)-abonado),
-        registradoPor:usuarioActual
-      });
-      if(pagada&&refCliente){
-        const cliente=clienteSnap?.exists?clienteSnap.data():{};
-        tx.set(refCliente,{
-          ...cliente,
-          docCliente:actual.docCliente,
-          nomCliente:actual.nomCliente||cliente.nomCliente||"",
-          telCliente:actual.telCliente||cliente.telCliente||"",
-          totalCompras:Number(cliente.totalCompras||0)+1,
-          totalInvertido:Number(cliente.totalInvertido||0)+Number(actual.total||0),
-          primeraCompra:cliente.primeraCompra||fecha,
-          ultimaCompra:fecha,
-          fechaRegistro:cliente.fechaRegistro||new Date().toISOString(),
-          ultimaActualizacion:new Date().toISOString()
-        },{merge:true});
-      }
-      return {actual,abono,abonado,pagada};
+    exigirSupabase();
+    const {data:resultado,error}=await supabaseClient.rpc("registrar_abono_cotizacion",{
+      p_id_documento:cotizacion.idDocumento,
+      p_valor:valor,
+      p_forma_pago:formaPago,
+      p_usuario:currentUser.nombre||currentUser.username||""
     });
-
-    if(resultado.pagada) clientesCacheBusqueda=null;
+    if(error)throw error;
+    if(resultado.pagada)clientesCacheBusqueda=null;
     cerrarModalAbono();
     alert(resultado.pagada?"Abono registrado y cotización marcada como Pagada.":"Abono registrado. La cotización continúa Abonada.");
     await procesarReportes(true);
@@ -4213,7 +4514,6 @@ async function registrarAbonoCotizacion(){
     boton.disabled=false;
   }
 }
-
 async function verDetalleDoc(id){
 
   const doc =
@@ -4223,12 +4523,22 @@ async function verDetalleDoc(id){
 
   if(!doc)return;
 
+  try{
+    const reciente=await db.collection("remisiones").doc(id).get();
+    if(reciente.exists)doc={...reciente.data(),id:reciente.id};
+  }catch(error){
+    console.warn("No se pudo actualizar el documento desde la base de datos; se mostrará la copia cargada:",error);
+  }
+
   const esCotizacion=doc.tipoDoc==="Cotización";
   const items=esCotizacion
-    ? (Array.isArray(doc.materiales)?doc.materiales:[]).map(material=>({
+    ? obtenerMaterialesCotizacion(doc).map(material=>({
         descripcion:[material.tipo,material.medida].filter(Boolean).join(" · "),
         cantidad:material.metros||material.rollos||0,
         precioUnitario:material.valorUnitario||0,
+        ivaAplicado:material.ivaAplicado===true,
+        ivaPct:Number(material.ivaPct||0),
+        valorIva:Number(material.valorIva||0),
         descuento:0,
         subtotal:material.valorTotal||0
       }))
@@ -4247,6 +4557,33 @@ async function verDetalleDoc(id){
       console.error("No se pudo cargar el historial de abonos:",error);
     }
   }
+  // El estado de la cotización y el acumulado guardado pueden quedar desfasados
+  // respecto del libro de abonos. Para el detalle, el historial es la fuente de
+  // verdad cuando contiene un acumulado mayor.
+  const totalAbonadoHistorial=historialAbonos.reduce((suma,abono)=>
+    suma+Math.max(0,Number(abono.valor||abono.abono||0)),0);
+  const totalAbonadoDetalle=esCotizacion
+    ? Math.max(Number(doc.totalAbonado||0),totalAbonadoHistorial)
+    : Number(doc.totalAbonado||0);
+  const cotizacionPagada=esCotizacion && (
+    String(doc.estado||"").toLowerCase()==="pagada" ||
+    totalAbonadoDetalle>=Number(doc.total||0)
+  );
+  const saldoPendienteDetalle=cotizacionPagada
+    ? 0
+    : Math.max(0,Number(doc.total||0)-totalAbonadoDetalle);
+  const resultadoImagenes=esCotizacion
+    ? await obtenerImagenesCotizacionFirmadas(doc.imagenesReferencia)
+    : {imagenes:[],errores:[]};
+  const referenciasGuardadas=Array.isArray(doc.imagenesReferencia)?doc.imagenesReferencia.filter(imagen=>imagen?.path):[];
+  const htmlImagenesReferencia=esCotizacion?`
+    <h3>Imágenes de referencia</h3>
+    ${resultadoImagenes.imagenes.length?`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:10px 0 16px">
+      ${resultadoImagenes.imagenes.map((imagen,index)=>`<a href="${escapeAttr(imagen.url)}" target="_blank" rel="noopener noreferrer" style="display:block;text-align:center"><img src="${escapeAttr(imagen.url)}" alt="Imagen de referencia ${index+1}" style="width:100%;max-height:240px;object-fit:contain;border:1px solid var(--line);border-radius:8px;background:#fff"><small>${escapeHtml(imagen.nombre||`Imagen ${index+1}`)}</small></a>`).join("")}
+    </div>`:""}
+    ${referenciasGuardadas.length===0?'<p>Esta cotización no tiene imágenes guardadas.</p>':""}
+    ${resultadoImagenes.errores.length?`<p role="status" style="color:#9b2c2c">No se pudieron cargar ${resultadoImagenes.errores.length} imagen(es): ${escapeHtml(resultadoImagenes.errores[0])}</p>`:""}
+  `:"";
 
   document.getElementById("detalleContenido").innerHTML=`
  <div class="grid-2">
@@ -4254,14 +4591,15 @@ async function verDetalleDoc(id){
   <div><strong>Fecha:</strong> ${escapeHtml(doc.fecha)}</div>
   <div><strong>Cliente:</strong> ${escapeHtml(doc.nomCliente)}</div>
   <div><strong>Documento cliente:</strong> ${escapeHtml(doc.docCliente)}</div>
+  ${esCotizacion?`<div><strong>Ciudad / País:</strong> ${escapeHtml(doc.ciudadPais||doc.ciudadCliente||"")}</div><div><strong>Origen del cliente:</strong> ${escapeHtml(doc.origenCliente||"")}${doc.detalleOrigenCliente?` · ${escapeHtml(doc.detalleOrigenCliente)}`:""}</div>`:""}
   <div><strong>Ciudad:</strong> ${escapeHtml(doc.ciudadCliente)}</div>
   <div><strong>Teléfono:</strong> ${escapeHtml(doc.telCliente)}</div>
   <div><strong>Asesor:</strong> ${escapeHtml(doc.asesor)}</div>
   <div><strong>Área:</strong> ${escapeHtml(doc.area)}</div>
   <div><strong>Forma de pago:</strong> ${escapeHtml(doc.formaPago)}</div>
   <div><strong>Tipo:</strong> ${escapeHtml(doc.tipoDoc)}</div>
-  <div><strong>Estado:</strong> ${escapeHtml(doc.estado||"Pendiente")}</div>
-  ${esCotizacion?`<div><strong>Entrega:</strong> ${escapeHtml(doc.fechaEntrega||"N/A")}</div><div><strong>Asesor:</strong> ${escapeHtml(doc.asesor||"N/A")}</div><div><strong>Saldo pendiente:</strong> ${money(Math.max(0,Number(doc.total||0)-Number(doc.totalAbonado||0)))}</div>`:""}
+  <div><strong>Estado:</strong> ${escapeHtml(cotizacionPagada?"Pagada":doc.estado||"Pendiente")}</div>
+  ${esCotizacion?`<div><strong>Entrega:</strong> ${escapeHtml(doc.fechaEntrega||"N/A")}</div><div><strong>Saldo pendiente:</strong> ${money(saldoPendienteDetalle)}</div>`:""}
 </div>
 
   <div class="table-wrap">
@@ -4271,6 +4609,7 @@ async function verDetalleDoc(id){
           <th>Descripción</th>
           <th class="num">Cantidad</th>
           <th class="num">Precio</th>
+          <th class="num">IVA</th>
           <th class="num">Descuento</th>
           <th class="num">Subtotal</th>
         </tr>
@@ -4282,6 +4621,7 @@ async function verDetalleDoc(id){
             <td>${escapeHtml(i.descripcion)}</td>
             <td class="num">${formatNumber(i.cantidad)}</td>
             <td class="num">${money(i.precioUnitario)}</td>
+            <td class="num">${i.ivaAplicado?`+${Number(i.ivaPct||19)}%${esCotizacion?` · ${money(i.valorIva||0)}`:""}`:"Incluido"}</td>
             <td class="num">${money(i.descuento)}</td>
             <td class="num">${money(i.subtotal)}</td>
           </tr>
@@ -4298,6 +4638,7 @@ async function verDetalleDoc(id){
       ${historialAbonos.map(abono=>`<tr><td>${escapeHtml(abono.fecha||"")}</td><td>${escapeHtml(abono.formaPago||"")}</td><td>${escapeHtml(abono.usuario||abono.registradoPor||"")}</td><td class="num">${money(abono.valor||0)}</td></tr>`).join("")||'<tr><td colspan="4">Sin abonos registrados.</td></tr>'}
     </tbody></table></div>
     ${doc.notas?`<p><strong>Indicaciones:</strong> ${escapeHtml(doc.notas)}</p>`:""}
+    ${htmlImagenesReferencia}
   `:""}
 
   ${doc.observaciones
@@ -4358,11 +4699,11 @@ async function verDetalleDoc(id){
   ${
     doc.estado !== "Anulada"
     ? `
-      <button
+      ${esCotizacion?`<button class="btn primary" onclick="generarPDFCotizacion('${escapeAttr(doc.idDocumento)}')">Guardar PDF</button>`:`<button
         class="btn primary"
         onclick="imprimirDocumento('${escapeAttr(doc.idDocumento)}')">
         Imprimir
-      </button>
+      </button>`}
     `
     : ""
   }
@@ -4389,7 +4730,7 @@ async function marcarComoPagada(id){
 
   try{
 
-    exigirFirebase();
+    exigirSupabase();
 
     await db.collection("remisiones").doc(id).update({
       estado:"Pagada"
@@ -4450,7 +4791,7 @@ async function anularDocumento(id){
 
   try{
 
-    exigirFirebase();
+    exigirSupabase();
 
     /* =========================================
        CONFIRMAR ANULACIÓN
@@ -4659,16 +5000,79 @@ function cerrarDetalle(){
   document.getElementById("detalleModal").classList.add("hidden");
 }
 
+function obtenerMaterialesCotizacion(doc){
+  if(!doc)return [];
+  const fuentes=[doc.materiales,doc.detalleMateriales,doc.detallePedido,doc.productos,doc.items];
+  const lista=fuentes.find(valor=>Array.isArray(valor)&&valor.length)
+    ||fuentes.find(Array.isArray);
+  if(!lista)return [];
+  return lista.map(material=>({
+    ...material,
+    tipo:material.tipo??material.tipoMaterial??material.descripcion??"",
+    medida:material.medida??material.ancho??"",
+    metros:Number(material.metros??material.cantidadMetros??0)||0,
+    rollos:Number(material.rollos??material.cantidadRollos??0)||0,
+    valorUnitario:Number(material.valorUnitario??material.precioUnitario??material.precio??0)||0,
+    valorTotal:Number(material.valorTotal??material.subtotal??0)||0,
+    valorIva:Number(material.valorIva??material.ivaValor??0)||0
+  }));
+}
+
 function obtenerItemsDocumentoImpresion(doc){
   if(doc.tipoDoc!=="Cotización") return Array.isArray(doc.items)?doc.items:[];
-  return (Array.isArray(doc.materiales)?doc.materiales:[]).map(material=>({
+  return obtenerMaterialesCotizacion(doc).map(material=>({
     descripcion:[material.tipo,material.medida].filter(Boolean).join(" · "),
     cantidad:material.metros?`${formatNumber(material.metros)} m`:material.rollos?`${formatNumber(material.rollos)} rollos`:"1",
     precioUnitario:material.valorUnitario||0,
+    ivaAplicado:material.ivaAplicado===true,
+    ivaPct:Number(material.ivaPct||0),
+    valorIva:Number(material.valorIva||0),
     subtotal:material.valorTotal||0
   }));
 }
 
+async function generarPDFCotizacion(id){
+  let doc=datosRemisiones.find(r=>(r.idDocumento||r.id)===id);
+  if(!doc||doc.tipoDoc!=="Cotización")return;
+  const w=window.open("","_blank","width=1000,height=900");
+  if(!w){alert("Permite las ventanas emergentes para generar el PDF.");return;}
+  try{
+    const reciente=await db.collection("remisiones").doc(id).get();
+    if(reciente.exists)doc={...reciente.data(),id:reciente.id};
+    const resultadoImagenes=await obtenerImagenesCotizacionFirmadas(doc.imagenesReferencia);
+    const materiales=obtenerMaterialesCotizacion(doc);
+    const logo="data:image/png;base64,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";
+    const filas=materiales.map((m,index)=>{
+      const cantidadMetros=Number(m.metros)||0;
+      const cantidadRollos=Number(m.rollos)||0;
+      const cantidad=cantidadMetros||cantidadRollos;
+      return `<tr>
+        <td>${escapeHtml([m.tipo,m.medida].filter(Boolean).join(" · ")||`Material ${index+1}`)}</td>
+        <td>${escapeHtml(m.medida||"—")}</td>
+        <td class="num">${cantidadMetros?formatNumber(cantidadMetros):"—"}</td>
+        <td class="num">${cantidadRollos?formatNumber(cantidadRollos):"—"}</td>
+        <td class="num">${money(m.valorUnitario||0)}</td>
+        <td class="num">${m.ivaAplicado?`${Number(m.ivaPct||19)}% · ${money(m.valorIva||0)}`:"No incluido"}</td>
+        <td class="num">${money(m.valorTotal||cantidad*Number(m.valorUnitario||0))}</td>
+      </tr>`;
+    }).join("");
+    const htmlImagenes=resultadoImagenes.imagenes.length?`<section class="references"><h2>Imágenes de referencia</h2><div class="gallery">${resultadoImagenes.imagenes.map((img,i)=>`<figure><img src="${escapeAttr(img.url)}" alt="Imagen de referencia ${i+1}"><figcaption>${escapeHtml(img.nombre||`Imagen ${i+1}`)}</figcaption></figure>`).join("")}</div></section>`:"";
+    w.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Cotización ${escapeHtml(doc.idDocumento)}</title><style>
+      @page{size:A4;margin:15mm}*{box-sizing:border-box}body{margin:0;color:#292724;font:12px Arial,Helvetica,sans-serif;background:#fff}.document{max-width:180mm;margin:0 auto}.header{display:flex;justify-content:space-between;align-items:center;gap:24px;border-bottom:2px solid #bda66c;padding-bottom:16px}.brand{display:flex;align-items:center;gap:18px}.logo{max-width:190px;max-height:70px;object-fit:contain}.company{line-height:1.6;color:#5f5b52}.company strong{display:block;color:#292724;font-size:18px;margin-bottom:4px}.quote-title{text-align:right}.quote-title h1{font-size:22px;margin:0 0 8px;color:#292724}.quote-title strong{font-size:17px}.meta{display:flex;justify-content:space-between;gap:20px;background:#f5f2e9;padding:13px 16px;margin:18px 0;border-radius:3px}.section-title{font-size:13px;text-transform:uppercase;color:#6f6040;border-bottom:1px solid #d8ceb3;padding-bottom:6px;margin:20px 0 10px}.client{display:grid;grid-template-columns:1fr 1fr;gap:8px 20px}.client div{padding:3px 0}.client strong{color:#292724}table{width:100%;border-collapse:collapse;font-size:10px}th{background:#eeeae0;color:#3f3b33;text-transform:uppercase;text-align:left;padding:9px 6px}td{padding:9px 6px;border-bottom:1px solid #e2ded4;vertical-align:top}.num{text-align:right;white-space:nowrap}.totals{margin:14px 0 0 auto;width:290px}.total-line{display:flex;justify-content:space-between;padding:5px 0}.grand-total{border-top:2px solid #bda66c;margin-top:5px;padding-top:10px;font-size:17px;font-weight:bold;color:#292724}.notes{white-space:pre-wrap;line-height:1.5}.gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.gallery figure{margin:0;border:1px solid #ded8c9;border-radius:3px;padding:7px;break-inside:avoid}.gallery img{width:100%;height:135px;object-fit:contain}.gallery figcaption{font-size:9px;color:#5f5b52;padding-top:4px;user-select:none}.footer{margin-top:28px;border-top:1px solid #d8ceb3;padding-top:10px;color:#5f5b52;text-align:center;font-size:10px}::selection{background:transparent;color:inherit}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}.document{max-width:none}.references{break-inside:avoid}*{user-select:none!important}}
+      </style></head><body><main class="document">
+        <header class="header"><div class="brand"><img class="logo" src="${logo}" alt="Logo La Cintería"><div class="company"><strong>La Cintería</strong><div>NIT: 900836104-0</div><div>Cra 53 # 49-47 oficina 666</div><div>Medellín, Antioquia</div><div>Teléfono: 316 8765223</div></div></div><div class="quote-title"><h1>COTIZACIÓN</h1><strong>${escapeHtml(doc.idDocumento||"")}</strong></div></header>
+        <div class="meta"><div><strong>Fecha de solicitud:</strong> ${escapeHtml(doc.fechaSolicitud||doc.fecha||"")}</div><div><strong>Fecha de entrega:</strong> ${escapeHtml(doc.fechaEntrega||"Por definir")}</div><div><strong>Asesor:</strong> ${escapeHtml(doc.asesor||"")}</div></div>
+        <h2 class="section-title">Datos del cliente</h2><div class="client"><div><strong>Cliente:</strong> ${escapeHtml(doc.nomCliente||"")}</div><div><strong>NIT / Cédula:</strong> ${escapeHtml(doc.docCliente||"")}</div><div><strong>Celular:</strong> ${escapeHtml(doc.telCliente||"")}</div><div><strong>Ciudad / País:</strong> ${escapeHtml(doc.ciudadPais||doc.ciudadCliente||"")}</div></div>
+        <h2 class="section-title">Detalle de materiales y valores</h2><table><thead><tr><th>Tipo de material</th><th>Medida</th><th class="num">Metros</th><th class="num">Rollos</th><th class="num">Valor unitario</th><th class="num">IVA</th><th class="num">Valor total</th></tr></thead><tbody>${filas||'<tr><td colspan="7">Sin materiales registrados.</td></tr>'}</tbody></table>
+        <div class="totals"><div class="total-line"><span>Valor materiales</span><strong>${money(doc.subtotalMaterialesBase||0)}</strong></div><div class="total-line"><span>IVA</span><strong>${money(doc.totalIva||0)}</strong></div><div class="total-line grand-total"><span>TOTAL</span><strong>${money(doc.total||0)}</strong></div></div>
+        ${[doc.colorBase,doc.colorFondo,doc.colorLogo,doc.medidaLogo,doc.orientacionLogo,doc.lineaCorte,doc.cantidadCortes,doc.distanciaLogos,doc.especificacionDiseno].some(Boolean)?`<h2 class="section-title">Especificaciones</h2><div class="client">${doc.colorBase?`<div><strong>Color base:</strong> ${escapeHtml(doc.colorBase)}</div>`:""}${doc.colorFondo?`<div><strong>Color de fondo:</strong> ${escapeHtml(doc.colorFondo)}</div>`:""}${doc.colorLogo?`<div><strong>Color del logo:</strong> ${escapeHtml(doc.colorLogo)}</div>`:""}${doc.medidaLogo?`<div><strong>Medida del logo:</strong> ${escapeHtml(doc.medidaLogo)}</div>`:""}${doc.orientacionLogo?`<div><strong>Orientación del logo:</strong> ${escapeHtml(doc.orientacionLogo)}</div>`:""}${doc.lineaCorte?`<div><strong>Línea de corte:</strong> ${escapeHtml(doc.lineaCorte)} cm</div>`:""}${doc.cantidadCortes?`<div><strong>Cantidad de cortes:</strong> ${formatNumber(doc.cantidadCortes)}</div>`:""}${doc.distanciaLogos?`<div><strong>Distancia entre logos:</strong> ${escapeHtml(doc.distanciaLogos)} cm</div>`:""}${doc.especificacionDiseno?`<div><strong>Diseño:</strong> ${escapeHtml(doc.especificacionDiseno)}</div>`:""}</div>`:""}
+        ${doc.notas?`<h2 class="section-title">Observaciones</h2><div class="notes">${escapeHtml(doc.notas)}</div>`:""}
+        ${htmlImagenes}
+        <footer class="footer">La Cintería · NIT 900836104-0 · Cra 53 # 49-47 oficina 666, Medellín, Antioquia · 316 8765223</footer>
+      </main><script>window.onload=async()=>{await Promise.all([...document.images].map(img=>img.decode?.().catch(()=>{})));window.getSelection()?.removeAllRanges();window.focus();window.print();};<\/script></body></html>`);
+    w.document.close();
+  }catch(error){w.close();console.error("No se pudo generar el PDF de cotización:",error);alert("No se pudo preparar la cotización para PDF: "+error.message);}
+}
 async function imprimirDocumento(id){
 
 const doc=datosRemisiones.find(r=>r.idDocumento===id);
@@ -4676,6 +5080,15 @@ const doc=datosRemisiones.find(r=>r.idDocumento===id);
 if(!doc)return;
 
 const w=window.open("","_blank","width=400,height=700");
+if(!w){alert("Permite las ventanas emergentes para imprimir la cotización.");return;}
+const resultadoImagenes=doc.tipoDoc==="Cotización"
+  ? await obtenerImagenesCotizacionFirmadas(doc.imagenesReferencia)
+  : {imagenes:[],errores:[]};
+const htmlImagenesReferencia=resultadoImagenes.imagenes.length?`
+  <div class="linea"></div>
+  <div class="referencias"><strong>IMÁGENES DE REFERENCIA</strong>
+    ${resultadoImagenes.imagenes.map((imagen,index)=>`<div class="referencia"><small>${escapeHtml(imagen.nombre||`IMAGEN ${index+1}`)}</small><img src="${escapeAttr(imagen.url)}" alt="Imagen de referencia ${index+1}"></div>`).join("")}
+  </div>`:"";
 
 const items=obtenerItemsDocumentoImpresion(doc)
 .map(i=>`
@@ -4689,6 +5102,7 @@ const items=obtenerItemsDocumentoImpresion(doc)
       <span>${i.cantidad} x ${money(i.precioUnitario)}</span>
       <strong>${money(i.subtotal)}</strong>
     </div>
+        ${i.ivaAplicado?`<small>IVA ${Number(i.ivaPct||19)}%: ${money(i.valorIva||0)}</small>`:""}
 
   </div>
 `).join("");
@@ -4792,6 +5206,10 @@ w.document.write(`
       word-wrap:break-word;
     }
 
+    .referencias{margin-top:10px}
+    .referencia{margin:8px 0;page-break-inside:avoid}
+    .referencia img{display:block;width:100%;max-height:65mm;object-fit:contain;margin-top:4px}
+
     .gracias{
       margin-top:20px;
       text-align:center;
@@ -4876,9 +5294,11 @@ w.document.write(`
   <div class="totales">
 
     <div class="total-line">
-      <span>SUBTOTAL</span>
-      <strong>${money(doc.subtotal||doc.totalMateriales||doc.total||0)}</strong>
+      <span>${doc.tipoDoc==="Cotización"?"VALOR MATERIALES":"SUBTOTAL"}</span>
+      <strong>${money(doc.tipoDoc==="Cotización"?doc.subtotalMaterialesBase:(doc.subtotal||doc.totalMateriales||doc.total||0))}</strong>
     </div>
+
+    ${doc.tipoDoc==="Cotización"?`<div class="total-line"><span>IVA AGREGADO</span><strong>${money(doc.totalIva||0)}</strong></div>`:""}
 
     <div class="total-line">
       <span>DESCUENTO</span>
@@ -4913,6 +5333,8 @@ w.document.write(`
     :
     ""
   }
+
+  ${htmlImagenesReferencia}
 
   <div class="gracias">
     GRACIAS POR SU COMPRA
@@ -4958,6 +5380,7 @@ async function generarPDFDocumento(id){
             ${money(i.subtotal)}
           </strong>
         </div>
+        ${i.ivaAplicado?`<small>IVA ${Number(i.ivaPct||19)}%: ${money(i.valorIva||0)}</small>`:""}
 
       </div>
     `)
@@ -5155,9 +5578,11 @@ async function generarPDFDocumento(id){
       <div class="totales">
 
         <div class="total-line">
-          <span>SUBTOTAL</span>
-          <strong>${money(doc.subtotal||0)}</strong>
+          <span>${doc.tipoDoc==="Cotización"?"VALOR MATERIALES":"SUBTOTAL"}</span>
+          <strong>${money(doc.tipoDoc==="Cotización"?doc.subtotalMaterialesBase:(doc.subtotal||0))}</strong>
         </div>
+
+        ${doc.tipoDoc==="Cotización"?`<div class="total-line"><span>IVA AGREGADO</span><strong>${money(doc.totalIva||0)}</strong></div>`:""}
 
         <div class="total-line">
           <span>DESCUENTO</span>
@@ -5235,7 +5660,7 @@ async function renderUsuarios(){
         <small>${escapeHtml(u.nombre||"")}</small>
       </td>
 
-      <td>${escapeHtml(u.pass||"")}</td>
+      <td>${escapeHtml(u.email||"")}</td>
 
       <td>
         ${escapeHtml(u.role||"")}
@@ -5262,6 +5687,210 @@ async function renderUsuarios(){
   `).join("");
 }
 
+async function migrarDatosFirebase(){
+  const estado=document.getElementById("estadoMigracionDatos");
+  const boton=document.getElementById("btnMigrarDatosFirebase");
+  if(currentUser?.role!=="admin")return;
+  if(!window.firebase?.firestore){estado.textContent="No se pudo cargar el acceso de lectura a Firebase.";return;}
+  if(!supabaseClient){estado.textContent="Supabase no está conectado.";return;}
+  if(!window.confirm("Se copiarán clientes, remisiones/cotizaciones, abonos y configuración a Pruebas. Firebase oficial se conservará intacto. ¿Continuar?"))return;
+  boton.disabled=true;
+  try{
+    let appFirebase=window.firebase.apps.find(app=>app.name==="migracion-usuarios-remisionario");
+    if(!appFirebase)appFirebase=window.firebase.initializeApp(FIREBASE_CONFIG,"migracion-usuarios-remisionario");
+    const firestore=appFirebase.firestore();
+    const fechaMigracion=(valor,soloFecha=false)=>{
+      let d=null;
+      if(valor instanceof Date)d=valor;
+      else if(valor&&typeof valor.toDate==="function")d=valor.toDate();
+      else if(valor&&typeof valor==="object"&&Number.isFinite(Number(valor.seconds??valor._seconds)))d=new Date(Number(valor.seconds??valor._seconds)*1000);
+      else if(typeof valor==="string"&&valor.trim())d=new Date(valor);
+      if(!valor)return soloFecha?fechaHoy():null;
+      if(!d||Number.isNaN(d.getTime()))throw new Error("Se encontró una fecha inválida en Firebase. No se alteró la base de datos de origen.");
+      return soloFecha?d.toISOString().slice(0,10):d.toISOString();
+    };
+    const origenes=[
+      {nombre:"clientes",tabla:"clientes",titulo:"clientes"},
+      {nombre:"remisiones",tabla:"remisiones",titulo:"remisiones y cotizaciones"},
+      {nombre:"abonosCotizaciones",tabla:"abonos_cotizaciones",titulo:"abonos"},
+      {nombre:"configuracion",tabla:"configuracion_empresa",titulo:"configuración"}
+    ];
+    let maximosConsecutivo={};
+    for(const origen of origenes){
+      estado.textContent=`Leyendo ${origen.titulo} de Firebase…`;
+      const snap=await firestore.collection(origen.nombre).get();
+      const docs=snap.docs.map(d=>({id:d.id,data:d.data()}));
+      if(!docs.length){estado.textContent+=` No hay registros.`;continue;}
+      let total=0;
+      for(let i=0;i<docs.length;i+=100){
+        const lote=docs.slice(i,i+100);
+        if(origen.tabla==="clientes"){
+          const rows=lote.map(({id,data})=>{
+            const row=filaDesdeDatos("clientes",id,data);
+            row.datos={...(row.datos||{}),firebase_id:id};
+            if(row.fecha_registro)row.fecha_registro=fechaMigracion(row.fecha_registro);
+            if(row.ultima_actualizacion)row.ultima_actualizacion=fechaMigracion(row.ultima_actualizacion);
+            return row;
+          });
+          const {error}=await supabaseClient.from("clientes").upsert(rows,{onConflict:"documento"});
+          if(error)throw new Error(`Clientes: ${error.message}`);
+        }else if(origen.tabla==="remisiones"){
+          const rows=lote.map(({id,data})=>{
+            const row=filaDesdeDatos("remisiones",id,data);
+            row.datos={...(row.datos||{}),firebase_id:id};
+            row.fecha=fechaMigracion(row.fecha,true);
+            if(row.fecha_creacion)row.fecha_creacion=fechaMigracion(row.fecha_creacion);
+            const tipo=row.tipo_doc||"Remisión";
+            maximosConsecutivo[tipo]=Math.max(maximosConsecutivo[tipo]||0,Number(row.consecutivo)||0);
+            return row;
+          });
+          const {error}=await supabaseClient.from("remisiones").upsert(rows,{onConflict:"id_documento"});
+          if(error)throw new Error(`Remisiones/cotizaciones: ${error.message}`);
+        }else if(origen.tabla==="abonos_cotizaciones"){
+          const rows=await Promise.all(lote.map(async({id,data})=>{
+            const detalles={...data,firebase_id:id};
+            let hash=new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(`firebase-abono:${id}`)));
+            hash[6]=(hash[6]&0x0f)|0x50;hash[8]=(hash[8]&0x3f)|0x80;
+            const hex=[...hash.slice(0,16)].map(b=>b.toString(16).padStart(2,"0")).join("");
+            const uuid=`${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`;
+            const fechaISO=fechaMigracion(data.fecha||data.fechaHora||data.fecha_hora,true);
+            return {id:uuid,id_documento:data.idDocumento||data.id_documento,fecha:fechaISO,asesor:data.asesor||"",area:data.area||"",forma_pago:data.formaPago||data.forma_pago||"",valor:Number(data.valor||data.abono||0),datos:detalles};
+          }));
+          if(rows.some(r=>!r.id_documento||!Number.isFinite(r.valor)||r.valor<=0))throw new Error("Hay abonos sin cotización relacionada o con valor no válido.");
+          const {error}=await supabaseClient.from("abonos_cotizaciones").upsert(rows,{onConflict:"id",ignoreDuplicates:true});
+          if(error)throw new Error(`Abonos: ${error.message}`);
+        }else{
+          const rows=lote.map(({data})=>({
+            id:"empresa",
+            nombre:String(data.nombre||data.nombreEmpresa||"Remisionario y Facturación"),
+            logo:String(data.logo||data.logoUrl||""),
+            codigo_anulacion:String(data.codigoAnulacion||data.codigo_anulacion||""),
+            updated_at:new Date().toISOString()
+          }));
+          const {error}=await supabaseClient.from("configuracion_empresa").upsert(rows,{onConflict:"id"});
+          if(error)throw new Error(`Configuración: ${error.message}`);
+        }
+        total+=lote.length;
+        estado.textContent=`Copiando ${origen.titulo}: ${total} de ${docs.length}…`;
+      }
+      estado.textContent=`${origen.titulo}: ${total} registros copiados.`;
+    }
+    for(const [tipo,ultimo] of Object.entries(maximosConsecutivo)){
+      const objetivo=Math.floor(ultimo)+1;
+      const {data:seq,error:readError}=await supabaseClient.from("consecutivos").select("siguiente").eq("tipo_doc",tipo).maybeSingle();
+      if(readError)throw new Error(`No se pudo leer el consecutivo de ${tipo}: ${readError.message}`);
+      const actual=Number(seq?.siguiente||1);
+      const faltan=Math.max(0,objetivo-actual);
+      for(let i=0;i<faltan;i+=25){
+        const lote=Array.from({length:Math.min(25,faltan-i)},()=>supabaseClient.rpc("reservar_consecutivo",{p_tipo_doc:tipo}));
+        const respuestas=await Promise.all(lote);
+        const fallo=respuestas.find(r=>r.error);
+        if(fallo)throw new Error(`No se pudo preparar el consecutivo de ${tipo}: ${fallo.error.message}`);
+      }
+    }
+    cacheRemisiones=null;clientesCacheBusqueda=null;datosRemisiones=[];
+    estado.textContent="Migración terminada. Se copiaron clientes, remisiones/cotizaciones, abonos y configuración; los consecutivos quedaron alineados. Firebase no se modificó.";
+  }catch(error){estado.textContent="La migración se detuvo: "+error.message;}
+  finally{boton.disabled=false;}
+}
+
+async function migrarSoloAdminFirebase(){
+  const estado=document.getElementById("estadoMigracionAdmin");
+  const boton=document.getElementById("btnMigrarSoloAdminFirebase");
+  if(currentUser?.role!=="admin")return;
+  if(!window.firebase?.firestore||!supabaseClient){estado.textContent="Firebase o Supabase no está conectado.";return;}
+  const campoPassword=document.getElementById("passwordAlternativaAdmin");
+  const passwordNueva=campoPassword.value;
+  if(passwordNueva.length<6){estado.textContent="La contraseña de Firebase es demasiado corta. Escribe una nueva de al menos 6 caracteres para la cuenta ADMIN.";campoPassword.focus();return;}
+  if(!window.confirm("Se importará únicamente ADMIN usando la nueva contraseña que acabas de definir. Las demás cuentas, la contraseña de trabajosdhr@gmail.com y Firebase no se modificarán. ¿Continuar?"))return;
+  boton.disabled=true;
+  estado.textContent="Buscando únicamente la cuenta ADMIN en Firebase…";
+  try{
+    let appFirebase=window.firebase.apps.find(app=>app.name==="migracion-usuarios-remisionario");
+    if(!appFirebase)appFirebase=window.firebase.initializeApp(FIREBASE_CONFIG,"migracion-usuarios-remisionario");
+    const snapshot=await appFirebase.firestore().collection("usuarios").get();
+    const candidatas=snapshot.docs.map(doc=>({...doc.data(),id:doc.id})).filter(u=>String(u.username||u.usuario||"").trim().toLowerCase()==="admin");
+    if(!candidatas.length)throw new Error("No encontré un usuario con nombre de acceso ADMIN (o admin) en la colección usuarios de Firebase.");
+    if(candidatas.length>1)throw new Error("Encontré más de una cuenta ADMIN en Firebase. No importé ninguna para evitar elegir la incorrecta.");
+    const usuario=candidatas[0];
+    // La contraseña histórica corta no es aceptada por Supabase Auth.
+    // La nueva clave se envía sólo para crear esta cuenta en Supabase.
+    usuario.pass=passwordNueva;
+    campoPassword.value="";
+    const username=String(usuario.username||usuario.usuario||"").trim().toLowerCase();
+    const {data:existente,error:consultaError}=await supabaseClient.from("perfiles").select("id,usuario,email").eq("usuario",username).maybeSingle();
+    if(consultaError)throw new Error("No pude comprobar si ADMIN ya existe en Pruebas: "+consultaError.message);
+    if(existente){
+      estado.textContent="La cuenta ADMIN ya existe en Pruebas. No la modifiqué ni cambié su contraseña.";
+      return;
+    }
+    const emailOriginal=String(usuario.email||"").trim().toLowerCase();
+    if(emailOriginal){
+      const {data:perfilConCorreo,error:correoError}=await supabaseClient.from("perfiles").select("usuario,email").ilike("email",emailOriginal).maybeSingle();
+      if(correoError)throw new Error("No pude comprobar si el correo de ADMIN ya está usado: "+correoError.message);
+      if(perfilConCorreo){
+        const idSeguro=String(usuario.id||"admin").toLowerCase().replace(/[^a-z0-9-]/g,"-").slice(0,36)||"admin";
+        usuario.email=`legacy-admin-${idSeguro}@remisionario.app`;
+      }
+    }
+    const {data,error}=await supabaseClient.functions.invoke("admin-users",{body:{action:"migrate-firebase-users",users:[usuario]}});
+    if(error){let detalle=error.message;try{const body=await error.context?.clone?.().json();detalle=body?.error||detalle;}catch{}throw new Error(detalle);}
+    if(data?.error)throw new Error(data.error);
+    const fallos=Array.isArray(data?.errors)?data.errors:[];
+    if(fallos.length){
+      estado.textContent=`ADMIN no se importó: ${fallos[0].reason||"la cuenta requiere revisión"}`;
+      return;
+    }
+    cacheUsuarios=null;
+    await renderUsuarios();
+    estado.textContent="Cuenta ADMIN importada. Inicia sesión con el usuario ADMIN y la nueva contraseña que definiste. trabajosdhr@gmail.com y Firebase quedaron sin cambios.";
+  }catch(error){estado.textContent="No se completó la importación de ADMIN: "+error.message;}
+  finally{campoPassword.value="";boton.disabled=false;}
+}
+
+async function migrarUsuariosFirebase(){
+  const estado=document.getElementById("estadoMigracionUsuarios");
+  const boton=document.getElementById("btnMigrarUsuariosFirebase");
+  const detalleErrores=document.getElementById("detalleErroresMigracionUsuarios");
+  detalleErrores.replaceChildren();
+  detalleErrores.classList.add("hidden");
+  if(currentUser?.role!=="admin")return;
+  if(!window.firebase?.firestore){
+    estado.textContent="No se pudo cargar el acceso a Firebase. Revisa tu conexión e inténtalo de nuevo.";
+    return;
+  }
+  if(!window.confirm("Se copiarán a Pruebas las cuentas actuales de Firebase, incluidas sus contraseñas, para que puedan iniciar sesión con los mismos datos. Las cuentas oficiales de Firebase no se modificarán. ¿Continuar?"))return;
+  boton.disabled=true;
+  estado.textContent="Leyendo las cuentas actuales…";
+  try{
+    let appFirebase=window.firebase.apps.find(app=>app.name==="migracion-usuarios-remisionario");
+    if(!appFirebase)appFirebase=window.firebase.initializeApp(FIREBASE_CONFIG,"migracion-usuarios-remisionario");
+    const snapshot=await appFirebase.firestore().collection("usuarios").get();
+    const usuarios=snapshot.docs.map(doc=>({...doc.data(),id:doc.id}));
+    if(!usuarios.length)throw new Error("Firebase no devolvió usuarios para importar.");
+    estado.textContent=`Importando ${usuarios.length} cuentas a Pruebas…`;
+    const {data,error}=await supabaseClient.functions.invoke("admin-users",{body:{action:"migrate-firebase-users",users:usuarios}});
+    if(error){let detalle=error.message;try{const body=await error.context?.clone?.().json();detalle=body?.error||detalle;}catch{}throw new Error(detalle);}
+    if(data?.error)throw new Error(data.error);
+    cacheUsuarios=null;
+    await renderUsuarios();
+    const fallos=Array.isArray(data.errors)?data.errors:[];
+    estado.textContent=`Importación terminada: ${data.created||0} cuentas creadas, ${data.updated||0} existentes sincronizadas y ${fallos.length} requieren revisión.`;
+    if(fallos.length){
+      for(const fallo of fallos){
+        const item=document.createElement("li");
+        item.textContent=`${fallo.username||"Usuario sin identificar"}: ${fallo.reason||"Revisa los datos de esta cuenta en Firebase."}`;
+        detalleErrores.appendChild(item);
+      }
+      detalleErrores.classList.remove("hidden");
+    }
+  }catch(error){
+    estado.textContent="No se completó la importación: "+error.message;
+  }finally{
+    boton.disabled=false;
+  }
+}
+
 async function guardarUsuario(event){
 
   event.preventDefault();
@@ -5271,15 +5900,16 @@ async function guardarUsuario(event){
   const id=document.getElementById("usrId").value.trim();
   const nombre=document.getElementById("usrNombre").value.trim();
   const username=document.getElementById("usrUsername").value.trim().toLowerCase();
-  const pass=document.getElementById("usrPass").value;
+  const email=document.getElementById("usrEmail").value.trim().toLowerCase();
+  const password=document.getElementById("usrPass").value;
   const role=document.getElementById("usrRole").value;
   const area=document.getElementById("usrArea").value.trim();
   const presupuestoMensual=Number(
   document.getElementById("usrPresupuestoMensual").value||0
 );
 
-  if(!nombre||!username||!area){
-    alert("Completa los campos obligatorios.");
+  if(!nombre||!username||!email||!area){
+    alert("Completa nombre, usuario, correo y área.");
     return;
   }
 
@@ -5294,8 +5924,8 @@ async function guardarUsuario(event){
     return;
   }
 
-  if(!id&&!pass){
-    alert("La contraseña es obligatoria para un usuario nuevo.");
+  if(!id&&password.length<8){
+    alert("Para crear un usuario nuevo, escribe una contraseña de al menos 8 caracteres.");
     return;
   }
 
@@ -5306,23 +5936,25 @@ async function guardarUsuario(event){
   id:id||undefined,
   nombre,
   username,
-  pass:pass||(anterior?.pass||""),
+  email:email||anterior?.email||"",
   role,
   area,
   presupuestoMensual
 
 };
 
-  const saved=await guardarUsuarioDB(user);
-
-  if(currentUser.id===saved.id)
-    currentUser=saved;
-
-  alert("Usuario guardado correctamente.");
-
-  cancelarEdicionUsuario();
-  renderUsuarios();
-  aplicarSesion();
+  user.password=password;
+  try{
+    const saved=await guardarUsuarioDB(user);
+    if(currentUser.id===saved.id)currentUser={...currentUser,...saved};
+    alert(id?"Usuario actualizado correctamente.":"Usuario creado correctamente. Ya puede ingresar a la app.");
+    cancelarEdicionUsuario();
+    await renderUsuarios();
+    await aplicarSesion();
+  }catch(error){
+    console.error("No se pudo guardar el usuario:",error);
+    alert("No se pudo guardar el usuario: "+error.message);
+  }
 }
 
 async function editarUsuario(id){
@@ -5334,8 +5966,10 @@ async function editarUsuario(id){
   document.getElementById("usrId").value=u.id;
   document.getElementById("usrNombre").value=u.nombre||"";
   document.getElementById("usrUsername").value=u.username||"";
+  document.getElementById("usrEmail").value=u.email||"";
   document.getElementById("usrPass").value="";
   document.getElementById("usrPass").placeholder="Dejar vacío para conservar";
+  document.getElementById("usrPassAyuda").textContent="Opcional: escribe una nueva contraseña para cambiarla.";
   document.getElementById("usrRole").value=u.role||"asesor";
   document.getElementById("usrArea").value=u.area||"";
   document.getElementById("usrPresupuestoMensual").value=u.presupuestoMensual??"";
@@ -5361,7 +5995,10 @@ function cancelarEdicionUsuario(){
 
   document.getElementById("userForm").reset();
   document.getElementById("usrId").value="";
-  document.getElementById("usrPass").placeholder="••••••••";
+  document.getElementById("usrEmail").value="";
+  document.getElementById("usrPass").value="";
+  document.getElementById("usrPass").placeholder="Mínimo 8 caracteres";
+  document.getElementById("usrPassAyuda").textContent="La contraseña la define el administrador para esta cuenta.";
   document.getElementById("formUserTitle").textContent="Crear / Editar Usuario";
   document.getElementById("btnCancelarEdicion").classList.add("hidden");
 }
@@ -5381,7 +6018,7 @@ async function cargarConfiguracion(){
 
   try{
 
-    exigirFirebase();
+    exigirSupabase();
 
     const snap=await db
       .collection("configuracion")
@@ -5394,7 +6031,7 @@ async function cargarConfiguracion(){
   }catch(e){
 
     console.error(
-      "No se pudo cargar la configuración de Firebase:",
+      "No se pudo cargar la configuración de Supabase:",
       e
     );
 
@@ -5445,7 +6082,7 @@ async function guardarConfiguracionEmpresa(event){
 
   try{
 
-    exigirFirebase();
+    exigirSupabase();
 
     await db
       .collection("configuracion")
@@ -5464,14 +6101,14 @@ async function guardarConfiguracionEmpresa(event){
     document.getElementById("appBrandName").textContent=nombre;
     document.getElementById("docTitle").textContent=nombre;
 
-    alert("Configuración guardada correctamente en Firebase.");
+    alert("Configuración guardada correctamente en Supabase.");
 
   }catch(e){
 
     console.error(e);
 
     alert(
-      "No se pudo guardar la configuración en Firebase: "
+      "No se pudo guardar la configuración en Supabase: "
       +e.message
     );
 
@@ -5639,10 +6276,32 @@ function escapeAttr(value){
    ========================================================= */
 window.addEventListener("DOMContentLoaded",async()=>{
 
-  initFirebase();
+  initSupabase();
 
   document.getElementById("loginForm")
     .addEventListener("submit",handleLogin);
+
+  document.getElementById("toggleLoginPassword")
+    .addEventListener("click",toggleLoginPassword);
+  document.getElementById("btnMostrarRecuperacion")
+    .addEventListener("click",mostrarPanelRecuperacion);
+  document.getElementById("btnCancelarRecuperacion")
+    .addEventListener("click",volverAlLogin);
+  document.getElementById("btnEnviarRecuperacion")
+    .addEventListener("click",solicitarRecuperacion);
+  document.getElementById("btnGuardarNuevaPassword")
+    .addEventListener("click",guardarNuevaPassword);
+  if(supabaseClient){
+    supabaseClient.auth.onAuthStateChange((event)=>{
+      if(event==="PASSWORD_RECOVERY"){
+        document.getElementById("loginForm").classList.add("hidden");
+        document.getElementById("loginError").textContent="";
+        document.getElementById("btnMostrarRecuperacion").classList.add("hidden");
+        document.getElementById("recoveryRequestPanel").classList.add("hidden");
+        document.getElementById("recoveryPasswordPanel").classList.remove("hidden");
+      }
+    });
+  }
 
   document.getElementById("userForm")
     .addEventListener("submit",guardarUsuario);
@@ -5722,6 +6381,8 @@ window.addEventListener("DOMContentLoaded",async()=>{
   toggleFacturaOptions();
 
   actualizarEtiquetasPersona();
+
+  await checkSession();
 
 });
 </script>
