@@ -1284,9 +1284,14 @@ async function eliminarUsuarioDB(id){
   if(data?.error)throw new Error(data.error);
 }
 
-async function guardarRemisionDB(doc){
+async function guardarRemisionDB(doc,{nueva=false}={}){
   exigirSupabase();
-  await db.collection("remisiones").doc(doc.idDocumento).set(doc);
+  const fila=filaDesdeDatos("remisiones",doc.idDocumento,doc);
+  const consulta=supabaseClient.from("remisiones");
+  const resultado=nueva
+    ? await consulta.insert(fila)
+    : await consulta.update(fila).eq("id_documento",doc.idDocumento);
+  if(resultado.error)throw resultado.error;
 }
 
 async function obtenerClientes(){
@@ -3393,21 +3398,9 @@ if(window.documentoEditandoId){
 
 }else{
 
-  const snapUltimo =
-    await db
-      .collection("remisiones")
-      .where("tipoDoc","==",tipoDoc)
-      .orderBy("consecutivo","desc")
-      .limit(1)
-      .get();
-
-  const ultimo =
-    snapUltimo.empty
-      ? null
-      : snapUltimo.docs[0].data();
-
-  consecutivo =
-    Number(ultimo?.consecutivo||0)+1;
+  const {data:reservado,error:consecutivoError}=await supabaseClient.rpc("reservar_consecutivo",{p_tipo_doc:tipoDoc});
+  if(consecutivoError)throw consecutivoError;
+  consecutivo=Number(reservado);
 
   const prefijo =
     tipoDoc==="Cotización"
@@ -3497,7 +3490,7 @@ const documento={
 
 };
 
-    await guardarRemisionDB(documento);
+    await guardarRemisionDB(documento,{nueva:!documentoOriginal});
 
     cacheRemisiones=null;
     cacheConsultasReportes.clear();
