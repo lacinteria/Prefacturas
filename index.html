@@ -1045,19 +1045,6 @@ min-height:44px;
     Código exclusivo de Administración para anular documentos.
   </small>
 </div>
-<div class="field">
-  <label>Código para registrar Factura Electrónica</label>
-  <input
-    type="password"
-    id="cfgCodigoFacturaElectronica"
-    inputmode="numeric"
-    maxlength="6"
-    pattern="[0-9]{6}"
-    placeholder="Ingrese 6 dígitos"
-    oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,6)"
-  >
-  <small style="color:#666;">Código de 6 dígitos para que Caja confirme el consecutivo generado en el sistema externo.</small>
-</div>
 <div style="margin:15px 0;text-align:center"><small>Vista previa actual del Logo:</small><br><div id="cfgPreviewLogo" style="width:60px;height:60px;border-radius:8px;background:var(--brand);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:700;overflow:hidden;margin-top:5px;border:1px solid var(--line)">POS</div></div>
 <button type="submit" class="btn primary" style="width:100%">Guardar y Aplicar Cambios</button>
 </form></div>
@@ -4979,27 +4966,11 @@ async function registrarFacturaElectronicaExterna(id){
     alert(`Esta factura ya fue registrada con el consecutivo externo ${documento.consecutivoFacturaElectronicaExterno}.`);
     return;
   }
-  const codigoConfigurado=String(cacheConfiguracionEmpresa?.codigoFacturaElectronica||"").trim();
-  if(!/^\d{6}$/.test(codigoConfigurado)){
-    alert("Administración debe configurar primero el código de 6 dígitos para Factura Electrónica en Configuración Empresa.");
-    return;
-  }
-  const codigoIngresado=prompt("Ingrese el código de 6 dígitos para registrar la Factura Electrónica:");
-  if(codigoIngresado===null)return;
-  const codigo=String(codigoIngresado).replace(/[^0-9]/g,"").trim();
-  if(!/^\d{6}$/.test(codigo)){
-    alert("El código debe contener exactamente 6 dígitos.");
-    return;
-  }
-  if(codigo!==codigoConfigurado){
-    alert("Código incorrecto. No se registró la factura.");
-    return;
-  }
-  const consecutivo=prompt(`Ingresa el consecutivo generado por el sistema de facturación electrónica para ${id}:`);
+  const consecutivo=prompt(`Ingresa el número de 3 o 4 dígitos generado por el facturador para ${id}:`);
   if(consecutivo===null)return;
   const consecutivoLimpio=consecutivo.trim();
-  if(!consecutivoLimpio){
-    alert("El consecutivo externo es obligatorio.");
+  if(!/^\d{3,4}$/.test(consecutivoLimpio)){
+    alert("El número del facturador debe contener exactamente 3 o 4 dígitos numéricos.");
     return;
   }
   if(!confirm(`Confirma que la factura ${id} ya fue registrada en el sistema de facturación electrónica con el consecutivo ${consecutivoLimpio}?`))return;
@@ -6006,7 +5977,6 @@ async function cargarConfiguracion(){
   nombre:"Remisionario y Facturación",
   logo:"",
   codigoAnulacion:"",
-  codigoFacturaElectronica:"",
   metaGeneralMensual:0
 };
 
@@ -6058,8 +6028,6 @@ async function cargarConfiguracion(){
 
 document.getElementById("cfgCodigoAnulacion").value=
   cfg.codigoAnulacion||"";
-document.getElementById("cfgCodigoFacturaElectronica").value=
-  cfg.codigoFacturaElectronica||"";
 logoBase64Temporal=
   (cfg.logo||"").startsWith("data:")
     ? cfg.logo
@@ -6078,15 +6046,10 @@ async function guardarConfiguracionEmpresa(event){
 
   const codigoAnulacion=
     document.getElementById("cfgCodigoAnulacion").value.trim();
-  const codigoFacturaElectronica=document.getElementById("cfgCodigoFacturaElectronica").value.trim();
   const metaGeneralMensual=Math.max(0,Number(document.getElementById("cfgMetaGeneralMensual").value||0));
 
   if(!/^\d{6}$/.test(codigoAnulacion)){
     alert("El código de anulación debe tener exactamente 6 dígitos.");
-    return;
-  }
-  if(codigoFacturaElectronica&&!/^\d{6}$/.test(codigoFacturaElectronica)){
-    alert("El código de Factura Electrónica debe tener exactamente 6 dígitos.");
     return;
   }
   try{
@@ -6100,13 +6063,12 @@ async function guardarConfiguracionEmpresa(event){
         nombre,
         logo,
         codigoAnulacion,
-        codigoFacturaElectronica,
         metaGeneralMensual,
         fechaActualizacion:new Date().toISOString()
       },{
         merge:true
       });
-    cacheConfiguracionEmpresa={...(cacheConfiguracionEmpresa||{}),nombre,logo,codigoAnulacion,codigoFacturaElectronica,metaGeneralMensual,fechaActualizacion:new Date().toISOString()};
+    cacheConfiguracionEmpresa={...(cacheConfiguracionEmpresa||{}),nombre,logo,codigoAnulacion,metaGeneralMensual,fechaActualizacion:new Date().toISOString()};
     metaGeneralMensualEmpresa=metaGeneralMensual;
     renderizarMetaReporte(documentosMetaReporte,obtenerPeriodoMetaActual());
 
