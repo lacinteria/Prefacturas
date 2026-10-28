@@ -27,7 +27,7 @@ body{margin:0;background:var(--bg);color:var(--ink);line-height:1.4}
 .login-card{background:var(--surface);padding:30px;border-radius:var(--radius);width:100%;max-width:380px;box-shadow:0 10px 25px rgba(0,0,0,.2)}
 .topbar{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;background:var(--surface);border-bottom:1px solid var(--line);flex-wrap:wrap;gap:10px}
 .brand{display:flex;align-items:center;gap:12px}.brand-mark{width:42px;height:42px;border-radius:8px;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;overflow:hidden}
-.brand-mark img{width:100%;height:100%;object-fit:cover}
+.brand-mark img{width:100%;height:100%;object-fit:contain;padding:2px}
 .tabs{display:flex;gap:4px;background:var(--surface-alt);padding:4px;border-radius:8px;flex-wrap:wrap}
 .tab-btn{border:none;background:transparent;padding:8px 14px;border-radius:6px;font-size:13.5px;font-weight:600;color:var(--ink-soft);cursor:pointer}
 .tab-btn.active{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
@@ -77,6 +77,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid rgba(14,107,82,.15);bo
   color:#842029
 }
 .status{padding:8px 10px;border-radius:6px;font-size:12px;margin-bottom:12px}.status.ok{background:#E4F4EA;color:#17613C}.status.warn{background:#FFF4D6;color:#765A00}.status.error{background:#FCE5E5;color:#8B2020}
+.campo-error{border:2px solid #dc2626!important;background:#fff1f2!important;box-shadow:0 0 0 2px rgba(220,38,38,.1)}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:8000;padding:20px}.modal-card{background:#fff;border-radius:10px;max-width:800px;width:100%;max-height:90vh;overflow:auto;padding:20px}
 
 /* =========================================================
@@ -858,6 +859,7 @@ min-height:44px;
     <div class="field"><label for="cotFotoPrediseno4">Imagen de referencia 4</label><input type="file" id="cotFotoPrediseno4" accept="image/jpeg,image/png,image/webp" onchange="actualizarNombreImagenCotizacion(4)"><small id="cotFotoNombre4">Opcional · JPG, PNG o WebP</small> <button type="button" id="btnQuitarImagenCotizacion4" class="btn small danger hidden" onclick="quitarImagenCotizacion(4)">Quitar imagen</button></div>
   </div>
   <div class="field"><label>Notas / indicaciones</label><textarea id="cotNotas" rows="3"></textarea></div>
+  <div id="cotValidacionAlert" class="status error hidden" role="alert" aria-live="assertive"></div>
   <div id="cotImagenProgreso" class="status hidden" role="status" aria-live="polite" style="margin-top:12px"></div>
   <div style="margin-top:20px;text-align:right"><button type="button" id="btnCancelarEdicionCotizacion" class="btn secondary hidden" onclick="cancelarEdicionCotizacion()">Cancelar edición</button> <button type="button" id="btnGuardarCotizacion" class="btn primary" onclick="guardarCotizacion()">Guardar Cotización</button></div>
 </div>
@@ -937,7 +939,7 @@ min-height:44px;
   </div>
 </div>
 <div style="margin-top:12px;text-align:right;display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap">
-  <button class="btn primary" onclick="procesarReportes()">
+  <button class="btn primary" onclick="actualizarMetaReporte();procesarReportes(true)">
     Filtrar y Actualizar Consolidado
   </button>
 
@@ -1045,13 +1047,13 @@ min-height:44px;
     Código exclusivo de Administración para anular documentos.
   </small>
 </div>
-<div style="margin:15px 0;text-align:center"><small>Vista previa actual del Logo:</small><br><div id="cfgPreviewLogo" style="width:60px;height:60px;border-radius:8px;background:var(--brand);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:700;overflow:hidden;margin-top:5px;border:1px solid var(--line)">POS</div></div>
+<div style="margin:15px 0;text-align:center"><small>Vista previa actual del Logo:</small><br><div id="cfgPreviewLogo" style="width:60px;height:60px;border-radius:8px;background:var(--brand);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:700;overflow:hidden;margin-top:5px;border:1px solid var(--line)">POS</div><div><button type="button" id="btnQuitarLogo" class="btn small danger hidden" style="margin-top:8px" onclick="quitarLogoConfigurado()">Quitar logo</button></div><small id="cfgLogoStatus" class="hidden" style="display:block;margin-top:6px;color:var(--ink-soft)">El logo se quitará al guardar los cambios.</small></div>
 <button type="submit" class="btn primary" style="width:100%">Guardar y Aplicar Cambios</button>
 </form></div>
 </section>
 </main>
 
-<div id="abonoCotizacionModal" class="modal hidden"><div class="modal-card" style="max-width:520px"><div style="display:flex;justify-content:space-between;align-items:center"><h2 id="abonoCotizacionTitulo">Registrar abono</h2><button class="btn secondary" onclick="cerrarModalAbono()">Cerrar</button></div><div id="abonoCotizacionResumen" class="status"></div><div class="field"><label>Valor del abono</label><input type="number" id="abonoCotizacionValor" min="1" step="1"></div><div class="field"><label>Método de pago</label><select id="abonoCotizacionMetodo"><option value="">-- Seleccione --</option><option>EFECTIVO</option><option>005 TRANSFERENCIA</option><option>SAS TRANSFERENCIA</option></select></div><div class="field"><label>Fecha del abono</label><input type="date" id="abonoCotizacionFecha"></div><div style="text-align:right"><button class="btn secondary" onclick="cerrarModalAbono()">Cancelar</button><button class="btn primary" id="btnGuardarAbonoCotizacion" onclick="registrarAbonoCotizacion()">Registrar abono</button></div></div></div>
+<div id="abonoCotizacionModal" class="modal hidden"><div class="modal-card" style="max-width:520px"><div style="display:flex;justify-content:space-between;align-items:center"><h2 id="abonoCotizacionTitulo">Registrar abono</h2><button class="btn secondary" onclick="cerrarModalAbono()">Cerrar</button></div><div id="abonoCotizacionResumen" class="status"></div><div class="field"><label>Valor del abono</label><div class="currency-input"><span>$</span><input type="text" id="abonoCotizacionValor" inputmode="numeric" onblur="formatearCampoCOP(this)" aria-label="Valor del abono en pesos colombianos"></div></div><div class="field"><label>Método de pago</label><select id="abonoCotizacionMetodo"><option value="">-- Seleccione --</option><option>EFECTIVO</option><option>005 TRANSFERENCIA</option><option>SAS TRANSFERENCIA</option><option>DATAFONO</option></select></div><div class="field"><label>Fecha del abono</label><input type="date" id="abonoCotizacionFecha"></div><div style="text-align:right"><button class="btn secondary" onclick="cerrarModalAbono()">Cancelar</button><button class="btn primary" id="btnGuardarAbonoCotizacion" onclick="registrarAbonoCotizacion()">Registrar abono</button></div></div></div>
 <div id="detalleModal" class="modal hidden">
 <div class="modal-card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><h2 style="margin-top:0">Detalle del documento</h2><button class="btn secondary" onclick="cerrarDetalle()">Cerrar</button></div><div id="detalleContenido"></div></div>
 </div>
@@ -1094,19 +1096,13 @@ let cacheRemisiones=null;
 let cacheUsuarios=null;
 let cacheUsuariosAt=0;
 let cargaUsuariosPendiente=null;
-let listenerCajaRemisiones=null;
-let listenerMetasReporte=null;
-let temporizadorMetaReporte=null;
-let periodoMetaReporteActivo="";
 let documentosMetaReporte=[];
 let usuariosMetaReporte=[];
 let metaGeneralMensualEmpresa=0;
-let claveListenerCaja=null;
-let datosListenerCaja=null;
 const cacheConsultasReportes=new Map();
 const cacheAbonosReporte=new Map();
 const consultasReportesPendientes=new Map();
-const CACHE_REPORTES_TTL=15000;
+const CACHE_REPORTES_TTL=60000;
 const cacheClientesPorDocumento=new Map();
 const cacheResultadosClientesBusqueda=new Map();
 const consultasClientesBusquedaPendientes=new Map();
@@ -1328,8 +1324,6 @@ function mostrarLogin(){ document.getElementById("loginModal").classList.remove(
 function ocultarLogin(){ document.getElementById("loginModal").classList.add("hidden"); }
 
 function logout(){
-  detenerListenerCaja();
-  detenerListenerMetaReporte();
   currentUser=null;
   sessionStorage.removeItem(LS.session);
   mostrarLogin();
@@ -1385,11 +1379,6 @@ function showView(view){
   }
   if(view==="cotizacion"&&currentUser.role!=="admin"&&!areaWhatsApp){alert("Nueva Cotización está disponible para el área de WhatsApp.");return;}
 
-  if(view!=="reporte"){
-    detenerListenerCaja();
-    detenerListenerMetaReporte();
-  }
-
   ["venta","cotizacion","reporte","usuarios","ajustes"].forEach(v=>
 
     document.getElementById("view-"+v).classList.toggle("hidden",v!==view)
@@ -1411,12 +1400,6 @@ function showView(view){
 
   if(view==="usuarios") renderUsuarios();
 
-}
-
-function detenerListenerMetaReporte(){
-  if(listenerMetasReporte){listenerMetasReporte();listenerMetasReporte=null;}
-  if(temporizadorMetaReporte){clearInterval(temporizadorMetaReporte);temporizadorMetaReporte=null;}
-  periodoMetaReporteActivo="";
 }
 
 function fechaMetaKey(fecha){
@@ -1518,65 +1501,43 @@ async function cargarDatosConsultaReporte(consulta,clave,forzarRecarga=false){
   return pendiente;
 }
 
-async function actualizarMetaReporte(){
-  if(!currentUser) return;
+async function actualizarMetaReporte(forzarRecarga=false){
+  if(!currentUser)return;
   const periodo=obtenerPeriodoMetaActual();
-  if(listenerMetasReporte&&periodoMetaReporteActivo===periodo.inicio){
-    renderizarMetaReporte(documentosMetaReporte,periodo);
-    return;
-  }
-  detenerListenerMetaReporte();
-  periodoMetaReporteActivo=periodo.inicio;
   document.getElementById("metaEstadoReporte").textContent="Cargando metas y ventas del mes...";
   document.getElementById("tablaMetasAsesoresReporte").innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--ink-soft)">Cargando presupuestos...</td></tr>';
   try{
     exigirFirebase();
+    let consulta;
+    let claveMeta=`meta:${currentUser.role}:${currentUser.id||currentUser.username||""}:${periodo.inicio}:${periodo.fin}`;
     if(currentUser.role==="asesor"){
       const nombreAsesor=currentUser.nombre||currentUser.username||"";
       usuariosMetaReporte=[currentUser];
-      const consultaMeta=db.collection("remisiones")
+      consulta=db.collection("remisiones")
         .where("fecha",">=",periodo.inicio)
         .where("fecha","<=",periodo.hoy)
         .where("asesor","==",nombreAsesor);
-      const asesorFiltro=document.getElementById("repFiltroAsesor").value;
-      const areaFiltro=document.getElementById("repFiltroArea").value;
-      const claveMeta=claveConsultaReporte(periodo.inicio,periodo.hoy,asesorFiltro,areaFiltro);
-      documentosMetaReporte=await cargarDatosConsultaReporte(consultaMeta,claveMeta);
-      renderizarMetaReporte(documentosMetaReporte,periodo);
-      return;
-    }
-
-    const usuarios=await obtenerUsuarios();
-    usuariosMetaReporte=usuarios.filter(u=>u.role==="asesor");
-    let consulta;
-    if(currentUser.role==="caja"){
-      currentUser.area=resolverAreaCaja(currentUser.area,usuarios);
-      const inicioMeta=new Date(`${periodo.inicio}T00:00:00`).toISOString();
-      const finMeta=new Date(`${periodo.fin}T00:00:00`);
-      finMeta.setDate(finMeta.getDate()+1);
-      consulta=db.collection("remisiones")
-        .where("area","==",String(currentUser.area||"").trim())
-        .where("fechaCreacion",">=",inicioMeta)
-        .where("fechaCreacion","<",finMeta.toISOString());
     }else{
-      consulta=db.collection("remisiones")
-        .where("fecha",">=",periodo.inicio)
-        .where("fecha","<=",periodo.fin);
+      const usuarios=await obtenerUsuarios();
+      usuariosMetaReporte=usuarios.filter(u=>u.role==="asesor");
+      if(currentUser.role==="caja"){
+        currentUser.area=resolverAreaCaja(currentUser.area,usuarios);
+        const inicioMeta=new Date(`${periodo.inicio}T00:00:00`).toISOString();
+        const finMeta=new Date(`${periodo.fin}T00:00:00`);
+        finMeta.setDate(finMeta.getDate()+1);
+        consulta=db.collection("remisiones")
+          .where("area","==",String(currentUser.area||"").trim())
+          .where("fechaCreacion",">=",inicioMeta)
+          .where("fechaCreacion","<",finMeta.toISOString());
+        claveMeta+=`:area:${String(currentUser.area||"").trim()}`;
+      }else{
+        consulta=db.collection("remisiones")
+          .where("fecha",">=",periodo.inicio)
+          .where("fecha","<=",periodo.fin);
+      }
     }
-    listenerMetasReporte=consulta.onSnapshot(snap=>{
-      documentosMetaReporte=snap.docs.map(doc=>doc.data());
-      renderizarMetaReporte(documentosMetaReporte,obtenerPeriodoMetaActual());
-    },error=>{
-      console.error("No se pudieron actualizar las metas:",error);
-      document.getElementById("metaEstadoReporte").textContent="No se pudieron cargar las metas. Verifica la conexión.";
-    });
-    temporizadorMetaReporte=setInterval(()=>{
-      const periodoActual=obtenerPeriodoMetaActual();
-      if(periodoActual.inicio!==periodoMetaReporteActivo)
-        actualizarMetaReporte();
-      else
-        renderizarMetaReporte(documentosMetaReporte,periodoActual);
-    },60000);
+    documentosMetaReporte=await cargarDatosConsultaReporte(consulta,claveMeta,forzarRecarga);
+    renderizarMetaReporte(documentosMetaReporte,periodo);
   }catch(error){
     console.error("No se pudieron cargar las metas:",error);
     document.getElementById("metaEstadoReporte").textContent="No se pudieron cargar las metas. Verifica la conexión.";
@@ -1845,7 +1806,7 @@ function seleccionarClienteCotizacion(cliente){
 }
 
 function actualizarOtroOrigenCotizacion(){
-  const esOtro=document.getElementById("cotOrigenCliente").value==="Otro";
+  const esOtro=normalizarTexto(document.getElementById("cotOrigenCliente").value)==="otro";
   const campo=document.getElementById("cotOtroOrigen");
   document.getElementById("cotOtroOrigenWrap").classList.toggle("hidden",!esOtro);
   campo.disabled=!esOtro;
@@ -1925,6 +1886,7 @@ function agregarItemCotizacion(){
   document.getElementById("cotItemIva").checked=false;
   renderItemsCotizacion();
   calcularTotalesCotizacion();
+  actualizarValidacionCotizacionSiVisible();
 }
 
 function eliminarItemCotizacion(indice){
@@ -1933,6 +1895,7 @@ function eliminarItemCotizacion(indice){
   else if(cotItemEditandoIndex!==null&&cotItemEditandoIndex>indice)cotItemEditandoIndex--;
   renderItemsCotizacion();
   calcularTotalesCotizacion();
+  actualizarValidacionCotizacionSiVisible();
 }
 
 function editarItemCotizacion(indice){
@@ -1988,6 +1951,79 @@ function calcularTotalesCotizacion(){
   const totalRedondeado=total.toFixed(2);
   document.getElementById("cotTotalMateriales").value=formatearValorCOP(total);
   document.getElementById("cotTotalPedido").value=formatearValorCOP(total);
+}
+
+function validarCamposCotizacion(){
+  const vista=document.getElementById("view-cotizacion");
+  const alerta=document.getElementById("cotValidacionAlert");
+  vista.querySelectorAll(".campo-error").forEach(campo=>campo.classList.remove("campo-error"));
+  const faltantes=[];
+  const marcados=new Set();
+  const marcar=(id,etiqueta)=>{
+    const campo=document.getElementById(id);
+    if(!campo||marcados.has(id))return;
+    marcados.add(id);
+    campo.classList.add("campo-error");
+    const label=etiqueta||campo.closest(".field")?.querySelector("label")?.textContent?.replace(/\*/g,"").replace(/\s+/g," ").trim()||campo.getAttribute("aria-label")||"Campo obligatorio";
+    faltantes.push(label);
+  };
+  const vacio=id=>!String(document.getElementById(id)?.value||"").trim();
+
+  [["cotFechaEntrega"],["cotNit"],["cotEmpresa"],["cotClienteNombre"],["cotCelular"],["cotOrigenCliente"],["cotCiudadPais"],["cotVenta"],["cotDiseno"]].forEach(([id])=>{
+    if(vacio(id))marcar(id);
+  });
+  if(normalizarTexto(document.getElementById("cotOrigenCliente").value)==="otro"&&vacio("cotOtroOrigen"))marcar("cotOtroOrigen");
+
+  const venta=document.getElementById("cotVenta").value;
+  if(venta==="Cotización"&&!cotItemsActuales.length){
+    marcar("cotItemTipo","Producto por agregar");
+    marcar("cotItemDetalle","Detalle del producto por agregar");
+    marcar("cotItemCantidad","Cantidad del producto por agregar");
+    marcar("cotItemPrecio","Precio unitario del producto por agregar");
+  }else if(venta&&venta!=="Cotización"){
+    const filas=[...document.querySelectorAll("#cotMaterialesBody tr[data-material-row]")];
+    const tieneMaterial=filas.some(fila=>{
+      const i=fila.dataset.materialRow;
+      return ["cotMaterialTipo","cotMaterialMedida","cotMetros","cotRollos","cotUnitario"].some(prefijo=>String(document.getElementById(`${prefijo}${i}`)?.value||"").trim());
+    });
+    if(!tieneMaterial){
+      marcar("cotMaterialTipo1","Tipo de material");
+      marcar("cotMaterialMedida1","Medida del material");
+      marcar("cotMetros1","Cantidad de metros");
+      marcar("cotUnitario1","Valor unitario del material");
+    }
+  }
+
+  const total=parseValorCOP(document.getElementById("cotTotalPedido").value);
+  if(venta&&total<=0){
+    marcar("cotTotalPedido","Total del pedido (debe ser mayor que $0)");
+    if(venta!=="Cotización"){
+      document.querySelectorAll("#cotMaterialesBody tr[data-material-row]").forEach(fila=>{
+        const i=fila.dataset.materialRow;
+        const hayDatos=["cotMaterialTipo","cotMaterialMedida","cotMetros","cotRollos","cotUnitario"].some(prefijo=>String(document.getElementById(`${prefijo}${i}`)?.value||"").trim());
+        if(hayDatos){
+          if(!(Number(document.getElementById(`cotMetros${i}`).value)>0))marcar(`cotMetros${i}`,`Cantidad de metros del material ${i}`);
+          if(!(parseValorCOP(document.getElementById(`cotUnitario${i}`).value)>0))marcar(`cotUnitario${i}`,`Valor unitario del material ${i}`);
+        }
+      });
+    }
+  }
+
+  if(faltantes.length){
+    alerta.innerHTML=`<strong>No se pudo registrar la cotización.</strong><br>Completa los campos obligatorios marcados en rojo:<ul style="margin:6px 0 0;padding-left:20px">${faltantes.map(texto=>`<li>${escapeHtml(texto)}</li>`).join("")}</ul>`;
+    alerta.classList.remove("hidden");
+    const primero=vista.querySelector(".campo-error");
+    primero?.scrollIntoView({behavior:"smooth",block:"center"});
+    return false;
+  }
+  alerta.textContent="";
+  alerta.classList.add("hidden");
+  return true;
+}
+
+function actualizarValidacionCotizacionSiVisible(){
+  const alerta=document.getElementById("cotValidacionAlert");
+  if(alerta&&!alerta.classList.contains("hidden"))validarCamposCotizacion();
 }
 
 function puedeGestionarCotizacion(doc){
@@ -2115,10 +2151,7 @@ async function guardarCotizacion(){
       materiales.push(material);
   });
 
-  if(!fechaEntrega||!docCliente||!empresa||!nomCliente||!telCliente||!origenCliente||(origenCliente==="Otro"&&!detalleOrigenCliente)||!ciudadPais||!venta||!diseno||(ventaEsCotizacion?!cotItemsActuales.length:!materiales.length)||total<=0){
-    alert(ventaEsCotizacion?"Completa los datos del cliente y agrega al menos un producto con valor.":"Completa la fecha de validez, identificación, empresa, contacto, celular, origen, ciudad/país, tipo de pedido y al menos un material con valor.");
-    return;
-  }
+  if(!validarCamposCotizacion())return;
 
   const boton=document.getElementById("btnGuardarCotizacion");
   const textoBotonOriginal=boton.textContent;
@@ -2268,8 +2301,8 @@ async function guardarCotizacion(){
 document.getElementById("cotClienteNombre").addEventListener("input",()=>buscarClientesCotizacion("nombre"));
 document.getElementById("cotNit").addEventListener("input",()=>buscarClientesCotizacion("documento"));
 document.getElementById("cotNit").addEventListener("blur",buscarClienteCotizacionPorDocumento);
-document.getElementById("view-cotizacion").addEventListener("input",calcularTotalesCotizacion);
-document.getElementById("view-cotizacion").addEventListener("change",calcularTotalesCotizacion);
+document.getElementById("view-cotizacion").addEventListener("input",()=>{calcularTotalesCotizacion();actualizarValidacionCotizacionSiVisible();});
+document.getElementById("view-cotizacion").addEventListener("change",()=>{calcularTotalesCotizacion();actualizarValidacionCotizacionSiVisible();});
 document.getElementById("view-cotizacion").addEventListener("focusout",event=>{
   if(/^cotUnitario\d+$/.test(event.target.id||"")||event.target.id==="cotItemPrecio"){
     formatearCampoCOP(event.target);
@@ -3708,9 +3741,22 @@ const documento={
 /* =========================================================
    REPORTES
    ========================================================= */
-async function obtenerEventosAbonoReporte(inicio,fin){
-  const clave=`${inicio||""}|${fin||""}`;const cached=cacheAbonosReporte.get(clave);if(cached&&Date.now()-cached.at<15000)return cached.datos;
-  try{let consulta=db.collection("abonosCotizaciones");if(inicio)consulta=consulta.where("fecha",">=",inicio);if(fin)consulta=consulta.where("fecha","<=",fin);const snap=await consulta.get();const datos=snap.docs.map(d=>({id:d.id,...d.data()}));cacheAbonosReporte.set(clave,{at:Date.now(),datos});return datos;}catch(error){console.warn("No se pudieron cargar abonos para los reportes:",error);return [];}
+async function obtenerEventosAbonoReporte(inicio,fin,forzarRecarga=false){
+  const clave=`${inicio||""}|${fin||""}`;
+  const cached=cacheAbonosReporte.get(clave);
+  if(!forzarRecarga&&cached&&Date.now()-cached.at<CACHE_REPORTES_TTL)return cached.datos;
+  try{
+    let consulta=db.collection("abonosCotizaciones");
+    if(inicio)consulta=consulta.where("fecha",">=",inicio);
+    if(fin)consulta=consulta.where("fecha","<=",fin);
+    const snap=await consulta.get();
+    const datos=snap.docs.map(d=>({id:d.id,...d.data()}));
+    cacheAbonosReporte.set(clave,{at:Date.now(),datos});
+    return datos;
+  }catch(error){
+    console.warn("No se pudieron cargar abonos para los reportes:",error);
+    return [];
+  }
 }
 function convertirAbonoEnRegistroReporte(abono){return {id:`abono-${abono.id}`,idDocumento:abono.idDocumento,fecha:abono.fecha,fechaCreacion:abono.fechaHora||abono.fecha,tipoDoc:"Abono de cotización",estado:"Pagada",nomCliente:abono.nomCliente||"",docCliente:abono.docCliente||"",asesor:abono.asesor||"",area:abono.area||"",formaPago:abono.formaPago||"",total:Number(abono.valor||0),esAbonoCotizacion:true};}
 
@@ -3838,23 +3884,9 @@ async function procesarReportes(forzarRecarga=false){
     }
 
 
-    if(currentUser.role==="caja"){
-
-  const claveCaja=JSON.stringify({
-    inicio,
-    fin,
-    area:String(currentUser.area||"").trim(),
-    asesor:asesor==="TODOS"?"TODOS":asesor
-  });
-  escucharRemisionesCaja(consulta,claveCaja);
-
-  return;
-
-}
-
 const claveConsulta=claveConsultaReporte(inicio,fin,asesor,area);
 const datos=await cargarDatosConsultaReporte(consulta,claveConsulta,forzarRecarga);
-const abonos=await obtenerEventosAbonoReporte(inicio,fin);
+const abonos=await obtenerEventosAbonoReporte(inicio,fin,forzarRecarga);
 const datosConAbonos=[...datos,...abonos.filter(a=>{
   if(currentUser.role==="asesor"&&String(a.asesor||"").trim()!==String(currentUser.nombre||currentUser.username||"").trim())return false;
   if(currentUser.role==="caja"&&String(a.area||"").trim()!==String(currentUser.area||"").trim())return false;
@@ -4001,156 +4033,6 @@ if(currentUser.role==="asesor"&&inicio===obtenerPeriodoMetaActual().inicio&&fin=
       </tr>`;
 
   }
-
-}
-
-function detenerListenerCaja(){
-  if(listenerCajaRemisiones) listenerCajaRemisiones();
-  listenerCajaRemisiones=null;
-  claveListenerCaja=null;
-  datosListenerCaja=null;
-}
-
-function escucharRemisionesCaja(consulta,clave){
-
-  if(listenerCajaRemisiones && claveListenerCaja===clave){
-    if(datosListenerCaja) actualizarReporteCajaEnPantalla(datosListenerCaja);
-    return;
-  }
-  detenerListenerCaja();
-  claveListenerCaja=clave;
-
-  listenerCajaRemisiones =
-    consulta.onSnapshot(
-      snap=>{
-
-        const datos=
-          snap.docs.map(d=>({
-            id:d.id,
-            ...d.data()
-          }));
-
-        console.log(
-          "Caja recibió actualización:",
-          snap.docChanges().length,
-          "cambios"
-        );
-
-        datosListenerCaja=datos;
-        actualizarReporteCajaEnPantalla(datos);
-
-      },
-      error=>{
-        console.error(
-          "Error en listener de Caja:",
-          error
-        );
-        document.getElementById("tablaReportesBody").innerHTML=
-          `<tr><td colspan="9">Error cargando remisiones: ${mensajeErrorFirestore(error)}</td></tr>`;
-      }
-    );
-
-}
-
-async function actualizarReporteCajaEnPantalla(datos){
-
-  const tipoDocFiltro=
-    document.getElementById("repFiltroTipoDoc").value;
-
-  const formaPagoFiltro=
-    document.getElementById("repFiltroFormaPago").value;
-
-  const estadoFiltro=
-    document.getElementById("repFiltroEstado").value;
-
-  const buscarCliente=
-    document.getElementById("repBuscarCliente").value
-      .trim()
-      .toLowerCase();
-
-  const inicio=document.getElementById("repFechaInicio").value;
-  const fin=document.getElementById("repFechaFin").value;
-  const abonos=await obtenerEventosAbonoReporte(inicio,fin);
-  const datosConAbonos=[...datos,...abonos.filter(a=>String(a.area||"").trim()===String(currentUser.area||"").trim()&&(document.getElementById("repFiltroAsesor").value==="TODOS"||a.asesor===document.getElementById("repFiltroAsesor").value)).map(convertirAbonoEnRegistroReporte)];
-  const filtrados=datosConAbonos.filter(r=>{
-
-    if(buscarCliente){
-
-      const nombreCliente=
-        String(r.nomCliente||"").toLowerCase();
-
-      const documentoCliente=
-        String(r.docCliente||"").toLowerCase();
-
-      if(
-        !nombreCliente.includes(buscarCliente) &&
-        !documentoCliente.includes(buscarCliente)
-      ){
-        return false;
-      }
-
-    }
-
-    if(
-      tipoDocFiltro!=="TODOS" &&
-      (r.tipoDoc||"Remisión")!==tipoDocFiltro
-    ){
-      return false;
-    }
-
-    if(
-      formaPagoFiltro!=="TODOS" &&
-      (r.formaPago||"")!==formaPagoFiltro
-    ){
-      return false;
-    }
-
-    if(!cumpleFiltroEstadoReporte(r,estadoFiltro))return false;
-
-    return true;
-
-  }).sort((a,b)=>
-    String(b.fechaCreacion||b.fecha)
-      .localeCompare(
-        String(a.fechaCreacion||a.fecha)
-      )
-  );
-
-  datosRemisiones=filtrados;
-
-  const datosContables=
-    filtrados.filter(r=>
-      String(r.tipoDoc||"")
-        .trim()
-        .toLowerCase()!=="cotización" &&
-      String(r.estado||"")
-        .trim()
-        .toLowerCase()==="pagada"
-    );
-
-  const total=
-    datosContables.reduce(
-      (s,r)=>s+Number(r.total||0),
-      0
-    );
-
-  document.getElementById("kpiTotalVentas").textContent=
-    money(total);
-
-  document.getElementById("kpiCantRemisiones").textContent=
-    filtrados.length;
-
-  document.getElementById("kpiTicketPromedio").textContent=
-    money(
-      filtrados.length
-        ? total/filtrados.length
-        : 0
-    );
-
-  renderConsolidadoAsesores(datosContables);
-  renderConsolidadoAreas(datosContables);
-  renderConsolidadoFormaPago(datosContables);
-  renderTablaDetalleRemisiones(filtrados);
 
 }
 
@@ -4836,13 +4718,13 @@ function renderTablaDetalleRemisiones(datos){
   </tr>`).join("");
 }
 
-function abrirModalAbono(id){const cot=datosRemisiones.find(d=>(d.idDocumento||d.id)===id);if(!cot||!puedeGestionarCotizacion(cot)){alert("Solo Administración o el asesor de WhatsApp que creó esta cotización pueden registrar abonos.");return;}cotizacionSeleccionadaAbono=cot;abonoCotizacionEnEdicion=null;document.getElementById("abonoCotizacionTitulo").textContent="Registrar abono";document.getElementById("btnGuardarAbonoCotizacion").textContent="Registrar abono";const saldo=Math.max(0,Number(cot.total||0)-Number(cot.totalAbonado||0));document.getElementById("abonoCotizacionResumen").innerHTML=`<strong>${escapeHtml(cot.idDocumento)}</strong> · ${escapeHtml(cot.nomCliente||"Cliente")}<br>Saldo: ${money(saldo)}`;document.getElementById("abonoCotizacionValor").value=saldo?String(saldo):"";document.getElementById("abonoCotizacionValor").max=String(saldo);document.getElementById("abonoCotizacionMetodo").value="";document.getElementById("abonoCotizacionFecha").value=fechaHoy();document.getElementById("abonoCotizacionModal").classList.remove("hidden");}
-async function editarAbonoCotizacion(idDocumento,idAbono){try{const snap=await db.collection("abonosCotizaciones").doc(idAbono).get();if(!snap.exists)throw new Error("No se encontró el abono.");const abono={id:snap.id,...snap.data()};cotizacionSeleccionadaAbono=datosRemisiones.find(d=>(d.idDocumento||d.id)===idDocumento);if(!cotizacionSeleccionadaAbono)throw new Error("No se encontró la cotización.");if(!puedeGestionarCotizacion(cotizacionSeleccionadaAbono))throw new Error("Solo Administración o el asesor de WhatsApp que creó esta cotización pueden editar abonos.");abonoCotizacionEnEdicion=abono;document.getElementById("abonoCotizacionTitulo").textContent="Editar abono";document.getElementById("btnGuardarAbonoCotizacion").textContent="Guardar cambios";document.getElementById("abonoCotizacionResumen").innerHTML=`<strong>${escapeHtml(idDocumento)}</strong> · ${escapeHtml(abono.nomCliente||cotizacionSeleccionadaAbono.nomCliente||"Cliente")}`;document.getElementById("abonoCotizacionValor").value=String(Number(abono.valor)||"");document.getElementById("abonoCotizacionValor").removeAttribute("max");document.getElementById("abonoCotizacionMetodo").value=abono.formaPago||"";document.getElementById("abonoCotizacionFecha").value=abono.fecha||fechaHoy();document.getElementById("abonoCotizacionModal").classList.remove("hidden");}catch(error){console.error("No se pudo abrir la edición del abono:",error);alert("No se pudo abrir el abono: "+error.message);}}
+function abrirModalAbono(id){const cot=datosRemisiones.find(d=>(d.idDocumento||d.id)===id);if(!cot||!puedeGestionarCotizacion(cot)){alert("Solo Administración o el asesor de WhatsApp que creó esta cotización pueden registrar abonos.");return;}cotizacionSeleccionadaAbono=cot;abonoCotizacionEnEdicion=null;document.getElementById("abonoCotizacionTitulo").textContent="Registrar abono";document.getElementById("btnGuardarAbonoCotizacion").textContent="Registrar abono";const saldo=Math.max(0,Number(cot.total||0)-Number(cot.totalAbonado||0));document.getElementById("abonoCotizacionResumen").innerHTML=`<strong>${escapeHtml(cot.idDocumento)}</strong> · ${escapeHtml(cot.nomCliente||"Cliente")}<br>Saldo: ${money(saldo)}`;document.getElementById("abonoCotizacionValor").value=saldo?formatearValorCOP(saldo):"";document.getElementById("abonoCotizacionMetodo").value="";document.getElementById("abonoCotizacionFecha").value=fechaHoy();document.getElementById("abonoCotizacionModal").classList.remove("hidden");}
+async function editarAbonoCotizacion(idDocumento,idAbono){try{const snap=await db.collection("abonosCotizaciones").doc(idAbono).get();if(!snap.exists)throw new Error("No se encontró el abono.");const abono={id:snap.id,...snap.data()};cotizacionSeleccionadaAbono=datosRemisiones.find(d=>(d.idDocumento||d.id)===idDocumento);if(!cotizacionSeleccionadaAbono)throw new Error("No se encontró la cotización.");if(!puedeGestionarCotizacion(cotizacionSeleccionadaAbono))throw new Error("Solo Administración o el asesor de WhatsApp que creó esta cotización pueden editar abonos.");abonoCotizacionEnEdicion=abono;document.getElementById("abonoCotizacionTitulo").textContent="Editar abono";document.getElementById("btnGuardarAbonoCotizacion").textContent="Guardar cambios";document.getElementById("abonoCotizacionResumen").innerHTML=`<strong>${escapeHtml(idDocumento)}</strong> · ${escapeHtml(abono.nomCliente||cotizacionSeleccionadaAbono.nomCliente||"Cliente")}`;document.getElementById("abonoCotizacionValor").value=Number(abono.valor)>0?formatearValorCOP(abono.valor):"";document.getElementById("abonoCotizacionValor").removeAttribute("max");document.getElementById("abonoCotizacionMetodo").value=abono.formaPago||"";document.getElementById("abonoCotizacionFecha").value=abono.fecha||fechaHoy();document.getElementById("abonoCotizacionModal").classList.remove("hidden");}catch(error){console.error("No se pudo abrir la edición del abono:",error);alert("No se pudo abrir el abono: "+error.message);}}
 function cerrarModalAbono(){document.getElementById("abonoCotizacionModal").classList.add("hidden");cotizacionSeleccionadaAbono=null;abonoCotizacionEnEdicion=null;}
-async function registrarAbonoCotizacion(){const cot=cotizacionSeleccionadaAbono,valor=Number(document.getElementById("abonoCotizacionValor").value),formaPago=document.getElementById("abonoCotizacionMetodo").value,fecha=document.getElementById("abonoCotizacionFecha").value||fechaHoy();if(!cot||!puedeGestionarCotizacion(cot)){alert("No tienes permiso para registrar el abono de esta cotización.");return;}if(!(valor>0)||!formaPago){alert("Ingresa un valor y elige la forma de pago.");return;}const ref=db.collection("remisiones").doc(cot.idDocumento);try{if(abonoCotizacionEnEdicion){const abono=abonoCotizacionEnEdicion,abonoRef=db.collection("abonosCotizaciones").doc(abono.id),fechaHora=new Date().toISOString();await db.runTransaction(async tx=>{const [snapCot,snapAbono]=await Promise.all([tx.get(ref),tx.get(abonoRef)]);if(!snapCot.exists||!snapAbono.exists)throw new Error("La cotización o el abono ya no existe.");const actual=snapCot.data(),actualAbono=snapAbono.data(),nuevoAbonado=Math.max(0,Number(actual.totalAbonado||0)+valor-Number(actualAbono.valor||0)),total=Number(actual.total||0);if(nuevoAbonado>total)throw new Error("El abono editado superaría el total de la cotización.");const estadoPago=nuevoAbonado>=total?"Pagada":nuevoAbonado>0?"Abonada":"Pendiente";tx.update(ref,{totalAbonado:nuevoAbonado,estado:"Pendiente",estadoPago});tx.update(abonoRef,{valor,formaPago,fecha,fechaHora,editadoPor:currentUser.nombre||currentUser.username||"",editadoEn:fechaHora});});}else{const abonoRef=db.collection("abonosCotizaciones").doc();await db.runTransaction(async tx=>{const snap=await tx.get(ref);if(!snap.exists)throw new Error("No se encontró la cotización.");const actual=snap.data(),abonado=Number(actual.totalAbonado||0),saldo=Math.max(0,Number(actual.total||0)-abonado);if(valor>saldo)throw new Error("El abono supera el saldo pendiente.");const nuevo=abonado+valor,estado=nuevo>=Number(actual.total||0)?"Pagada":"Abonada",fechaHora=new Date().toISOString();tx.update(ref,{totalAbonado:nuevo,numeroAbonos:Number(actual.numeroAbonos||0)+1,estado:"Pendiente",estadoPago:estado});tx.set(abonoRef,{idDocumento:cot.idDocumento,fecha,fechaHora,formaPago,valor,usuario:currentUser.nombre||currentUser.username||"",asesor:actual.asesor||"",area:actual.area||"",nomCliente:actual.nomCliente||"",tipoDoc:"Cotización",estado});});}cacheRemisiones=null;cacheConsultasReportes.clear();cacheAbonosReporte.clear();cerrarModalAbono();await procesarReportes(true);await verDetalleDoc(cot.idDocumento);}catch(error){console.error("Error guardando abono:",error);alert("No se pudo guardar el abono: "+error.message);}}
+async function registrarAbonoCotizacion(){const cot=cotizacionSeleccionadaAbono,valor=parseValorCOP(document.getElementById("abonoCotizacionValor").value),formaPago=document.getElementById("abonoCotizacionMetodo").value,fecha=document.getElementById("abonoCotizacionFecha").value||fechaHoy();if(!cot||!puedeGestionarCotizacion(cot)){alert("No tienes permiso para registrar el abono de esta cotización.");return;}if(!(valor>0)||!formaPago){alert("Ingresa un valor y elige la forma de pago.");return;}const ref=db.collection("remisiones").doc(cot.idDocumento);try{if(abonoCotizacionEnEdicion){const abono=abonoCotizacionEnEdicion,abonoRef=db.collection("abonosCotizaciones").doc(abono.id),fechaHora=new Date().toISOString();await db.runTransaction(async tx=>{const [snapCot,snapAbono]=await Promise.all([tx.get(ref),tx.get(abonoRef)]);if(!snapCot.exists||!snapAbono.exists)throw new Error("La cotización o el abono ya no existe.");const actual=snapCot.data(),actualAbono=snapAbono.data(),nuevoAbonado=Math.max(0,Number(actual.totalAbonado||0)+valor-Number(actualAbono.valor||0)),total=Number(actual.total||0);if(nuevoAbonado>total)throw new Error("El abono editado superaría el total de la cotización.");const estadoPago=nuevoAbonado>=total?"Pagada":nuevoAbonado>0?"Abonada":"Pendiente";tx.update(ref,{totalAbonado:nuevoAbonado,estado:"Pendiente",estadoPago});tx.update(abonoRef,{valor,formaPago,fecha,fechaHora,editadoPor:currentUser.nombre||currentUser.username||"",editadoEn:fechaHora});});}else{const abonoRef=db.collection("abonosCotizaciones").doc();await db.runTransaction(async tx=>{const snap=await tx.get(ref);if(!snap.exists)throw new Error("No se encontró la cotización.");const actual=snap.data(),abonado=Number(actual.totalAbonado||0),saldo=Math.max(0,Number(actual.total||0)-abonado);if(valor>saldo)throw new Error("El abono supera el saldo pendiente.");const nuevo=abonado+valor,estado=nuevo>=Number(actual.total||0)?"Pagada":"Abonada",fechaHora=new Date().toISOString();tx.update(ref,{totalAbonado:nuevo,numeroAbonos:Number(actual.numeroAbonos||0)+1,estado:"Pendiente",estadoPago:estado});tx.set(abonoRef,{idDocumento:cot.idDocumento,fecha,fechaHora,formaPago,valor,usuario:currentUser.nombre||currentUser.username||"",asesor:actual.asesor||"",area:actual.area||"",nomCliente:actual.nomCliente||"",tipoDoc:"Cotización",estado});});}cacheRemisiones=null;cacheConsultasReportes.clear();cacheAbonosReporte.clear();cerrarModalAbono();await procesarReportes(true);await verDetalleDoc(cot.idDocumento);}catch(error){console.error("Error guardando abono:",error);alert("No se pudo guardar el abono: "+error.message);}}
 async function crearOrdenProduccionCotizacion(id){
   const cot=datosRemisiones.find(d=>(d.idDocumento||d.id)===id);
-  if(!cot||cot.tipoDoc!=="Cotización"||cot.venta!=="Cotización"){alert("La orden de producción solo se crea desde una cotización de productos.");return;}
+  if(!cot||cot.tipoDoc!=="Cotización"){alert("La orden de producción solo se crea desde una cotización.");return;}
   if(!puedeGestionarCotizacion(cot)){alert("Solo Administración o el asesor de WhatsApp que creó la cotización pueden crear la orden de producción.");return;}
   if(!confirm(`¿Crear la orden de producción para ${cot.idDocumento}? La cotización seguirá en estado Pendiente.`))return;
   const ventana=window.open("","_blank");
@@ -4877,7 +4759,21 @@ async function crearOrdenProduccionCotizacion(id){
     alert("No se pudo crear la orden de producción: "+error.message);
   }
 }
-async function verDetalleDoc(id){let doc=datosRemisiones.find(d=>(d.idDocumento||d.id)===id);if(!doc)return;try{const s=await db.collection("remisiones").doc(id).get();if(s.exists)doc={...s.data(),id:s.id};}catch(e){console.warn("No se pudo actualizar el documento",e);}const esCot=doc.tipoDoc==="Cotización",puedeGestionar=esCot&&puedeGestionarCotizacion(doc),puedeVerPdfProduccion=puedeGestionar,hist=[];if(esCot){try{const snap=await db.collection("abonosCotizaciones").where("idDocumento","==",doc.idDocumento).get();snap.docs.forEach(d=>hist.push({id:d.id,...d.data()}));hist.sort((a,b)=>String(a.fechaHora||a.fecha).localeCompare(String(b.fechaHora||b.fecha)));}catch(e){console.warn("No se pudo cargar el historial de abonos",e);}}const abonado=Math.max(Number(doc.totalAbonado||0),hist.reduce((a,x)=>a+Number(x.valor||0),0));const pagada=String(doc.estado||"").toLowerCase()==="pagada"||abonado>=Number(doc.total||0);const saldo=pagada?0:Math.max(0,Number(doc.total||0)-abonado);const items=esCot?(doc.venta==="Cotización"&&Array.isArray(doc.items)&&doc.items.length?doc.items:obtenerMaterialesCotizacion(doc).map(m=>({descripcion:[m.tipo,m.medida].filter(Boolean).join(" · "),cantidad:m.metros||0,precioUnitario:m.valorUnitario||0,ivaAplicado:!!m.ivaAplicado,ivaPct:m.ivaPct||0,descuento:0,subtotal:m.valorTotal||0}))):(Array.isArray(doc.items)?doc.items:[]);const ims=esCot?await obtenerImagenesCotizacionFirmadas(doc.imagenesReferencia):{imagenes:[],errores:[]};document.getElementById("detalleContenido").innerHTML=`<div class="grid-2"><div><strong>Documento:</strong> ${escapeHtml(doc.idDocumento||id)}</div><div><strong>Fecha:</strong> ${escapeHtml(doc.fecha||"")}</div><div><strong>${esCot?"Identificación":"Documento cliente"}:</strong> ${escapeHtml(doc.docCliente||"")}</div>${esCot?`<div><strong>Empresa:</strong> ${escapeHtml(doc.empresa||"")}</div><div><strong>Contacto:</strong> ${escapeHtml(doc.nomCliente||"")}</div>`:`<div><strong>Cliente:</strong> ${escapeHtml(doc.nomCliente||"")}</div>`}${esCot?`<div><strong>Ciudad / País:</strong> ${escapeHtml(doc.ciudadPais||"")}</div><div><strong>Origen:</strong> ${escapeHtml(doc.origenCliente||"")}</div>`:""}<div><strong>Ciudad:</strong> ${escapeHtml(doc.ciudadCliente||"")}</div><div><strong>Teléfono:</strong> ${escapeHtml(doc.telCliente||"")}</div><div><strong>Asesor:</strong> ${escapeHtml(doc.asesor||"")}</div><div><strong>Área:</strong> ${escapeHtml(doc.area||"")}</div><div><strong>Forma de pago:</strong> ${escapeHtml(doc.formaPago||"")}</div><div><strong>Tipo:</strong> ${escapeHtml(doc.tipoDoc||"")}</div><div><strong>Estado:</strong> ${escapeHtml(esCot?"Pendiente":pagada?"Pagada":doc.estado||"Pendiente")}</div>${esCot?`<div><strong>Pago:</strong> ${escapeHtml(doc.estadoPago||(pagada?"Pagada":abonado>0?"Abonada":"Pendiente"))}</div><div><strong>Válido hasta:</strong> ${escapeHtml(doc.fechaEntrega||"")}</div><div style="color:#c53030"><strong>Saldo pendiente:</strong> ${money(saldo)}</div>${doc.ordenProduccion?`<div><strong>Orden:</strong> ${escapeHtml(doc.ordenProduccion.idOrden||"Creada")} · ${escapeHtml(doc.ordenProduccion.estado||"Creada")}</div>`:""}`:""}</div><div class="table-wrap"><table><thead><tr><th>Descripción</th><th>Cantidad</th><th>Precio</th><th>IVA</th><th>Descuento</th><th>Subtotal</th></tr></thead><tbody>${items.map(i=>`<tr><td>${escapeHtml([i.tipoProducto,i.descripcion].filter(Boolean).join(" · ")||"")}</td><td>${formatNumber(i.cantidad||0)}</td><td>${money(i.precioUnitario||0)}</td><td>${i.ivaAplicado?`${i.ivaPct||19}%`:"IVA incluido"}</td><td>${money(i.descuento||0)}</td><td>${money(i.subtotal||0)}</td></tr>`).join("")||'<tr><td colspan="6">Sin productos registrados.</td></tr>'}</tbody></table></div><div class="total-box">Total: ${money(doc.total||0)}</div>${esCot?`<h3>Historial de abonos</h3><div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Método</th><th>Registrado por</th><th>Valor</th>${puedeGestionar?"<th>Acción</th>":""}</tr></thead><tbody>${hist.map(a=>`<tr><td>${escapeHtml(a.fecha||"")}</td><td>${escapeHtml(a.formaPago||"")}</td><td>${escapeHtml(a.usuario||"")}</td><td>${money(a.valor||0)}</td>${puedeGestionar?`<td><button class="btn small secondary" onclick="editarAbonoCotizacion('${escapeAttr(doc.idDocumento)}','${escapeAttr(a.id)}')">Editar</button></td>`:""}</tr>`).join("")||`<tr><td colspan="${puedeGestionar?5:4}">Sin abonos registrados.</td></tr>`}</tbody></table></div><h3>Imágenes de referencia</h3>${ims.imagenes.map((im,i)=>`<img src="${escapeAttr(im.url)}" alt="Imagen ${i+1}" style="max-width:180px;max-height:180px;object-fit:contain;margin:5px">`).join("")||"<p>Sin imágenes guardadas.</p>"}${doc.notas?`<p><strong>Indicaciones:</strong> ${escapeHtml(doc.notas)}</p>`:""}<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:24px">${puedeGestionar&&doc.estado!=="Anulada"?`<button class="btn primary" onclick="editarCotizacion('${escapeAttr(doc.idDocumento)}')">Editar cotización</button>`:""}${puedeGestionar&&!pagada?`<button class="btn primary" onclick="abrirModalAbono('${escapeAttr(doc.idDocumento)}')">Abonar</button>`:""}${puedeGestionar?`<button class="btn primary" onclick="generarPDFCotizacion('${escapeAttr(doc.idDocumento)}','cotizacion')">PDF de cotización</button>`:""}${puedeVerPdfProduccion&&(doc.ordenProduccion||normalizarTexto(doc.venta)==="cotizacion")? (doc.ordenProduccion?`<button class="btn primary" onclick="generarPDFCotizacion('${escapeAttr(doc.idDocumento)}','produccion')">PDF de orden de producción</button>`:`<button class="btn primary" onclick="crearOrdenProduccionCotizacion('${escapeAttr(doc.idDocumento)}')">Crear orden de producción</button>`):""}</div>`:`<p>${escapeHtml(doc.observaciones||"")}</p><button class="btn primary" onclick="imprimirDocumento('${escapeAttr(doc.idDocumento)}')">Imprimir</button>`}</div>`;document.getElementById("detalleModal").classList.remove("hidden");}
+function textoDescripcionItem(item){
+  const tipo=String(item?.tipoProducto||"").trim();
+  const descripcion=String(item?.descripcion||"").trim();
+  if(!tipo)return descripcion;
+  if(!descripcion)return tipo;
+  const detalle=String(item?.descripcionDetalle||"").trim();
+  const detalleNormalizado=normalizarTexto(detalle);
+  const tipoNormalizado=normalizarTexto(tipo);
+  const descripcionNormalizada=normalizarTexto(descripcion);
+  const tipoSingular=tipoNormalizado.endsWith("s")?tipoNormalizado.slice(0,-1):"";
+  if((detalleNormalizado&&descripcionNormalizada.includes(detalleNormalizado))||descripcionNormalizada===tipoNormalizado||descripcionNormalizada.startsWith(`${tipoNormalizado} `)||descripcionNormalizada.startsWith(`${tipoNormalizado}-`)||(tipoSingular&&descripcionNormalizada.startsWith(`${tipoSingular} `)))return descripcion;
+  return `${tipo} · ${descripcion}`;
+}
+
+async function verDetalleDoc(id){let doc=datosRemisiones.find(d=>(d.idDocumento||d.id)===id);if(!doc)return;try{const s=await db.collection("remisiones").doc(id).get();if(s.exists)doc={...s.data(),id:s.id};}catch(e){console.warn("No se pudo actualizar el documento",e);}const esCot=doc.tipoDoc==="Cotización",puedeGestionar=esCot&&puedeGestionarCotizacion(doc),puedeVerPdfProduccion=puedeGestionar,hist=[];if(esCot){try{const snap=await db.collection("abonosCotizaciones").where("idDocumento","==",doc.idDocumento).get();snap.docs.forEach(d=>hist.push({id:d.id,...d.data()}));hist.sort((a,b)=>String(a.fechaHora||a.fecha).localeCompare(String(b.fechaHora||b.fecha)));}catch(e){console.warn("No se pudo cargar el historial de abonos",e);}}const abonado=Math.max(Number(doc.totalAbonado||0),hist.reduce((a,x)=>a+Number(x.valor||0),0));const pagada=String(doc.estado||"").toLowerCase()==="pagada"||abonado>=Number(doc.total||0);const saldo=pagada?0:Math.max(0,Number(doc.total||0)-abonado);const items=esCot?(doc.venta==="Cotización"&&Array.isArray(doc.items)&&doc.items.length?doc.items:obtenerMaterialesCotizacion(doc).map(m=>({descripcion:[m.tipo,m.medida].filter(Boolean).join(" · "),cantidad:m.metros||0,precioUnitario:m.valorUnitario||0,ivaAplicado:!!m.ivaAplicado,ivaPct:m.ivaPct||0,descuento:0,subtotal:m.valorTotal||0}))):(Array.isArray(doc.items)?doc.items:[]);const ims=esCot?await obtenerImagenesCotizacionFirmadas(doc.imagenesReferencia):{imagenes:[],errores:[]};document.getElementById("detalleContenido").innerHTML=`<div class="grid-2"><div><strong>Documento:</strong> ${escapeHtml(doc.idDocumento||id)}</div><div><strong>Fecha:</strong> ${escapeHtml(doc.fecha||"")}</div><div><strong>${esCot?"Identificación":"Documento cliente"}:</strong> ${escapeHtml(doc.docCliente||"")}</div>${esCot?`<div><strong>Empresa:</strong> ${escapeHtml(doc.empresa||"")}</div><div><strong>Contacto:</strong> ${escapeHtml(doc.nomCliente||"")}</div>`:`<div><strong>Cliente:</strong> ${escapeHtml(doc.nomCliente||"")}</div>`}${esCot?`<div><strong>Ciudad / País:</strong> ${escapeHtml(doc.ciudadPais||"")}</div><div><strong>Origen:</strong> ${escapeHtml(doc.origenCliente||"")}</div>`:""}<div><strong>Ciudad:</strong> ${escapeHtml(doc.ciudadCliente||"")}</div><div><strong>Teléfono:</strong> ${escapeHtml(doc.telCliente||"")}</div><div><strong>Asesor:</strong> ${escapeHtml(doc.asesor||"")}</div><div><strong>Área:</strong> ${escapeHtml(doc.area||"")}</div><div><strong>Forma de pago:</strong> ${escapeHtml(doc.formaPago||"")}</div><div><strong>Tipo:</strong> ${escapeHtml(doc.tipoDoc||"")}</div><div><strong>Estado:</strong> ${escapeHtml(esCot?"Pendiente":pagada?"Pagada":doc.estado||"Pendiente")}</div>${esCot?`<div><strong>Pago:</strong> ${escapeHtml(doc.estadoPago||(pagada?"Pagada":abonado>0?"Abonada":"Pendiente"))}</div><div><strong>Válido hasta:</strong> ${escapeHtml(doc.fechaEntrega||"")}</div><div style="color:#c53030"><strong>Saldo pendiente:</strong> ${money(saldo)}</div>${doc.ordenProduccion?`<div><strong>Orden:</strong> ${escapeHtml(doc.ordenProduccion.idOrden||"Creada")} · ${escapeHtml(doc.ordenProduccion.estado||"Creada")}</div>`:""}`:""}</div><div class="table-wrap"><table><thead><tr><th>Descripción</th><th>Cantidad</th><th>Precio</th><th>IVA</th><th>Descuento</th><th>Subtotal</th></tr></thead><tbody>${items.map(i=>`<tr><td>${escapeHtml(textoDescripcionItem(i))}</td><td>${formatNumber(i.cantidad||0)}</td><td>${money(i.precioUnitario||0)}</td><td>${i.ivaAplicado?`${i.ivaPct||19}%`:"IVA incluido"}</td><td>${money(i.descuento||0)}</td><td>${money(i.subtotal||0)}</td></tr>`).join("")||'<tr><td colspan="6">Sin productos registrados.</td></tr>'}</tbody></table></div><div class="total-box">Total: ${money(doc.total||0)}</div>${esCot?`<h3>Historial de abonos</h3><div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Método</th><th>Registrado por</th><th>Valor</th>${puedeGestionar?"<th>Acción</th>":""}</tr></thead><tbody>${hist.map(a=>`<tr><td>${escapeHtml(a.fecha||"")}</td><td>${escapeHtml(a.formaPago||"")}</td><td>${escapeHtml(a.usuario||"")}</td><td>${money(a.valor||0)}</td>${puedeGestionar?`<td><button class="btn small secondary" onclick="editarAbonoCotizacion('${escapeAttr(doc.idDocumento)}','${escapeAttr(a.id)}')">Editar</button></td>`:""}</tr>`).join("")||`<tr><td colspan="${puedeGestionar?5:4}">Sin abonos registrados.</td></tr>`}</tbody></table></div><h3>Imágenes de referencia</h3>${ims.imagenes.map((im,i)=>`<img src="${escapeAttr(im.url)}" alt="Imagen ${i+1}" style="max-width:180px;max-height:180px;object-fit:contain;margin:5px">`).join("")||"<p>Sin imágenes guardadas.</p>"}${doc.notas?`<p><strong>Indicaciones:</strong> ${escapeHtml(doc.notas)}</p>`:""}<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:24px">${puedeGestionar&&doc.estado!=="Anulada"?`<button class="btn primary" onclick="editarCotizacion('${escapeAttr(doc.idDocumento)}')">Editar cotización</button>`:""}${puedeGestionar&&!pagada?`<button class="btn primary" onclick="abrirModalAbono('${escapeAttr(doc.idDocumento)}')">Abonar</button>`:""}${puedeGestionar?`<button class="btn primary" onclick="generarPDFCotizacion('${escapeAttr(doc.idDocumento)}','cotizacion')">PDF de cotización</button>`:""}${puedeVerPdfProduccion? (doc.ordenProduccion?`<button class="btn primary" onclick="generarPDFCotizacion('${escapeAttr(doc.idDocumento)}','produccion')">PDF de orden de producción</button>`:`<button class="btn primary" onclick="crearOrdenProduccionCotizacion('${escapeAttr(doc.idDocumento)}')">Crear orden de producción</button>`):""}</div>`:`<p>${escapeHtml(doc.observaciones||"")}</p><button class="btn primary" onclick="imprimirDocumento('${escapeAttr(doc.idDocumento)}')">Imprimir</button>`}</div>`;document.getElementById("detalleModal").classList.remove("hidden");}
 
 /* Marcar como pagada la factura, campo exclusivo para caja y Administrador*/ 
 
@@ -4937,7 +4833,7 @@ async function marcarComoPagada(id){
       document.getElementById("view-reporte") &&
       !document.getElementById("view-reporte").classList.contains("hidden")
     ){
-      await procesarReportes();
+      await Promise.all([actualizarMetaReporte(true),procesarReportes(true)]);
     }
 
   }catch(e){
@@ -5250,13 +5146,13 @@ async function generarPDFCotizacion(id,tipoPdf="cotizacion",ventanaPreabierta=nu
   const filas=usaListaProductos
     ?doc.items.map(item=>esOrdenProduccion
       ?`<tr><td>${escapeHtml(item.tipoProducto||"Producto")}</td><td>${escapeHtml(item.descripcion||"—")}</td><td class="num">${formatNumber(item.cantidad||0)}</td></tr>`
-      :`<tr><td>${escapeHtml(item.tipoProducto||"Producto")}</td><td>${escapeHtml(item.descripcion||"—")}</td><td class="num">${formatNumber(item.cantidad||0)}</td><td class="num">${money(item.precioUnitario||0)}</td><td class="num">${item.ivaAplicado?`19% · ${money((Number(item.cantidad)||0)*(Number(item.precioUnitario)||0)*0.19)}`:"IVA INCLUIDO"}</td><td class="num">${money(item.subtotal||0)}</td></tr>`).join("")
+      :`<tr><td>${escapeHtml(item.tipoProducto||"Producto")}</td><td>${escapeHtml(item.descripcion||"—")}</td><td class="num">${formatNumber(item.cantidad||0)}</td><td class="num money">${money(item.precioUnitario||0)}</td><td class="num money">${item.ivaAplicado?`19% · ${money((Number(item.cantidad)||0)*(Number(item.precioUnitario)||0)*0.19)}`:"IVA INCLUIDO"}</td><td class="num money">${money(item.subtotal||0)}</td></tr>`).join("")
     :obtenerMaterialesCotizacion(doc).map((m,i)=>esOrdenProduccion
       ?`<tr><td>${escapeHtml(m.tipo||`Material ${i+1}`)}</td><td>${escapeHtml(m.medida||"—")}</td><td class="num">${m.metros?formatNumber(m.metros):"—"}</td><td class="num">${m.rollos?escapeHtml(m.rollos):"—"}</td></tr>`
-      :`<tr><td>${escapeHtml(m.tipo||`Material ${i+1}`)}</td><td>${escapeHtml(m.medida||"—")}</td><td class="num">${m.metros?formatNumber(m.metros):"—"}</td><td class="num">${m.rollos?escapeHtml(m.rollos):"—"}</td><td class="num">${money(m.valorUnitario||0)}</td><td class="num">${m.ivaAplicado?`19% · ${money(m.valorIva||0)}`:"IVA INCLUIDO"}</td><td class="num">${money(m.valorTotal||Number(m.metros||0)*Number(m.valorUnitario||0))}</td></tr>`).join("");
+      :`<tr><td>${escapeHtml(m.tipo||`Material ${i+1}`)}</td><td>${escapeHtml(m.medida||"—")}</td><td class="num">${m.metros?formatNumber(m.metros):"—"}</td><td class="num">${m.rollos?escapeHtml(m.rollos):"—"}</td><td class="num money">${money(m.valorUnitario||0)}</td><td class="num money">${m.ivaAplicado?`19% · ${money(m.valorIva||0)}`:"IVA INCLUIDO"}</td><td class="num money">${money(m.valorTotal||Number(m.metros||0)*Number(m.valorUnitario||0))}</td></tr>`).join("");
   const encabezados=esOrdenProduccion
     ?(usaListaProductos?"<th>Producto</th><th>Detalle</th><th>Cantidad</th>":"<th>Material</th><th>Medida</th><th>Metros</th><th>Rollos</th>")
-    :(usaListaProductos?"<th>Producto</th><th>Detalle</th><th>Cantidad</th><th>Precio unitario (COP)</th><th>IVA</th><th>Subtotal (COP)</th>":"<th>Material</th><th>Medida</th><th>Metros</th><th>Rollos</th><th>Valor unitario (COP)</th><th>IVA</th><th>Valor total (COP)</th>");
+    :(usaListaProductos?"<th>Producto</th><th>Detalle</th><th>Cantidad</th><th>Precio unitario</th><th>IVA</th><th>Total</th>":"<th>Material</th><th>Medida</th><th>Metros</th><th>Rollos</th><th>Valor unitario</th><th>IVA</th><th>Total</th>");
   const colspan=esOrdenProduccion?(usaListaProductos?3:4):(usaListaProductos?6:7);
   const tituloPdf=esOrdenProduccion?"ORDEN DE PRODUCCIÓN":"COTIZACIÓN";
   const numeroPdf=esOrdenProduccion?(doc.ordenProduccion.idOrden||`OP-${doc.idDocumento}`):doc.idDocumento;
@@ -5269,10 +5165,10 @@ async function generarPDFCotizacion(id,tipoPdf="cotizacion",ventanaPreabierta=nu
   ].filter(([,valor])=>valor!==undefined&&valor!==null&&String(valor).trim()!=="");
   const htmlSpecs=esOrdenProduccion&&specs.length
     ?`<h2 class="section">Especificaciones para producción</h2><div class="specs">${specs.map(([nombre,valor])=>`<div><b>${escapeHtml(nombre)}:</b> ${escapeHtml(valor)}</div>`).join("")}</div>`:"";
-  const htmlTotales=esOrdenProduccion?"":`<div class="totals"><div class="line"><span>${usaListaProductos?"Subtotal de productos":"Valor materiales"}</span><b>${money(doc.subtotalMaterialesBase||0)}</b></div><div class="line"><span>IVA</span><b>${money(doc.totalIva||0)}</b></div><div class="line grand"><span>TOTAL</span><b>${money(doc.total||0)}</b></div></div>`;
+  const htmlTotales=esOrdenProduccion?"":`<div class="totals"><div class="line"><span>Subtotal</span><b>${money(doc.subtotalMaterialesBase||0)}</b></div><div class="line"><span>IVA</span><b>${money(doc.totalIva||0)}</b></div><div class="line grand"><span>TOTAL</span><b>${money(doc.total||0)}</b></div></div>`;
   const htmlNotas=doc.notas?`<h2 class="section">${esOrdenProduccion?"Indicaciones para producción":"Observaciones"}</h2><p>${escapeHtml(doc.notas)}</p>`:"";
   pop.document.open();
-  pop.document.write(`<!doctype html><html lang="es"><meta charset="utf-8"><title>${escapeHtml(tituloPdf)} ${escapeHtml(numeroPdf)}</title><style>@page{size:A4;margin:15mm}*{box-sizing:border-box}body{font:12px Arial;color:#292724;margin:0;text-transform:uppercase}.document{max-width:180mm;margin:auto}.header{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #bda66c;padding-bottom:14px}.brand{display:flex;align-items:center;gap:16px}.logo{max-width:180px;max-height:65px;object-fit:contain}.company{line-height:1.6;color:#5f5b52}.company strong{display:block;font-size:18px;color:#222}.title{text-align:right}.meta{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;background:#f5f2e9;padding:12px;margin:16px 0}.section{font-size:13px;text-transform:uppercase;color:#6f6040;border-bottom:1px solid #d8ceb3;padding-bottom:5px;margin:18px 0 9px}.client{display:grid;grid-template-columns:1fr 1fr;gap:8px}.client-subhead{font-weight:bold;color:#6f6040;border-bottom:1px solid #d8ceb3;padding-bottom:4px}.specs{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px}table{width:100%;border-collapse:collapse;font-size:9px}th{background:#eeeae0;text-transform:uppercase;text-align:center;padding:7px 5px}td{text-align:center;padding:7px 5px;border-bottom:1px solid #ddd}.num{text-align:center;white-space:nowrap}.totals{margin:14px auto 0;width:260px}.line{display:flex;justify-content:center;gap:8px;padding:4px}.grand{font-size:17px;font-weight:bold;border-top:2px solid #bda66c}.gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.gallery figure{margin:0;border:1px solid #ddd;padding:6px;break-inside:avoid}.gallery img{width:100%;height:130px;object-fit:contain}.gallery figcaption{font-size:9px}.footer{text-align:center;border-top:1px solid #d8ceb3;margin-top:22px;padding-top:8px;font-size:9px}@media print{*{user-select:none!important}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style><main class="document"><header class="header"><div class="brand">${logo?`<img class="logo" src="${escapeAttr(logo)}">`:""}</div><div class="title"><h1>${escapeHtml(tituloPdf)}</h1><b>${escapeHtml(numeroPdf)}</b></div></header><div class="meta"><span><b>Fecha de solicitud:</b> ${escapeHtml(doc.fechaSolicitud||doc.fecha||"")}</span><span><b>${esOrdenProduccion?"Fecha de entrega:":"Válido hasta:"}</b> ${escapeHtml(doc.fechaEntrega||"Por definir")}</span><span><b>Asesor:</b> ${escapeHtml(doc.asesor||"")}</span>${esOrdenProduccion?`<span><b>Cotización:</b> ${escapeHtml(doc.idDocumento||"")}</span>`:`<span><b>Venta:</b> ${escapeHtml(doc.venta||"")}</span>`}</div><h2 class="section">Datos de contacto</h2><div class="client"><div class="client-subhead">Proveedor</div><div class="client-subhead">Cliente</div><div><b>GRUPO EMPRESARIAL LA CINTERIA S.A.S.</b></div><div><b>Identificación:</b> ${escapeHtml(doc.docCliente||"")}</div><div><b>NIT:</b> 900836104-0</div><div><b>Empresa:</b> ${escapeHtml(doc.empresa||"")}</div><div><b>Dirección:</b> Cra 53 # 49-47 oficina 666</div><div><b>Contacto:</b> ${escapeHtml(doc.nomCliente||"")}</div><div><b>Ciudad:</b> Medellín, Antioquia</div><div><b>Celular:</b> ${escapeHtml(doc.telCliente||"")}</div><div><b>Teléfono:</b> ${escapeHtml(contactoAsesor.telefono||"No registrado")}</div><div><b>Ciudad / País:</b> ${escapeHtml(doc.ciudadPais||"")}</div><div><b>Correo:</b> ${escapeHtml(contactoAsesor.email||"No registrado")}</div><div></div></div><h2 class="section">${esOrdenProduccion?"Productos y cantidades para producción":usaListaProductos?"Detalle del pedido":"Detalle de materiales y valores"}</h2><table><thead><tr>${encabezados}</tr></thead><tbody>${filas||`<tr><td colspan="${colspan}">Sin ${usaListaProductos?"productos":"materiales"} registrados</td></tr>`}</tbody></table>${htmlTotales}${htmlSpecs}${htmlNotas}${htmlImgs?`<h2 class="section">${esOrdenProduccion?"Diseños e imágenes de referencia":"Imágenes de referencia"}</h2><div class="gallery">${htmlImgs}</div>`:""}<footer class="footer">GRUPO EMPRESARIAL LA CINTERIA S.A.S. · NIT 900836104-0 · Cra 53 # 49-47 oficina 666, Medellín</footer></main><script>window.onload=async()=>{await Promise.all([...document.images].map(i=>i.decode?.().catch(()=>{})));window.getSelection()?.removeAllRanges();window.print()}<\/script></html>`);
+  pop.document.write(`<!doctype html><html lang="es"><meta charset="utf-8"><title>${escapeHtml(tituloPdf)} ${escapeHtml(numeroPdf)}</title><style>@page{size:A4;margin:15mm}*{box-sizing:border-box}body{font:12px Arial;color:#292724;margin:0;text-transform:uppercase}.document{max-width:180mm;margin:auto}.header{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #bda66c;padding-bottom:14px}.brand{display:flex;align-items:center;gap:16px}.logo{max-width:180px;max-height:65px;object-fit:contain}.company{line-height:1.6;color:#5f5b52}.company strong{display:block;font-size:18px;color:#222}.title{text-align:right}.meta{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;background:#f5f2e9;padding:12px;margin:16px 0}.section{font-size:13px;text-transform:uppercase;color:#6f6040;border-bottom:1px solid #d8ceb3;padding-bottom:5px;margin:18px 0 9px}.client{display:grid;grid-template-columns:1fr 1fr;gap:8px}.client-subhead{font-weight:bold;color:#6f6040;border-bottom:1px solid #d8ceb3;padding-bottom:4px}.specs{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px}table{width:100%;border-collapse:collapse;font-size:9px}th{background:#eeeae0;text-transform:uppercase;text-align:center;padding:7px 5px}td{text-align:center;padding:7px 5px;border-bottom:1px solid #ddd}.num{text-align:center;white-space:nowrap}.money{text-align:right!important;white-space:nowrap}.totals{margin:14px 0 0 auto;width:260px}.line{display:flex;justify-content:space-between;gap:8px;padding:4px}.line b{text-align:right;min-width:90px}.grand{font-size:17px;font-weight:bold}.gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.gallery figure{margin:0;border:1px solid #ddd;padding:6px;break-inside:avoid}.gallery img{width:100%;height:130px;object-fit:contain}.gallery figcaption{font-size:9px}.footer{text-align:center;border-top:1px solid #d8ceb3;margin-top:22px;padding-top:8px;font-size:9px}@media print{*{user-select:none!important}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style><main class="document"><header class="header"><div class="brand">${logo?`<img class="logo" src="${escapeAttr(logo)}">`:""}</div><div class="title"><h1>${escapeHtml(tituloPdf)}</h1><b>${escapeHtml(numeroPdf)}</b></div></header><div class="meta"><span><b>Fecha de solicitud:</b> ${escapeHtml(doc.fechaSolicitud||doc.fecha||"")}</span><span><b>${esOrdenProduccion?"Fecha de entrega:":"Válido hasta:"}</b> ${escapeHtml(doc.fechaEntrega||"Por definir")}</span><span><b>Asesor:</b> ${escapeHtml(doc.asesor||"")}</span>${esOrdenProduccion?`<span><b>Cotización:</b> ${escapeHtml(doc.idDocumento||"")}</span>`:`<span><b>Venta:</b> ${escapeHtml(doc.venta||"")}</span>`}</div><h2 class="section">Datos de contacto</h2><div class="client"><div class="client-subhead">Proveedor</div><div class="client-subhead">Cliente</div><div><b>GRUPO EMPRESARIAL LA CINTERIA S.A.S.</b></div><div><b>Identificación:</b> ${escapeHtml(doc.docCliente||"")}</div><div><b>NIT:</b> 900836104-0</div><div><b>Empresa:</b> ${escapeHtml(doc.empresa||"")}</div><div><b>Dirección:</b> Cra 53 # 49-47 oficina 666</div><div><b>Contacto:</b> ${escapeHtml(doc.nomCliente||"")}</div><div><b>Ciudad:</b> Medellín, Antioquia</div><div><b>Celular:</b> ${escapeHtml(doc.telCliente||"")}</div><div><b>Teléfono:</b> ${escapeHtml(contactoAsesor.telefono||"No registrado")}</div><div><b>Ciudad / País:</b> ${escapeHtml(doc.ciudadPais||"")}</div><div><b>Correo:</b> ${escapeHtml(contactoAsesor.email||"No registrado")}</div><div></div></div><h2 class="section">${esOrdenProduccion?"Productos y cantidades para producción":usaListaProductos?"Detalle del pedido":"Detalle de materiales y valores"}</h2><table><thead><tr>${encabezados}</tr></thead><tbody>${filas||`<tr><td colspan="${colspan}">Sin ${usaListaProductos?"productos":"materiales"} registrados</td></tr>`}</tbody></table>${htmlTotales}${htmlSpecs}${htmlNotas}${htmlImgs?`<h2 class="section">${esOrdenProduccion?"Diseños e imágenes de referencia":"Imágenes de referencia"}</h2><div class="gallery">${htmlImgs}</div>`:""}<footer class="footer">GRUPO EMPRESARIAL LA CINTERIA S.A.S. · NIT 900836104-0 · Cra 53 # 49-47 oficina 666, Medellín</footer></main><script>window.onload=async()=>{await Promise.all([...document.images].map(i=>i.decode?.().catch(()=>{})));window.getSelection()?.removeAllRanges();window.print()}<\/script></html>`);
   pop.document.close();
  }catch(e){pop.close();console.error(e);alert("No se pudo preparar el PDF: "+e.message);}
 }
@@ -6116,10 +6012,28 @@ function convertirImagenBase64(input){
   reader.readAsDataURL(file);
 }
 
+function quitarLogoConfigurado(){
+
+  logoBase64Temporal="";
+
+  document.getElementById("cfgLogoUrl").value="";
+  document.getElementById("cfgLogoFile").value="";
+
+  aplicarLogo("");
+
+  document.getElementById("cfgLogoStatus").classList.remove("hidden");
+
+}
+
 function aplicarLogo(src){
 
   const box=document.getElementById("boxLogo");
   const preview=document.getElementById("cfgPreviewLogo");
+  const botonQuitar=document.getElementById("btnQuitarLogo");
+  const estadoLogo=document.getElementById("cfgLogoStatus");
+
+  botonQuitar?.classList.toggle("hidden",!src);
+  estadoLogo?.classList.add("hidden");
 
   [box,preview].forEach(el=>{
 
