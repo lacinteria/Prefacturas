@@ -554,6 +554,7 @@ min-height:44px;
 #view-cotizacion{user-select:none}
 #view-cotizacion ::selection{background:transparent;color:inherit}
 @media(max-width:760px){.cot-materiales-tabla{min-width:850px}}
+
 </style>
 </head>
 <body>
@@ -1103,6 +1104,9 @@ const cacheConsultasReportes=new Map();
 const cacheAbonosReporte=new Map();
 const consultasReportesPendientes=new Map();
 const CACHE_REPORTES_TTL=60000;
+let listenerReporteCaja=null;
+let claveListenerReporteCaja=null;
+let tokenListenerReporteCaja=0;
 const cacheClientesPorDocumento=new Map();
 const cacheResultadosClientesBusqueda=new Map();
 const consultasClientesBusquedaPendientes=new Map();
@@ -1324,6 +1328,7 @@ function mostrarLogin(){ document.getElementById("loginModal").classList.remove(
 function ocultarLogin(){ document.getElementById("loginModal").classList.add("hidden"); }
 
 function logout(){
+  detenerListenerReporteCaja();
   currentUser=null;
   sessionStorage.removeItem(LS.session);
   mostrarLogin();
@@ -1378,6 +1383,8 @@ function showView(view){
 
   }
   if(view==="cotizacion"&&currentUser.role!=="admin"&&!areaWhatsApp){alert("Nueva Cotización está disponible para el área de WhatsApp.");return;}
+
+  if(view!=="reporte") detenerListenerReporteCaja();
 
   ["venta","cotizacion","reporte","usuarios","ajustes"].forEach(v=>
 
@@ -1499,6 +1506,50 @@ async function cargarDatosConsultaReporte(consulta,clave,forzarRecarga=false){
     consultasReportesPendientes.set(clave,pendiente);
   }
   return pendiente;
+}
+
+function detenerListenerReporteCaja(){
+  tokenListenerReporteCaja++;
+  if(listenerReporteCaja){
+    listenerReporteCaja();
+    listenerReporteCaja=null;
+  }
+  claveListenerReporteCaja=null;
+}
+
+function cargarReporteCajaEnVivo(consulta,clave){
+  const cacheado=cacheConsultasReportes.get(clave);
+  if(listenerReporteCaja&&claveListenerReporteCaja===clave&&cacheado)
+    return Promise.resolve(cacheado.datos);
+
+  detenerListenerReporteCaja();
+  const token=tokenListenerReporteCaja;
+  claveListenerReporteCaja=clave;
+
+  return new Promise((resolve,reject)=>{
+    let primeraRespuesta=true;
+    listenerReporteCaja=consulta.onSnapshot(snapshot=>{
+      if(token!==tokenListenerReporteCaja)return;
+      const datos=snapshot.docs.map(d=>({id:d.id,...d.data()}));
+      cacheConsultasReportes.set(clave,{at:Date.now(),datos});
+      if(primeraRespuesta){
+        primeraRespuesta=false;
+        resolve(datos);
+        return;
+      }
+      const vistaReporte=document.getElementById("view-reporte");
+      if(vistaReporte&&!vistaReporte.classList.contains("hidden"))
+        procesarReportes(false,true);
+    },error=>{
+      if(token!==tokenListenerReporteCaja)return;
+      if(primeraRespuesta){
+        primeraRespuesta=false;
+        reject(error);
+      }else{
+        console.error("Se perdió la actualización en vivo del reporte de Caja:",error);
+      }
+    });
+  });
 }
 
 async function actualizarMetaReporte(forzarRecarga=false){
@@ -3885,7 +3936,9 @@ async function procesarReportes(forzarRecarga=false){
 
 
 const claveConsulta=claveConsultaReporte(inicio,fin,asesor,area);
-const datos=await cargarDatosConsultaReporte(consulta,claveConsulta,forzarRecarga);
+const datos=currentUser.role==="caja"
+  ? await cargarReporteCajaEnVivo(consulta,claveConsulta)
+  : await cargarDatosConsultaReporte(consulta,claveConsulta,forzarRecarga);
 const abonos=await obtenerEventosAbonoReporte(inicio,fin,forzarRecarga);
 const datosConAbonos=[...datos,...abonos.filter(a=>{
   if(currentUser.role==="asesor"&&String(a.asesor||"").trim()!==String(currentUser.nombre||currentUser.username||"").trim())return false;
