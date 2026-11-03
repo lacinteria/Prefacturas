@@ -852,8 +852,9 @@ min-height:44px;
   </tbody></table></div>
   <button type="button" class="btn secondary" style="margin-top:10px" onclick="agregarFilaMaterialCotizacion()">＋ Agregar material</button>
   <p style="margin:5px 0;color:#b49b00;font-weight:700;font-style:italic">Nota: En pedidos por metros la producción puede variar +/- 1%-2%.</p>
+  <div id="cotEspecificacionesPersonalizadas"></div>
   </div>
-  <div id="cotEspecificacionesFields">
+  <div id="cotEspecificacionesFields" class="hidden" aria-hidden="true">
   <div class="section-title" style="margin-top:15px">Especificaciones para Producción</div>
   <div class="grid-3">
     <div class="field"><label>Color base</label><input type="text" id="cotColorBase"></div>
@@ -1827,6 +1828,7 @@ function agregarFilaMaterialCotizacion(){
   const numero=siguienteFilaMaterialCotizacion++;
   const fila=document.createElement("tr");
   fila.dataset.materialRow=String(numero);
+  fila.dataset.especificacionesActivas="true";
   fila.innerHTML=`
     <td><input aria-label="Tipo de material ${numero}" type="text" id="cotMaterialTipo${numero}"></td>
     <td><input aria-label="Medida ${numero}" type="text" id="cotMaterialMedida${numero}"></td>
@@ -1840,10 +1842,59 @@ function agregarFilaMaterialCotizacion(){
     fila,
     document.getElementById("cotFilaTotalMateriales")
   );
+  actualizarEspecificacionesPersonalizadasCotizacion();
+}
+
+const CAMPOS_ESPECIFICACION_MATERIAL=[
+  ["colorBase","Color base","text"],
+  ["medidaLogo","Medida logo","text"],
+  ["lineaCorte","Línea de corte (cm)","text"],
+  ["colorFondo","Color de fondo","text"],
+  ["orientacionLogo","Orientación del logo","text"],
+  ["cantidadCortes","Cantidad de cortes","number"],
+  ["colorLogo","Color del logo","text"],
+  ["distanciaLogos","Distancia entre logos (cm)","text"],
+  ["especificacionDiseno","Diseño","textarea"]
+];
+
+function obtenerEspecificacionesMaterialCotizacion(fila){
+  let especificaciones={};
+  try{especificaciones=JSON.parse(fila.dataset.especificaciones||"{}");}catch{}
+  CAMPOS_ESPECIFICACION_MATERIAL.forEach(([clave,,tipo])=>{
+    const campo=document.getElementById(`cotSpec${clave}${fila.dataset.materialRow}`);
+    if(campo)especificaciones[clave]=tipo==="number"?(Number(campo.value)||0):campo.value.trim();
+  });
+  return especificaciones;
+}
+
+function actualizarEspecificacionesPersonalizadasCotizacion(){
+  const contenedor=document.getElementById("cotEspecificacionesPersonalizadas");
+  if(!contenedor)return;
+  const filas=[...document.querySelectorAll("#cotMaterialesBody tr[data-material-row]")];
+  filas.forEach(fila=>{fila.dataset.especificaciones=JSON.stringify(obtenerEspecificacionesMaterialCotizacion(fila));});
+  const materialesConEspecificaciones=filas.filter(fila=>
+    String(document.getElementById(`cotMaterialTipo${fila.dataset.materialRow}`)?.value||"").trim()!==""
+    ||fila.dataset.especificacionesActivas==="true"
+  );
+  contenedor.innerHTML=materialesConEspecificaciones.map(fila=>{
+    const numero=fila.dataset.materialRow;
+    const especificaciones=obtenerEspecificacionesMaterialCotizacion(fila);
+    const tipoMaterial=document.getElementById(`cotMaterialTipo${numero}`)?.value.trim();
+    const medidaMaterial=document.getElementById(`cotMaterialMedida${numero}`)?.value.trim();
+    const titulo=[tipoMaterial||`Material ${numero}`,medidaMaterial].filter(Boolean).join(" · ");
+    return `<div class="card" style="margin:14px 0;padding:14px"><div class="section-title">Especificaciones · ${escapeHtml(titulo)}</div><div class="grid-3">${CAMPOS_ESPECIFICACION_MATERIAL.map(([clave,etiqueta,tipo])=>{const id=`cotSpec${clave}${numero}`;const valor=especificaciones[clave]??"";return `<div class="field"><label for="${id}">${etiqueta}</label>${tipo==="textarea"?`<textarea id="${id}" rows="1">${escapeHtml(valor)}</textarea>`:`<input id="${id}" type="${tipo}"${tipo==="number"?' min="0"':''} value="${escapeAttr(valor)}">`}</div>`;}).join("")}</div></div>`;
+  }).join("");
+}
+
+function especificacionesMaterialCotizacionTieneDatos(especificaciones){
+  return CAMPOS_ESPECIFICACION_MATERIAL.some(([clave,,tipo])=>tipo==="number"
+    ?Number(especificaciones?.[clave]||0)>0
+    :String(especificaciones?.[clave]||"").trim()!=="");
 }
 
 function eliminarFilaMaterialCotizacion(boton){
   boton.closest("tr[data-material-row]")?.remove();
+  actualizarEspecificacionesPersonalizadasCotizacion();
   calcularTotalesCotizacion();
 }
 
@@ -2319,13 +2370,36 @@ function editarCotizacion(id){
   document.getElementById("cotOtroOrigen").value=doc.detalleOrigenCliente||"";
   actualizarOtroOrigenCotizacion();
   const materiales=obtenerMaterialesCotizacion(doc);
+  const especificacionesGeneralesAnteriores={
+    colorBase:doc.colorBase||"",medidaLogo:doc.medidaLogo||"",lineaCorte:doc.lineaCorte||"",
+    colorFondo:doc.colorFondo||"",orientacionLogo:doc.orientacionLogo||"",cantidadCortes:doc.cantidadCortes||0,
+    colorLogo:doc.colorLogo||"",distanciaLogos:doc.distanciaLogos||"",especificacionDiseno:doc.especificacionDiseno||""
+  };
+  const hayEspecificacionesGeneralesAnteriores=Object.entries(especificacionesGeneralesAnteriores)
+    .some(([clave,valor])=>clave==="cantidadCortes"?Number(valor)>0:String(valor).trim()!=="");
+  const indiceMaterialParaMigrar=materiales.findIndex(material=>String(material.tipo||"").trim()!=="");
+  let migradasEspecificacionesGenerales=false;
   materiales.forEach((material,pos)=>{
     const n=pos===0?1:(agregarFilaMaterialCotizacion(),siguienteFilaMaterialCotizacion-1);
+    const filaMaterial=document.querySelector(`#cotMaterialesBody tr[data-material-row="${n}"]`);
+    let especificaciones={...(material.especificaciones||{})};
+    if(pos===indiceMaterialParaMigrar&&hayEspecificacionesGeneralesAnteriores){
+      especificaciones={...especificacionesGeneralesAnteriores,...especificaciones};
+      migradasEspecificacionesGenerales=true;
+    }
+    if(filaMaterial){
+      filaMaterial.dataset.especificaciones=JSON.stringify(especificaciones);
+      if(String(material.tipo||"").trim()||especificacionesMaterialCotizacionTieneDatos(especificaciones))filaMaterial.dataset.especificacionesActivas="true";
+    }
     const set=(sufijo,valor)=>{const campo=document.getElementById(`cot${sufijo}${n}`);if(campo)campo.value=valor??"";};
     set("MaterialTipo",material.tipo);set("MaterialMedida",material.medida);set("Metros",material.metros);set("Rollos",material.rollos);
     const iva=document.getElementById(`cotAplicarIva${n}`);if(iva)iva.checked=!!material.ivaAplicado;
     const unitario=document.getElementById(`cotUnitario${n}`);if(unitario)unitario.value=formatearValorCOP(material.valorUnitario||0);
   });
+  if(migradasEspecificacionesGenerales){
+    ["cotColorBase","cotMedidaLogo","cotLineaCorte","cotColorFondo","cotOrientacionLogo","cotCantidadCortes","cotColorLogo","cotDistanciaLogos","cotEspecificacionDiseno"].forEach(id=>{const campo=document.getElementById(id);if(campo)campo.value="";});
+  }
+  actualizarEspecificacionesPersonalizadasCotizacion();
   renderItemsCotizacion();
   actualizarModoVentaCotizacion();
   calcularTotalesCotizacion();
@@ -2354,9 +2428,12 @@ function cancelarEdicionCotizacion(){
   cotItemEditandoIndex=null;
   cotItemsActuales=[];
   document.querySelectorAll("#cotMaterialesBody tr[data-material-row]").forEach(fila=>{if(Number(fila.dataset.materialRow)>1)fila.remove();});
+  document.querySelectorAll("#cotMaterialesBody tr[data-material-row]").forEach(fila=>{delete fila.dataset.especificaciones;delete fila.dataset.especificacionesActivas;});
+  actualizarEspecificacionesPersonalizadasCotizacion();
   document.querySelectorAll("#view-cotizacion input").forEach(campo=>{if(campo.type==="file")campo.value="";else if(campo.type==="checkbox")campo.checked=false;else campo.value="";});
   document.querySelectorAll("#view-cotizacion select").forEach(campo=>campo.value="");
   document.querySelectorAll("#view-cotizacion textarea").forEach(campo=>campo.value="");
+  actualizarEspecificacionesPersonalizadasCotizacion();
   document.getElementById("cotItemCantidad").value="1";
   document.getElementById("cotFechaSolicitud").value=fechaHoy();
   document.getElementById("cotFechaSolicitud").readOnly=true;
@@ -2406,9 +2483,11 @@ async function guardarCotizacion(){
       ivaPct:document.getElementById(`cotAplicarIva${i}`).checked?19:0,
       valorTotal:parseValorCOP(document.getElementById(`cotValorTotal${i}`).value)
     };
+    if(String(material.tipo||"").trim()||fila.dataset.especificacionesActivas==="true")
+      material.especificaciones=obtenerEspecificacionesMaterialCotizacion(fila);
     const cantidad=material.metros;
     material.valorIva=material.ivaAplicado?Number((cantidad*material.valorUnitario*0.19).toFixed(2)):0;
-    if(material.tipo||material.medida||material.metros||material.rollos||material.valorUnitario)
+    if(material.tipo||material.medida||material.metros||material.rollos||material.valorUnitario||especificacionesMaterialCotizacionTieneDatos(material.especificaciones))
       materiales.push(material);
   });
 
@@ -2523,8 +2602,11 @@ async function guardarCotizacion(){
     document.querySelectorAll("#cotMaterialesBody tr[data-material-row]").forEach(fila=>{
       if(Number(fila.dataset.materialRow)>1) fila.remove();
     });
+    document.querySelectorAll("#cotMaterialesBody tr[data-material-row]").forEach(fila=>{delete fila.dataset.especificaciones;delete fila.dataset.especificacionesActivas;});
+    actualizarEspecificacionesPersonalizadasCotizacion();
     siguienteFilaMaterialCotizacion=2;
     document.querySelectorAll("#view-cotizacion select").forEach(select=>select.value="");
+    actualizarEspecificacionesPersonalizadasCotizacion();
     actualizarModoVentaCotizacion();
     document.querySelectorAll("#view-cotizacion textarea").forEach(textarea=>textarea.value="");
     document.getElementById("cotItemCantidad").value="1";
@@ -2553,8 +2635,8 @@ async function guardarCotizacion(){
 document.getElementById("cotClienteNombre").addEventListener("input",()=>buscarClientesCotizacion("nombre"));
 document.getElementById("cotNit").addEventListener("input",()=>buscarClientesCotizacion("documento"));
 document.getElementById("cotNit").addEventListener("blur",buscarClienteCotizacionPorDocumento);
-document.getElementById("view-cotizacion").addEventListener("input",()=>{calcularTotalesCotizacion();actualizarValidacionCotizacionSiVisible();});
-document.getElementById("view-cotizacion").addEventListener("change",()=>{calcularTotalesCotizacion();actualizarValidacionCotizacionSiVisible();});
+document.getElementById("view-cotizacion").addEventListener("input",event=>{if(/^cotMaterial(Tipo|Medida)\d+$/.test(event.target.id||""))actualizarEspecificacionesPersonalizadasCotizacion();calcularTotalesCotizacion();actualizarValidacionCotizacionSiVisible();});
+document.getElementById("view-cotizacion").addEventListener("change",event=>{if(/^cotMaterial(Tipo|Medida)\d+$/.test(event.target.id||""))actualizarEspecificacionesPersonalizadasCotizacion();calcularTotalesCotizacion();actualizarValidacionCotizacionSiVisible();});
 document.getElementById("view-cotizacion").addEventListener("focusout",event=>{
   if(/^cotUnitario\d+$/.test(event.target.id||"")||event.target.id==="cotItemPrecio"){
     formatearCampoCOP(event.target);
@@ -4057,7 +4139,7 @@ async function obtenerEventosAbonoReporte(inicio,fin,forzarRecarga=false){
   }
 }
 function abonoCotizacionAnulado(abono){return String(abono?.estado||"").trim().toLowerCase()==="anulada"||!!abono?.fechaAnulacion;}
-function convertirAbonoEnRegistroReporte(abono){return {id:`abono-${abono.id}`,idAbono:abono.id,idDocumento:abono.idDocumento,fecha:abono.fecha,fechaCreacion:abono.fechaHora||abono.fecha,tipoDoc:"Abono de cotización",estado:abonoCotizacionAnulado(abono)?"Anulada":"Pagada",nomCliente:abono.nomCliente||"",docCliente:abono.docCliente||"",asesor:abono.asesor||"",area:abono.area||"",formaPago:abono.formaPago||"",total:Number(abono.valor||0),esAbonoCotizacion:true};}
+function convertirAbonoEnRegistroReporte(abono){return {id:`abono-${abono.id}`,idAbono:abono.id,idDocumento:abono.idDocumento,fecha:abono.fecha,fechaCreacion:abono.fechaHora||abono.fecha,tipoDoc:"Abono de cotización",estado:abonoCotizacionAnulado(abono)?"Anulada":"Pagada",nomCliente:abono.nomCliente||"",docCliente:abono.docCliente||"",asesor:abono.asesor||"",area:abono.area||"",formaPago:abono.formaPago||"",total:Number(abono.valor||0),consecutivoFacturaElectronicaExterno:abono.consecutivoFacturaElectronicaExterno||"",fechaRegistroFacturaElectronicaExterna:abono.fechaRegistroFacturaElectronicaExterna||"",registradoFacturaElectronicaPor:abono.registradoFacturaElectronicaPor||"",esAbonoCotizacion:true};}
 
 function cumpleFiltroEstadoReporte(documento,filtro){
   if(filtro==="TODOS")return true;
@@ -4963,7 +5045,8 @@ function renderTablaDetalleRemisiones(datos){
         ${r.tipoDoc==="Cotización"&&puedeGestionarCotizacion(r)&&r.estado!=="Anulada"?`<button class="btn small primary" onclick="editarCotizacion('${escapeAttr(r.idDocumento||r.id||"")}')">Editar cotización</button>`:""}
 
         ${currentUser.role==="caja"&&r.tipoDoc==="Factura Electrónica"&&r.estado==="Pagada"&&!r.consecutivoFacturaElectronicaExterno?`<button class="btn small danger" onclick="registrarFacturaElectronicaExterna('${escapeAttr(r.idDocumento||r.id||"")}')">Registrar FEV DIAN</button>`:""}
-        ${r.tipoDoc==="Factura Electrónica"&&r.consecutivoFacturaElectronicaExterno?`<small>FVE DIAN: ${escapeHtml(r.consecutivoFacturaElectronicaExterno)}</small>`:""}
+        ${currentUser.role==="caja"&&r.esAbonoCotizacion&&normalizarTexto(r.formaPago)==="sas transferencia"&&r.estado!=="Anulada"&&!r.consecutivoFacturaElectronicaExterno?`<button class="btn small danger" onclick="registrarFveDianAbono('${escapeAttr(r.idAbono||"")}')">Registrar FEV DIAN</button>`:""}
+        ${(r.tipoDoc==="Factura Electrónica"||r.esAbonoCotizacion)&&r.consecutivoFacturaElectronicaExterno?`<small>FVE DIAN: ${escapeHtml(r.consecutivoFacturaElectronicaExterno)}</small>`:""}
 
         ${
           r.esAbonoCotizacion
@@ -5253,6 +5336,44 @@ async function registrarFacturaElectronicaExterna(id){
   }
 }
 
+async function registrarFveDianAbono(idAbono){
+  if(currentUser?.role!=="caja"){
+    alert("Esta opción está disponible solo para Caja.");
+    return;
+  }
+  const abono=datosRemisiones.find(r=>r.esAbonoCotizacion&&String(r.idAbono)===String(idAbono));
+  if(!abono||normalizarTexto(abono.formaPago)!=="sas transferencia"||abono.estado==="Anulada"){
+    alert("Solo puedes registrar el FVE DIAN de un abono vigente realizado por SAS TRANSFERENCIA.");
+    return;
+  }
+  if(abono.consecutivoFacturaElectronicaExterno){
+    alert(`Este abono ya tiene el FVE DIAN ${abono.consecutivoFacturaElectronicaExterno}.`);
+    return;
+  }
+  const consecutivo=prompt(`Ingresa el número de 3 o 4 dígitos generado por el facturador para el abono de ${abono.idDocumento}:`);
+  if(consecutivo===null)return;
+  const consecutivoLimpio=consecutivo.trim();
+  if(!/^\d{3,4}$/.test(consecutivoLimpio)){
+    alert("El número del facturador debe contener exactamente 3 o 4 dígitos numéricos.");
+    return;
+  }
+  if(!confirm(`Confirma que registraste en el facturador el abono de ${abono.idDocumento} por ${money(abono.total)} con el consecutivo ${consecutivoLimpio}?`))return;
+  try{
+    exigirSupabase();
+    const {error}=await supabaseClient.rpc("registrar_fve_dian_abono",{
+      p_id_abono:idAbono,
+      p_consecutivo:consecutivoLimpio
+    });
+    if(error)throw error;
+    cacheAbonosReporte.clear();
+    await procesarReportes(true);
+    alert(`Abono registrado con el consecutivo FVE DIAN ${consecutivoLimpio}.`);
+  }catch(error){
+    console.error("No se pudo registrar el FVE DIAN del abono:",error);
+    alert("No se pudo guardar el consecutivo FVE DIAN del abono: "+error.message);
+  }
+}
+
 /* Agrega botón Anular, exclusivo para Admin*/
 
 async function anularDocumento(id){
@@ -5521,8 +5642,18 @@ async function generarPDFCotizacion(id,tipoPdf="cotizacion",ventanaPreabierta=nu
     ["Cantidad de cortes",doc.cantidadCortes],["Color del logo",doc.colorLogo],
     ["Distancia entre logos",doc.distanciaLogos],["Diseño",doc.especificacionDiseno]
   ].filter(([,valor])=>valor!==undefined&&valor!==null&&String(valor).trim()!=="");
-  const htmlSpecs=esOrdenProduccion&&specs.length
-    ?`<h2 class="section">Especificaciones para producción</h2><div class="specs">${specs.map(([nombre,valor])=>`<div><b>${escapeHtml(nombre)}:</b> ${escapeHtml(valor)}</div>`).join("")}</div>`:"";
+  const specsPorMaterial=obtenerMaterialesCotizacion(doc)
+    .filter(material=>material.especificaciones&&especificacionesMaterialCotizacionTieneDatos(material.especificaciones))
+    .map((material,i)=>{
+      const valores=CAMPOS_ESPECIFICACION_MATERIAL
+        .map(([clave,nombre])=>[nombre,material.especificaciones[clave]])
+        .filter(([,valor])=>valor!==undefined&&valor!==null&&String(valor).trim()!=="");
+      if(!valores.length)return "";
+      const titulo=[material.tipo||`Material ${i+1}`,material.medida].filter(Boolean).join(" · ");
+      return `<div class="material-specs"><h3>${escapeHtml(titulo)}</h3><div class="specs">${valores.map(([nombre,valor])=>`<div><b>${escapeHtml(nombre)}:</b> ${escapeHtml(valor)}</div>`).join("")}</div></div>`;
+    }).filter(Boolean).join("");
+  const htmlSpecs=esOrdenProduccion&&(specs.length||specsPorMaterial)
+    ?`<h2 class="section">Especificaciones para producción</h2>${specs.length?`<div class="specs">${specs.map(([nombre,valor])=>`<div><b>${escapeHtml(nombre)}:</b> ${escapeHtml(valor)}</div>`).join("")}</div>`:""}${specsPorMaterial}`:"";
   const htmlTotales=esOrdenProduccion?"":`<div class="totals"><div class="line"><span>Subtotal</span><b>${money(resumenFiscal.subtotal)}</b></div><div class="line"><span>IVA</span><b>${money(resumenFiscal.iva)}</b></div><div class="line grand"><span>TOTAL</span><b>${money(doc.total||0)}</b></div></div>`;
   const htmlNotas=doc.notas?`<h2 class="section">${esOrdenProduccion?"Indicaciones para producción":"Observaciones"}</h2><p>${escapeHtml(doc.notas)}</p>`:"";
   pop.document.open();
