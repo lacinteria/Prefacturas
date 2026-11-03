@@ -5228,12 +5228,12 @@ async function registrarFacturaElectronicaExterna(id){
   if(!confirm(`Confirma que la factura ${id} ya fue registrada en el sistema de facturación electrónica con el consecutivo ${consecutivoLimpio}?`))return;
   try{
     exigirSupabase();
-    const fechaRegistro=new Date().toISOString();
-    await db.collection("remisiones").doc(id).update({
-      consecutivoFacturaElectronicaExterno:consecutivoLimpio,
-      fechaRegistroFacturaElectronicaExterna:fechaRegistro,
-      registradoFacturaElectronicaPor:currentUser.nombre||currentUser.username||"Caja"
+    const {data,error}=await supabaseClient.rpc("registrar_fve_dian",{
+      p_id_documento:id,
+      p_consecutivo:consecutivoLimpio
     });
+    if(error)throw error;
+    const fechaRegistro=data?.fechaRegistro||new Date().toISOString();
     documento.consecutivoFacturaElectronicaExterno=consecutivoLimpio;
     documento.fechaRegistroFacturaElectronicaExterna=fechaRegistro;
     documento.registradoFacturaElectronicaPor=currentUser.nombre||currentUser.username||"Caja";
