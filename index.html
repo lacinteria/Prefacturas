@@ -995,6 +995,11 @@ min-height:44px;
 </div>
 <div class="card" id="panelMetasReportes" style="margin-bottom:16px">
   <div class="section-title" id="metaTituloReporte">Metas de la empresa <span id="metaPeriodoReporte" style="font-weight:400;color:var(--ink-soft)"></span></div>
+  <div style="display:flex;align-items:end;gap:10px;flex-wrap:wrap;margin:0 0 12px">
+    <div class="field" style="margin:0;max-width:220px"><label for="metaMesSelector">Consultar mes</label><input type="month" id="metaMesSelector" onchange="actualizarMetaReporte(true)"></div>
+    <span id="metaCierreEstado" style="font-size:12px;color:var(--ink-soft);flex:1;min-width:240px">Cargando estado del cierre…</span>
+    <button type="button" class="btn primary hidden" id="btnCerrarMetaMes" onclick="guardarCierreMetaEmpresa()">Guardar cierre del mes</button>
+  </div>
   <div class="grid-4">
     <div class="kpi-card"><div class="kpi-title">Meta general mensual</div><div class="kpi-value" id="metaGeneralReporte">$0</div></div>
     <div class="kpi-card"><div class="kpi-title">Vendido este mes · Empresa</div><div class="kpi-value" id="metaVendidoMesReporte">$0</div><small id="metaEsperadoMesReporte">Esperado a la fecha: $0</small></div>
@@ -1771,10 +1776,18 @@ function obtenerFestivosColombia(anio){
 
 function obtenerPeriodoMetaActual(){
   const ahora=new Date();
-  const anio=ahora.getFullYear();
-  const mes=ahora.getMonth();
+  const selector=document.getElementById("metaMesSelector");
+  if(selector&&!selector.value){
+    selector.value=`${ahora.getFullYear()}-${String(ahora.getMonth()+1).padStart(2,"0")}`;
+    selector.max=selector.value;
+  }
+  const partes=String(selector?.value||`${ahora.getFullYear()}-${String(ahora.getMonth()+1).padStart(2,"0")}`).split("-").map(Number);
+  const anio=partes[0]||ahora.getFullYear();
+  const mes=Math.max(0,Math.min(11,(partes[1]||ahora.getMonth()+1)-1));
+  const esMesActual=anio===ahora.getFullYear()&&mes===ahora.getMonth();
   const inicio=new Date(anio,mes,1);
   const fin=new Date(anio,mes+1,0);
+  const fechaCorte=esMesActual?ahora:fin;
   const festivos=obtenerFestivosColombia(anio);
   let diasLaborales=0;
   let diasLaboralesTranscurridos=0;
@@ -1782,19 +1795,21 @@ function obtenerPeriodoMetaActual(){
     const fecha=new Date(anio,mes,dia);
     if(fecha.getDay()!==0&&!festivos.has(fechaMetaKey(fecha))){
       diasLaborales++;
-      if(dia<=ahora.getDate())diasLaboralesTranscurridos++;
+      if(dia<=fechaCorte.getDate())diasLaboralesTranscurridos++;
     }
   }
   return {
     inicio:fechaMetaKey(inicio),
     fin:fechaMetaKey(fin),
-    hoy:fechaMetaKey(ahora),
+    hoy:fechaMetaKey(fechaCorte),
     anio,
+    mes,
+    esMesActual,
     festivos,
     diasLaborales,
     diasLaboralesTranscurridos,
-    hoyLaboral:ahora.getDay()!==0&&!festivos.has(fechaMetaKey(ahora)),
-    etiqueta:ahora.toLocaleDateString("es-CO",{month:"long",year:"numeric"})
+    hoyLaboral:fechaCorte.getDay()!==0&&!festivos.has(fechaMetaKey(fechaCorte)),
+    etiqueta:inicio.toLocaleDateString("es-CO",{month:"long",year:"numeric"})
   };
 }
 
@@ -1878,6 +1893,10 @@ async function actualizarMetaReporte(forzarRecarga=false){
   document.getElementById("tablaMetasAsesoresReporte").innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--ink-soft)">Cargando presupuestos...</td></tr>';
   try{
     exigirSupabase();
+    if(periodo.esMesActual){
+      const {error:metaError}=await supabaseClient.rpc("asegurar_meta_empresa_mes_actual");
+      if(metaError)throw metaError;
+    }
     const {data:resumenEmpresa,error:resumenError}=await supabaseClient.rpc("resumen_meta_empresa_global",{
       p_inicio:periodo.inicio,
       p_hoy:periodo.hoy
@@ -1886,6 +1905,7 @@ async function actualizarMetaReporte(forzarRecarga=false){
     resumenMetaEmpresaGlobal=resumenEmpresa||null;
     if(!resumenMetaEmpresaGlobal)throw new Error("No se recibió el resumen global de metas.");
     metaGeneralMensualEmpresa=Math.max(0,Number(resumenMetaEmpresaGlobal.metaGeneralMensual||0));
+    actualizarEstadoCierreMeta(periodo);
     let consulta;
     let claveMeta=`meta:${currentUser.role}:${currentUser.id||currentUser.username||""}:${periodo.inicio}:${periodo.fin}`;
     if(currentUser.role==="asesor"){
@@ -1919,7 +1939,46 @@ async function actualizarMetaReporte(forzarRecarga=false){
   }catch(error){
     console.error("No se pudieron cargar las metas:",error);
     resumenMetaEmpresaGlobal=null;
-    document.getElementById("metaEstadoReporte").textContent="No se pudo cargar el avance global de la empresa. Verifica que la migración de metas esté aplicada.";
+    actualizarEstadoCierreMeta(periodo);
+    document.getElementById("metaEstadoReporte").textContent="No se pudo cargar el avance global de la empresa. Verifica que la migración 014 de historial de metas esté aplicada.";
+  }
+}
+
+function actualizarEstadoCierreMeta(periodo=obtenerPeriodoMetaActual()){
+  const estado=document.getElementById("metaCierreEstado");
+  const boton=document.getElementById("btnCerrarMetaMes");
+  if(!estado||!boton)return;
+  const cerrado=!!resumenMetaEmpresaGlobal?.cerrado;
+  const puedeCerrar=currentUser?.role==="admin"&&!periodo.esMesActual&&!cerrado&&!!resumenMetaEmpresaGlobal&&resumenMetaEmpresaGlobal.metaRegistrada!==false;
+  boton.classList.toggle("hidden",!puedeCerrar);
+  if(cerrado){
+    const fecha=resumenMetaEmpresaGlobal.fechaCierre?new Date(resumenMetaEmpresaGlobal.fechaCierre).toLocaleString("es-CO"):"";
+    estado.textContent=`Cierre guardado${fecha?` el ${fecha}`:""}. Estas cifras quedan conservadas para el historial.`;
+  }else if(periodo.esMesActual){
+    estado.textContent="Mes en curso: cifras globales actualizadas al consultar el reporte.";
+  }else if(resumenMetaEmpresaGlobal?.metaRegistrada===false){
+    estado.textContent="No hay una meta guardada para este mes. Las ventas se pueden consultar, pero no se puede conservar un cierre completo.";
+  }else{
+    estado.textContent="Vista previa del mes con los datos disponibles. Admin puede guardar el cierre para conservar estas cifras.";
+  }
+}
+
+async function guardarCierreMetaEmpresa(){
+  if(currentUser?.role!=="admin")return;
+  const periodo=obtenerPeriodoMetaActual();
+  if(periodo.esMesActual){alert("El cierre solo se puede guardar cuando el mes haya terminado.");return;}
+  if(resumenMetaEmpresaGlobal?.cerrado){alert("Este mes ya tiene un cierre guardado.");return;}
+  const mes=periodo.etiqueta;
+  if(!confirm(`¿Guardar el cierre de ${mes} con las cifras que muestra el reporte? El cierre quedará conservado para todos los usuarios.`))return;
+  try{
+    exigirSupabase();
+    const {error}=await supabaseClient.rpc("guardar_cierre_meta_empresa",{p_inicio:periodo.inicio});
+    if(error)throw error;
+    await actualizarMetaReporte(true);
+    alert(`El cierre de ${mes} quedó guardado.`);
+  }catch(error){
+    console.error("No se pudo guardar el cierre mensual de la empresa:",error);
+    alert("No se pudo guardar el cierre del mes: "+error.message);
   }
 }
 
@@ -1950,13 +2009,14 @@ function renderizarMetaReporte(documentos,periodo=obtenerPeriodoMetaActual()){
   document.getElementById("metaTituloReporte").firstChild.textContent="Metas de la empresa ";
   document.getElementById("metaTablaTituloReporte").textContent=currentUser?.role==="asesor"?"Mi presupuesto mensual":"Presupuesto mensual por asesor";
   document.getElementById("metaGeneralReporte").previousElementSibling.textContent="Meta general mensual";
-  document.getElementById("metaVendidoMesReporte").previousElementSibling.textContent="Vendido este mes · Empresa";
+  document.getElementById("metaVendidoMesReporte").previousElementSibling.textContent=`Vendido ${periodo.esMesActual?"este mes":"en el mes"} · Empresa`;
   document.getElementById("metaPorcentajeMesReporte").previousElementSibling.textContent="Cumplimiento mensual · Empresa";
   document.getElementById("metaPeriodoReporte").textContent=`· ${periodo.etiqueta}`;
+  document.getElementById("metaDiariaReporte").previousElementSibling.textContent=periodo.esMesActual?"Meta diaria / vendido hoy":"Meta diaria / vendido último día";
   document.getElementById("metaGeneralReporte").textContent=money(meta);
   document.getElementById("metaVendidoMesReporte").textContent=money(vendidoMes);
   document.getElementById("metaPorcentajeMesReporte").textContent=meta>0?`${cumplimientoMes.toFixed(1)}%`:"Sin meta";
-  document.getElementById("metaEsperadoMesReporte").textContent=`Esperado a la fecha: ${money(esperadoMes)}`;
+  document.getElementById("metaEsperadoMesReporte").textContent=`${periodo.esMesActual?"Esperado a la fecha":"Esperado al cierre"}: ${money(esperadoMes)}`;
   document.getElementById("metaRestanteMesReporte").textContent=meta>0
     ? (vendidoMes>=meta?`Restante: $0 · 0.0% · Meta superada por ${money(vendidoMes-meta)}`:`Restante para la meta: ${money(restanteMeta)} · ${restantePorcentaje.toFixed(1)}%`)
     : "Configura una meta mensual para ver el porcentaje restante";
@@ -1968,8 +2028,13 @@ function renderizarMetaReporte(documentos,periodo=obtenerPeriodoMetaActual()){
   if(progreso) progreso.setAttribute("aria-valuenow",String(Math.round(porcentajeBarra)));
   if(progreso) progreso.setAttribute("aria-label","Cumplimiento de la meta mensual de la empresa");
   document.getElementById("metaEstadoReporte").textContent=meta>0
-    ? "Avance global actualizado al consultar el reporte. Incluye remisiones y cotizaciones totalmente pagadas de todas las áreas; excluye pendientes y anuladas."
-    : "La empresa aún no ha configurado su meta general mensual.";
+    ? (resumenMetaEmpresaGlobal?.cerrado
+      ? "Cierre mensual conservado. Incluye remisiones y cotizaciones totalmente pagadas de todas las áreas; excluye pendientes y anuladas."
+      : "Avance global actualizado al consultar el reporte. Incluye remisiones y cotizaciones totalmente pagadas de todas las áreas; excluye pendientes y anuladas.")
+    : (resumenMetaEmpresaGlobal?.metaRegistrada===false
+      ? "No hay una meta histórica guardada para este mes; el valor vendido sí se calcula con los documentos disponibles."
+      : "La empresa aún no ha configurado su meta general mensual.");
+  actualizarEstadoCierreMeta(periodo);
 
   let asesores=usuariosMetaReporte;
   if(currentUser.role==="asesor")
@@ -2555,9 +2620,32 @@ function puedeGestionarCotizacion(doc){
   return identidadUsuario.some(nombre=>identidadAsesor.includes(nombre));
 }
 
-function editarCotizacion(id){
-  const doc=datosRemisiones.find(d=>(d.idDocumento||d.id)===id);
-  if(!doc||doc.tipoDoc!=="Cotización"){alert("No se encontró la cotización para editar.");return;}
+async function obtenerCotizacionParaAccion(id){
+  const idDocumento=String(id||"").trim();
+  if(!idDocumento)return null;
+  exigirSupabase();
+  const snap=await db.collection("remisiones").doc(idDocumento).get();
+  if(!snap.exists)return null;
+  const datos=snap.data()||{};
+  const cotizacion={...datos,id:snap.id,idDocumento:String(datos.idDocumento||snap.id).trim()};
+  const indice=datosRemisiones.findIndex(doc=>String(doc.idDocumento||doc.id||"").trim()===cotizacion.idDocumento);
+  if(indice>=0)datosRemisiones[indice]=cotizacion;
+  else datosRemisiones.push(cotizacion);
+  return cotizacion;
+}
+
+async function editarCotizacion(id){
+  let doc;
+  try{doc=await obtenerCotizacionParaAccion(id);}
+  catch(error){
+    console.error("No se pudo cargar la cotización para editar desde Supabase:",error);
+    alert("No se pudo consultar la cotización en Supabase: "+error.message);
+    return;
+  }
+  if(!doc||String(doc.tipoDoc||"").trim()!=="Cotización"){
+    alert("No se encontró una cotización con ese número en Supabase.");
+    return;
+  }
   if(!puedeGestionarCotizacion(doc)){alert("Solo Administración o el asesor de WhatsApp que creó esta cotización pueden editarla.");return;}
   if(doc.estado==="Anulada"){alert("No se puede editar una cotización anulada.");return;}
   cotizacionEditandoId=doc.idDocumento||id;
@@ -5383,22 +5471,32 @@ async function registrarAbonoCotizacion(){
 }
 
 async function crearOrdenProduccionCotizacion(id){
-  const cot=datosRemisiones.find(d=>(d.idDocumento||d.id)===id);
-  if(!cot||cot.tipoDoc!=="Cotización"){alert("La orden de producción solo se crea desde una cotización.");return;}
+  let cot;
+  try{cot=await obtenerCotizacionParaAccion(id);}
+  catch(error){
+    console.error("No se pudo cargar la cotización para crear la orden desde Supabase:",error);
+    alert("No se pudo consultar la cotización en Supabase: "+error.message);
+    return;
+  }
+  if(!cot||String(cot.tipoDoc||"").trim()!=="Cotización"){
+    alert("No se encontró una cotización con ese número en Supabase.");
+    return;
+  }
   if(!puedeGestionarCotizacion(cot)){alert("Solo Administración o el asesor de WhatsApp que creó la cotización pueden crear la orden de producción.");return;}
-  if(!confirm(`¿Crear la orden de producción para ${cot.idDocumento}? La cotización seguirá en estado Pendiente.`))return;
+  const idCotizacion=cot.idDocumento;
+  if(!confirm(`¿Crear la orden de producción para ${idCotizacion}? La cotización seguirá en estado Pendiente.`))return;
   const ventana=window.open("","_blank");
   if(!ventana){alert("Permite las ventanas emergentes para generar el PDF de producción.");return;}
   try{
-    const resultado=await operarCotizacion(id,"crear_orden");
+    const resultado=await operarCotizacion(idCotizacion,"crear_orden");
     const ordenProduccion=resultado.ordenProduccion;
     cot.ordenProduccion=ordenProduccion;
     cot.estado="Pendiente";
     cacheRemisiones=null;
     cacheConsultasReportes.clear();
-    await generarPDFCotizacion(id,"produccion",ventana);
+    await generarPDFCotizacion(idCotizacion,"produccion",ventana);
     await procesarReportes(true);
-    await verDetalleDoc(id);
+    await verDetalleDoc(idCotizacion);
   }catch(error){
     ventana.close();
     console.error("No se pudo crear la orden de producción:",error);
@@ -5816,8 +5914,19 @@ function obtenerMaterialesCotizacion(doc){
   return Array.isArray(doc?.items)?doc.items.map(item=>({tipo:item.tipoProducto||"Producto",medida:item.descripcion||"",metros:Number(item.cantidad)||0,rollos:"",valorUnitario:Number(item.precioUnitario)||0,valorTotal:Number(item.subtotal)||0,ivaAplicado:!!item.ivaAplicado,valorIva:item.ivaAplicado?Number(item.cantidad||0)*Number(item.precioUnitario||0)*0.19:0})):[];
 }
 async function generarPDFCotizacion(id,tipoPdf="cotizacion",ventanaPreabierta=null){
- const doc=datosRemisiones.find(d=>(d.idDocumento||d.id)===id);
- if(!doc){if(ventanaPreabierta)ventanaPreabierta.close();alert("No se encontró la cotización.");return;}
+ let doc;
+ try{doc=await obtenerCotizacionParaAccion(id);}
+ catch(error){
+  if(ventanaPreabierta)ventanaPreabierta.close();
+  console.error("No se pudo cargar la cotización para generar el PDF:",error);
+  alert("No se pudo consultar la cotización en Supabase: "+error.message);
+  return;
+ }
+ if(!doc||String(doc.tipoDoc||"").trim()!=="Cotización"){
+  if(ventanaPreabierta)ventanaPreabierta.close();
+  alert("No se encontró una cotización con ese número en Supabase.");
+  return;
+ }
  const esOrdenProduccion=tipoPdf==="produccion";
  const puedeGenerarPdf=puedeGestionarCotizacion(doc);
  if(!puedeGenerarPdf){if(ventanaPreabierta)ventanaPreabierta.close();alert("Solo Administración o el asesor de WhatsApp que creó esta cotización pueden acceder a sus PDF.");return;}
