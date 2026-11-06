@@ -965,12 +965,40 @@ min-height:44px;
     📊 Descargar Excel
   </button>
 </div>
+<div class="card hidden" id="panelCierreCaja" style="margin-top:16px">
+  <div class="section-title">Cierre del día · Caja</div>
+  <p style="margin:0 0 12px;color:var(--ink-soft);font-size:13px">Compara los pagos registrados hoy con el dinero y los soportes que tienes físicamente. Las cotizaciones se cuentan por sus abonos recibidos; se excluyen documentos anulados y pendientes.</p>
+  <div class="grid-3" style="margin-bottom:12px">
+    <div class="kpi-card"><div class="kpi-title">Fecha del cierre</div><div class="kpi-value" id="cierreCajaFecha">—</div></div>
+    <div class="kpi-card"><div class="kpi-title">Área de Caja</div><div class="kpi-value" id="cierreCajaArea">—</div></div>
+    <div class="kpi-card"><div class="kpi-title">Estado</div><div class="kpi-value" id="cierreCajaEstado">Cargando…</div></div>
+  </div>
+  <div id="cierreCajaFormulario">
+    <div class="grid-3" style="align-items:end">
+      <div class="field"><label>Base inicial de caja ($)</label><div class="currency-input"><span>$</span><input type="text" id="cierreCajaBaseInicial" inputmode="numeric" placeholder="0" onblur="formatearCampoCOP(this)" oninput="actualizarVistaPreviaCierreCaja()"></div><small>Se suma al efectivo esperado. El efectivo contado debe incluir esta base.</small></div>
+      <div class="kpi-card"><div class="kpi-title">Total efectivo en caja</div><div class="kpi-value" id="cierreCajaTotalEsperado">$0</div></div>
+      <div class="kpi-card"><div class="kpi-title">Total contado</div><div class="kpi-value" id="cierreCajaTotalContado">$0</div></div>
+    </div>
+    <div class="section-title" style="margin-top:12px">Pagos registrados para el cierre</div>
+    <div class="table-wrap" style="margin:12px 0"><table><thead><tr><th>Hora</th><th>Documento</th><th>Tipo</th><th>Cliente</th><th>Método</th><th class="num">Valor</th></tr></thead><tbody id="cierreCajaTablaMovimientos"><tr><td colspan="6" style="text-align:center">Cargando pagos del día…</td></tr></tbody></table></div>
+    <div class="table-wrap" style="margin:12px 0"><table><thead><tr><th>Método de pago</th><th class="num">Registrado hoy</th><th class="num">Esperado con base</th><th class="num">Conteo real</th><th class="num">Diferencia</th></tr></thead><tbody id="cierreCajaTablaMetodos"><tr><td colspan="5" style="text-align:center">Cargando pagos del día…</td></tr></tbody></table></div>
+    <div class="grid-2" style="align-items:end">
+      <div class="field"><label>Observaciones</label><textarea id="cierreCajaObservaciones" rows="2" placeholder="Obligatorias si hay diferencias"></textarea></div>
+      <div class="kpi-card"><div class="kpi-title">Diferencia total</div><div class="kpi-value" id="cierreCajaDiferencia">$0</div></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;flex-wrap:wrap">
+      <button type="button" class="btn secondary" onclick="cargarCierreCaja(true)">Actualizar valores del día</button>
+      <button type="button" class="btn primary" id="btnCrearCierreCaja" onclick="crearCierreCaja()">Cerrar caja y generar comprobante</button>
+    </div>
+  </div>
+  <div id="cierreCajaComprobante" class="hidden"></div>
+</div>
 <div class="card" id="panelMetasReportes" style="margin-bottom:16px">
   <div class="section-title" id="metaTituloReporte">Metas de la empresa <span id="metaPeriodoReporte" style="font-weight:400;color:var(--ink-soft)"></span></div>
   <div class="grid-4">
     <div class="kpi-card"><div class="kpi-title">Meta general mensual</div><div class="kpi-value" id="metaGeneralReporte">$0</div></div>
-    <div class="kpi-card"><div class="kpi-title">Vendido este mes</div><div class="kpi-value" id="metaVendidoMesReporte">$0</div></div>
-    <div class="kpi-card"><div class="kpi-title">Cumplimiento mensual</div><div class="kpi-value" id="metaPorcentajeMesReporte">0%</div></div>
+    <div class="kpi-card"><div class="kpi-title">Vendido este mes · Empresa</div><div class="kpi-value" id="metaVendidoMesReporte">$0</div><small id="metaEsperadoMesReporte">Esperado a la fecha: $0</small></div>
+    <div class="kpi-card"><div class="kpi-title">Cumplimiento mensual · Empresa</div><div class="kpi-value" id="metaPorcentajeMesReporte">0%</div><small id="metaRestanteMesReporte">Restante para la meta: $0 · 0%</small></div>
     <div class="kpi-card"><div class="kpi-title">Meta diaria / vendido hoy</div><div class="kpi-value" id="metaDiariaReporte">$0 / $0</div><small id="metaPorcentajeDiaReporte">0% de cumplimiento</small></div>
   </div>
   <div class="meta-progress-track" role="progressbar" aria-label="Cumplimiento de meta mensual de la empresa" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="meta-progress-fill" id="metaBarraReporte"></div></div>
@@ -1033,7 +1061,7 @@ min-height:44px;
 <div class="field"><label>Rol <span class="req">*</span></label><select id="usrRole"><option value="asesor">Asesor</option><option value="caja">Caja</option><option value="admin">Administrador</option></select></div>
 <div class="field"><label>Área asignada <span class="req">*</span></label><input type="text" id="usrArea" placeholder="ej. General, Bordados, Ventas..." required></div>
 <div class="field"><label>Teléfono de contacto para PDF</label><input type="tel" id="usrTelefono" autocomplete="tel"></div>
-<div class="field"><label>Correo de contacto para PDF</label><input type="email" id="usrEmail" autocomplete="email"></div>
+<div class="field"><label>Correo de contacto para PDF</label><input type="email" id="usrEmail" autocomplete="email"><small>Al editar, déjalo vacío para conservar el acceso actual. El correo es obligatorio al crear un usuario.</small></div>
 <div class="field"><label>Presupuesto Mensual</label><input type="number" id="usrPresupuestoMensual" min="0" step="1000" placeholder="ej. 20000000"></div>
 <button type="submit" class="btn primary">Guardar Usuario</button><button type="button" class="btn secondary hidden" id="btnCancelarEdicion" onclick="cancelarEdicionUsuario()">Cancelar edición</button>
 </form></div>
@@ -1108,6 +1136,7 @@ let cargaUsuariosPendiente=null;
 let documentosMetaReporte=[];
 let usuariosMetaReporte=[];
 let metaGeneralMensualEmpresa=0;
+let resumenMetaEmpresaGlobal=null;
 const cacheConsultasReportes=new Map();
 const cacheAbonosReporte=new Map();
 const consultasReportesPendientes=new Map();
@@ -1115,6 +1144,7 @@ const CACHE_REPORTES_TTL=60000;
 let listenerReporteCaja=null;
 let claveListenerReporteCaja=null;
 let tokenListenerReporteCaja=0;
+let cierreCajaResumenActual=null;
 const cacheClientesPorDocumento=new Map();
 const cacheResultadosClientesBusqueda=new Map();
 const consultasClientesBusquedaPendientes=new Map();
@@ -1324,9 +1354,17 @@ async function guardarUsuarioDB(user){
 async function eliminarUsuarioDB(id){
   exigirSupabase();
   cacheUsuarios=null;
-  const {data,error}=await supabaseClient.functions.invoke("admin-users",{body:{action:"delete",id}});
+  const {data,error}=await supabaseClient.functions.invoke("admin-users",{body:{action:"set-active",id,activo:false}});
   if(error){let detalle=error.message;try{const body=await error.context?.clone?.().json();detalle=body?.error||detalle;}catch{}throw new Error(detalle);}
   if(data?.error)throw new Error(data.error);
+}
+
+async function cambiarEstadoUsuarioDB(id,activo){
+  exigirSupabase();
+  const {data,error}=await supabaseClient.functions.invoke("admin-users",{body:{action:"set-active",id,activo}});
+  if(error){let detalle=error.message;try{const body=await error.context?.clone?.().json();detalle=body?.error||detalle;}catch{}throw new Error(detalle);}
+  if(data?.error)throw new Error(data.error);
+  cacheUsuarios=null;
 }
 
 
@@ -1459,6 +1497,10 @@ function ocultarLogin(){ document.getElementById("loginModal").classList.add("hi
 
 async function logout(){
   detenerListenerReporteCaja();
+  cierreCajaResumenActual=null;
+  resumenMetaEmpresaGlobal=null;
+  document.getElementById("cierreCajaBaseInicial").value="";
+  document.getElementById("cierreCajaObservaciones").value="";
   cacheUsuarios=null;cacheRemisiones=null;cacheConfiguracionEmpresa=null;
   cacheConsultasReportes.clear();cacheAbonosReporte.clear();
   cacheClientesPorDocumento.clear();cacheResultadosClientesBusqueda.clear();
@@ -1501,6 +1543,140 @@ async function aplicarSesion(){
 /* =========================================================
    NAVEGACIÓN Y FORMULARIO
    ========================================================= */
+async function cargarCierreCaja(confirmarReemplazo=false){
+  if(currentUser?.role!=="caja")return;
+  const yaHayConteo=[...document.querySelectorAll(".cierre-caja-contado")].some(input=>input.value.trim()!=="")||document.getElementById("cierreCajaBaseInicial")?.value.trim()!=="";
+  if(confirmarReemplazo&&yaHayConteo&&!confirm("Actualizar los pagos del servidor borrará los conteos que aún no has guardado. ¿Continuar?"))return;
+  const estado=document.getElementById("cierreCajaEstado");
+  document.getElementById("btnCrearCierreCaja").disabled=true;
+  estado.textContent="Cargando…";
+  try{
+    const {data,error}=await supabaseClient.rpc("resumen_cierre_caja");
+    if(error)throw error;
+    cierreCajaResumenActual=data||null;
+    if(!cierreCajaResumenActual)throw new Error("No se recibió el resumen de caja.");
+    document.getElementById("cierreCajaFecha").textContent=formatearFechaCierre(cierreCajaResumenActual.fecha);
+    document.getElementById("cierreCajaArea").textContent=cierreCajaResumenActual.area||currentUser.area||"—";
+    if(cierreCajaResumenActual.cierre){
+      estado.textContent="CERRADO";
+      document.getElementById("cierreCajaFormulario").classList.add("hidden");
+      document.getElementById("cierreCajaComprobante").classList.remove("hidden");
+      renderizarComprobanteCierreCaja(cierreCajaResumenActual.cierre);
+      return;
+    }
+    estado.textContent="ABIERTO";
+    document.getElementById("cierreCajaFormulario").classList.remove("hidden");
+    document.getElementById("cierreCajaComprobante").classList.add("hidden");
+    const movimientos=cierreCajaResumenActual.movimientos||[];
+    document.getElementById("cierreCajaTablaMovimientos").innerHTML=movimientos.map(m=>`<tr><td>${escapeHtml(m.hora||"—")}</td><td>${escapeHtml(m.documento||"—")}</td><td>${escapeHtml(m.tipo||"")}</td><td>${escapeHtml(m.cliente||"—")}</td><td>${escapeHtml(m.metodo||"SIN MÉTODO")}</td><td class="num">${money(m.valor||0)}</td></tr>`).join("")||'<tr><td colspan="6" style="text-align:center;color:var(--ink-soft)">No hay pagos registrados hoy.</td></tr>';
+    const metodos=cierreCajaResumenActual.metodosSistema||{};
+    document.getElementById("cierreCajaTablaMetodos").innerHTML=Object.entries(metodos).map(([metodo,sistema])=>`
+      <tr data-cierre-metodo="${escapeAttr(metodo)}" data-cierre-sistema="${Number(sistema)||0}">
+        <td>${escapeHtml(metodo||"SIN MÉTODO")}</td>
+        <td class="num">${money(sistema)}</td>
+        <td class="num cierre-caja-esperado">${money((Number(sistema)||0)+(metodo==="EFECTIVO"?parseValorCOP(document.getElementById("cierreCajaBaseInicial").value):0))}</td>
+        <td class="num" style="min-width:150px"><div class="currency-input"><span>$</span><input type="text" class="cierre-caja-contado" data-metodo="${escapeAttr(metodo)}" inputmode="numeric" placeholder="0" oninput="actualizarVistaPreviaCierreCaja()" onblur="formatearCampoCOP(this);actualizarVistaPreviaCierreCaja()" aria-label="Conteo real de ${escapeAttr(metodo)}"></div></td>
+        <td class="num cierre-caja-diferencia">${money(0)}</td>
+      </tr>`).join("")||'<tr><td colspan="5">No hay métodos de pago configurados.</td></tr>';
+    document.getElementById("cierreCajaBaseInicial").value="";
+    document.getElementById("cierreCajaObservaciones").value="";
+    actualizarVistaPreviaCierreCaja();
+    document.getElementById("btnCrearCierreCaja").disabled=false;
+  }catch(error){
+    console.error("No se pudo cargar el cierre de caja:",error);
+    cierreCajaResumenActual=null;
+    document.getElementById("btnCrearCierreCaja").disabled=true;
+    estado.textContent="ERROR";
+    document.getElementById("cierreCajaTablaMovimientos").innerHTML=`<tr><td colspan="6" style="color:var(--required)">No se pudieron cargar los pagos del día.</td></tr>`;
+    document.getElementById("cierreCajaTablaMetodos").innerHTML=`<tr><td colspan="5" style="color:var(--required)">No se pudieron cargar los pagos del día: ${escapeHtml(error.message||"Error de conexión")}</td></tr>`;
+  }
+}
+
+function formatearFechaCierre(fecha){
+  if(!fecha)return"—";
+  const [anio,mes,dia]=String(fecha).slice(0,10).split("-").map(Number);
+  return new Date(anio,mes-1,dia).toLocaleDateString("es-CO",{year:"numeric",month:"long",day:"numeric"});
+}
+
+function actualizarVistaPreviaCierreCaja(){
+  if(!cierreCajaResumenActual||cierreCajaResumenActual.cierre)return;
+  const base=parseValorCOP(document.getElementById("cierreCajaBaseInicial")?.value||0);
+  let totalEsperado=0,totalContado=0;
+  document.querySelectorAll("#cierreCajaTablaMetodos tr[data-cierre-metodo]").forEach(fila=>{
+    const metodo=fila.dataset.cierreMetodo;
+    const sistema=Number(fila.dataset.cierreSistema)||0;
+    const input=fila.querySelector(".cierre-caja-contado");
+    const contado=parseValorCOP(input?.value||0);
+    const esperado=sistema+(metodo==="EFECTIVO"?base:0);
+    const diferencia=contado-esperado;
+    totalEsperado+=esperado;totalContado+=contado;
+    fila.querySelector(".cierre-caja-esperado").textContent=money(esperado);
+    fila.querySelector(".cierre-caja-diferencia").textContent=money(diferencia);
+    fila.querySelector(".cierre-caja-diferencia").style.color=diferencia===0?"var(--success)":"var(--required)";
+  });
+  const diferencia=totalContado-totalEsperado;
+  document.getElementById("cierreCajaTotalEsperado").textContent=money(totalEsperado);
+  document.getElementById("cierreCajaTotalContado").textContent=money(totalContado);
+  document.getElementById("cierreCajaDiferencia").textContent=money(diferencia);
+  document.getElementById("cierreCajaDiferencia").style.color=diferencia===0?"var(--success)":"var(--required)";
+}
+
+async function crearCierreCaja(){
+  if(currentUser?.role!=="caja"||!cierreCajaResumenActual)return;
+  const baseInput=document.getElementById("cierreCajaBaseInicial");
+  const conteos={};
+  for(const input of document.querySelectorAll(".cierre-caja-contado")){
+    if(!input.value.trim()){alert(`Ingresa el conteo real de ${input.dataset.metodo}. Si no hubo movimiento, escribe 0.`);input.focus();return;}
+    conteos[input.dataset.metodo]=parseValorCOP(input.value);
+  }
+  if(!baseInput.value.trim()){alert("Ingresa la base inicial de caja. Si no aplica, escribe 0.");baseInput.focus();return;}
+  const base=parseValorCOP(baseInput.value);
+  const observaciones=document.getElementById("cierreCajaObservaciones").value.trim();
+  const hayDiferencias=Object.entries(cierreCajaResumenActual.metodosSistema||{}).some(([metodo,valor])=>{
+    const esperado=Number(valor||0)+(metodo==="EFECTIVO"?base:0);
+    return Number(conteos[metodo]||0)!==esperado;
+  });
+  if(hayDiferencias&&!observaciones){alert("Explica las diferencias por método de pago en Observaciones antes de cerrar.");document.getElementById("cierreCajaObservaciones").focus();return;}
+  if(!confirm("Al cerrar se generará un comprobante definitivo para esta área y fecha. ¿Confirmas el cierre?"))return;
+  const boton=document.getElementById("btnCrearCierreCaja");
+  boton.disabled=true;boton.textContent="Guardando cierre…";
+  try{
+    const {data,error}=await supabaseClient.rpc("crear_cierre_caja",{p_base_inicial:base,p_conteos:conteos,p_observaciones:observaciones});
+    if(error)throw error;
+    if(data?.error)throw new Error(data.error);
+    await cargarCierreCaja();
+  }catch(error){
+    console.error("No se pudo crear el cierre de caja:",error);
+    alert("No se pudo cerrar la caja: "+(error.message||"Error de conexión"));
+  }finally{boton.disabled=false;boton.textContent="Cerrar caja y generar comprobante";}
+}
+
+function renderizarComprobanteCierreCaja(cierre){
+  const datos=cierre.datos||{};
+  const metodos=datos.metodos||{};
+  const movimientos=datos.movimientos||[];
+  const filas=Object.entries(metodos).map(([metodo,m])=>`<tr><td>${escapeHtml(metodo)}</td><td class="num">${money(m.sistema)}</td><td class="num">${money(m.esperado)}</td><td class="num">${money(m.contado)}</td><td class="num">${money(m.diferencia)}</td></tr>`).join("");
+  const diferencia=Number(cierre.diferencia||0);
+  document.getElementById("cierreCajaComprobante").innerHTML=`<div id="cierreCajaImprimible" class="card" style="margin:0;border:1px solid var(--line)">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap"><div><h3 style="margin:0 0 6px">Comprobante de cierre de caja</h3><div><strong>${escapeHtml(cierre.numero_comprobante||"")}</strong></div></div><div style="text-align:right"><strong>${escapeHtml(formatearFechaCierre(cierre.fecha))}</strong><br>${escapeHtml(cierre.area||"")}</div></div>
+    <p><strong>Cajero:</strong> ${escapeHtml(cierre.nombre_cajero||"")} · <strong>Registrado:</strong> ${escapeHtml(new Date(cierre.created_at).toLocaleString("es-CO"))}</p>
+    <p><strong>Base inicial:</strong> ${money(cierre.base_inicial)}</p>
+    <div class="table-wrap"><table><thead><tr><th>Método</th><th class="num">Sistema</th><th class="num">Esperado</th><th class="num">Contado</th><th class="num">Diferencia</th></tr></thead><tbody>${filas}</tbody><tfoot><tr><th>Totales</th><th class="num">${money(cierre.total_sistema)}</th><th class="num">${money(cierre.total_esperado)}</th><th class="num">${money(cierre.total_contado)}</th><th class="num">${money(diferencia)}</th></tr></tfoot></table></div>
+    <h4>Pagos incluidos</h4><div class="table-wrap"><table><thead><tr><th>Hora</th><th>Documento</th><th>Tipo</th><th>Cliente</th><th>Método</th><th class="num">Valor</th></tr></thead><tbody>${movimientos.map(m=>`<tr><td>${escapeHtml(m.hora||"—")}</td><td>${escapeHtml(m.documento||"—")}</td><td>${escapeHtml(m.tipo||"")}</td><td>${escapeHtml(m.cliente||"—")}</td><td>${escapeHtml(m.metodo||"SIN MÉTODO")}</td><td class="num">${money(m.valor||0)}</td></tr>`).join("")||'<tr><td colspan="6">Sin pagos registrados.</td></tr>'}</tbody></table></div>
+    ${datos.observaciones?`<p><strong>Observaciones:</strong> ${escapeHtml(datos.observaciones)}</p>`:""}
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button type="button" class="btn secondary" onclick="imprimirComprobanteCierreCaja()">Imprimir comprobante</button></div>
+  </div>`;
+}
+
+function imprimirComprobanteCierreCaja(){
+  const comprobante=document.getElementById("cierreCajaImprimible");
+  if(!comprobante)return;
+  const ventana=window.open("","_blank","width=900,height=700");
+  if(!ventana){alert("Permite las ventanas emergentes para imprimir el comprobante.");return;}
+  ventana.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Comprobante de cierre</title><style>body{font:14px Arial,sans-serif;color:#17212b;padding:24px}h3{margin-top:0}table{width:100%;border-collapse:collapse;margin-top:16px}th,td{padding:9px;border-bottom:1px solid #d7ddd3;text-align:left}.num{text-align:right}button{display:none!important}tfoot{font-weight:bold}@media print{body{padding:0}}</style></head><body>${comprobante.innerHTML}</body></html>`);
+  ventana.document.close();ventana.focus();ventana.print();
+}
+
 function showView(view){
 
   if(!currentUser) return;
@@ -1537,8 +1713,10 @@ function showView(view){
   if(view==="cotizacion"){document.getElementById("cotFechaSolicitud").value=fechaHoy();document.getElementById("cotAsesor").value=currentUser.nombre||currentUser.username||"";cargarSiguienteNumeroPrefactura();}
 
   if(view==="reporte"){
+    document.getElementById("panelCierreCaja").classList.toggle("hidden",currentUser.role!=="caja");
     actualizarMetaReporte();
     procesarReportes();
+    if(currentUser.role==="caja")cargarCierreCaja(true);
   }
 
   if(view==="usuarios") renderUsuarios();
@@ -1599,9 +1777,13 @@ function obtenerPeriodoMetaActual(){
   const fin=new Date(anio,mes+1,0);
   const festivos=obtenerFestivosColombia(anio);
   let diasLaborales=0;
+  let diasLaboralesTranscurridos=0;
   for(let dia=1;dia<=fin.getDate();dia++){
     const fecha=new Date(anio,mes,dia);
-    if(fecha.getDay()!==0&&!festivos.has(fechaMetaKey(fecha))) diasLaborales++;
+    if(fecha.getDay()!==0&&!festivos.has(fechaMetaKey(fecha))){
+      diasLaborales++;
+      if(dia<=ahora.getDate())diasLaboralesTranscurridos++;
+    }
   }
   return {
     inicio:fechaMetaKey(inicio),
@@ -1610,6 +1792,7 @@ function obtenerPeriodoMetaActual(){
     anio,
     festivos,
     diasLaborales,
+    diasLaboralesTranscurridos,
     hoyLaboral:ahora.getDay()!==0&&!festivos.has(fechaMetaKey(ahora)),
     etiqueta:ahora.toLocaleDateString("es-CO",{month:"long",year:"numeric"})
   };
@@ -1695,6 +1878,14 @@ async function actualizarMetaReporte(forzarRecarga=false){
   document.getElementById("tablaMetasAsesoresReporte").innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--ink-soft)">Cargando presupuestos...</td></tr>';
   try{
     exigirSupabase();
+    const {data:resumenEmpresa,error:resumenError}=await supabaseClient.rpc("resumen_meta_empresa_global",{
+      p_inicio:periodo.inicio,
+      p_hoy:periodo.hoy
+    });
+    if(resumenError)throw resumenError;
+    resumenMetaEmpresaGlobal=resumenEmpresa||null;
+    if(!resumenMetaEmpresaGlobal)throw new Error("No se recibió el resumen global de metas.");
+    metaGeneralMensualEmpresa=Math.max(0,Number(resumenMetaEmpresaGlobal.metaGeneralMensual||0));
     let consulta;
     let claveMeta=`meta:${currentUser.role}:${currentUser.id||currentUser.username||""}:${periodo.inicio}:${periodo.fin}`;
     if(currentUser.role==="asesor"){
@@ -1727,43 +1918,58 @@ async function actualizarMetaReporte(forzarRecarga=false){
     renderizarMetaReporte(documentosMetaReporte,periodo);
   }catch(error){
     console.error("No se pudieron cargar las metas:",error);
-    document.getElementById("metaEstadoReporte").textContent="No se pudieron cargar las metas. Verifica la conexión.";
+    resumenMetaEmpresaGlobal=null;
+    document.getElementById("metaEstadoReporte").textContent="No se pudo cargar el avance global de la empresa. Verifica que la migración de metas esté aplicada.";
   }
 }
 
 function renderizarMetaReporte(documentos,periodo=obtenerPeriodoMetaActual()){
-  const esAsesor=currentUser?.role==="asesor";
-  const meta=Math.max(0,Number(esAsesor?currentUser.presupuestoMensual:metaGeneralMensualEmpresa)||0);
-  const esVentaPagada=doc=>String(doc.tipoDoc||"").trim().toLowerCase()!=="cotización"&&String(doc.estado||"").trim().toLowerCase()==="pagada";
+  const meta=Math.max(0,Number(resumenMetaEmpresaGlobal?.metaGeneralMensual??metaGeneralMensualEmpresa)||0);
+  const esVentaPagada=doc=>{
+    const estado=String(doc.estado||"").trim().toLowerCase();
+    if(estado==="anulada"||String(doc.estadoPago||"").trim().toLowerCase()==="anulada")return false;
+    if(String(doc.tipoDoc||"").trim().toLowerCase()==="cotización"){
+      const abonado=Number(doc.totalAbonado||0);
+      return String(doc.estadoPago||"").trim().toLowerCase()==="pagada"||(Number(doc.total||0)>0&&abonado>=Number(doc.total||0));
+    }
+    return estado==="pagada";
+  };
   const vendidas=documentos.filter(esVentaPagada);
-  const vendidoMes=vendidas.reduce((s,doc)=>s+Number(doc.total||0),0);
-  const vendidoHoy=vendidas.filter(doc=>doc.fecha===periodo.hoy).reduce((s,doc)=>s+Number(doc.total||0),0);
+  const vendidoMes=Math.max(0,Number(resumenMetaEmpresaGlobal?.vendidoMes||0));
+  const vendidoHoy=Math.max(0,Number(resumenMetaEmpresaGlobal?.vendidoHoy||0));
   const metaDiaria=periodo.diasLaborales>0?meta/periodo.diasLaborales:0;
   const metaDeHoy=periodo.hoyLaboral?metaDiaria:0;
+  const esperadoMes=periodo.diasLaborales>0?meta*periodo.diasLaboralesTranscurridos/periodo.diasLaborales:0;
   const cumplimientoMes=meta>0?vendidoMes/meta*100:0;
   const cumplimientoDia=metaDeHoy>0?vendidoHoy/metaDeHoy*100:0;
+  const restanteMeta=Math.max(0,meta-vendidoMes);
+  const restantePorcentaje=meta>0?Math.max(0,100-cumplimientoMes):0;
   const barra=document.getElementById("metaBarraReporte");
   const progreso=barra?.parentElement;
   const porcentajeBarra=Math.min(cumplimientoMes,100);
-  document.getElementById("metaTituloReporte").firstChild.textContent=esAsesor?"Mi avance mensual ":"Metas de la empresa ";
-  document.getElementById("metaTablaTituloReporte").textContent=esAsesor?"Mi presupuesto mensual":"Presupuesto mensual por asesor";
-  document.getElementById("metaGeneralReporte").previousElementSibling.textContent=esAsesor?"Mi presupuesto mensual":"Meta general mensual";
-  document.getElementById("metaVendidoMesReporte").previousElementSibling.textContent=esAsesor?"Vendido por mí este mes":"Vendido este mes";
-  document.getElementById("metaPorcentajeMesReporte").previousElementSibling.textContent=esAsesor?"Mi cumplimiento mensual":"Cumplimiento mensual";
+  document.getElementById("metaTituloReporte").firstChild.textContent="Metas de la empresa ";
+  document.getElementById("metaTablaTituloReporte").textContent=currentUser?.role==="asesor"?"Mi presupuesto mensual":"Presupuesto mensual por asesor";
+  document.getElementById("metaGeneralReporte").previousElementSibling.textContent="Meta general mensual";
+  document.getElementById("metaVendidoMesReporte").previousElementSibling.textContent="Vendido este mes · Empresa";
+  document.getElementById("metaPorcentajeMesReporte").previousElementSibling.textContent="Cumplimiento mensual · Empresa";
   document.getElementById("metaPeriodoReporte").textContent=`· ${periodo.etiqueta}`;
   document.getElementById("metaGeneralReporte").textContent=money(meta);
   document.getElementById("metaVendidoMesReporte").textContent=money(vendidoMes);
   document.getElementById("metaPorcentajeMesReporte").textContent=meta>0?`${cumplimientoMes.toFixed(1)}%`:"Sin meta";
+  document.getElementById("metaEsperadoMesReporte").textContent=`Esperado a la fecha: ${money(esperadoMes)}`;
+  document.getElementById("metaRestanteMesReporte").textContent=meta>0
+    ? (vendidoMes>=meta?`Restante: $0 · 0.0% · Meta superada por ${money(vendidoMes-meta)}`:`Restante para la meta: ${money(restanteMeta)} · ${restantePorcentaje.toFixed(1)}%`)
+    : "Configura una meta mensual para ver el porcentaje restante";
   document.getElementById("metaDiariaReporte").textContent=`${money(metaDeHoy)} / ${money(vendidoHoy)}`;
   document.getElementById("metaPorcentajeDiaReporte").textContent=periodo.hoyLaboral
     ? (metaDeHoy>0?`${cumplimientoDia.toFixed(1)}% de cumplimiento hoy`:"Meta diaria sin configurar")
     : "Hoy no es día laboral; no aplica meta diaria";
   if(barra) barra.style.width=`${porcentajeBarra}%`;
   if(progreso) progreso.setAttribute("aria-valuenow",String(Math.round(porcentajeBarra)));
-  if(progreso) progreso.setAttribute("aria-label",esAsesor?"Cumplimiento de mi meta mensual":"Cumplimiento de meta mensual de la empresa");
+  if(progreso) progreso.setAttribute("aria-label","Cumplimiento de la meta mensual de la empresa");
   document.getElementById("metaEstadoReporte").textContent=meta>0
-    ? (esAsesor?"Avance personal actualizado al consultar el reporte. Se cuentan tus documentos pagados; se excluyen las cotizaciones.":"Avance actualizado en tiempo real. Se cuentan documentos pagados; se excluyen las cotizaciones.")
-    : (esAsesor?"No tienes un presupuesto mensual configurado.":"La empresa aún no ha configurado su meta general mensual.");
+    ? "Avance global actualizado al consultar el reporte. Incluye remisiones y cotizaciones totalmente pagadas de todas las áreas; excluye pendientes y anuladas."
+    : "La empresa aún no ha configurado su meta general mensual.";
 
   let asesores=usuariosMetaReporte;
   if(currentUser.role==="asesor")
@@ -5147,7 +5353,7 @@ async function anularAbonoCotizacion(idDocumento,idAbono){
       await verDetalleDoc(idDocumento);
     }
     alert("Abono anulado correctamente.");
-    await procesarReportes(true);
+    await Promise.all([actualizarMetaReporte(true),procesarReportes(true)]);
   }catch(error){
     console.error("Error anulando el abono de cotización:",error);
     alert("No se pudo anular el abono: "+error.message);
@@ -5170,7 +5376,7 @@ async function registrarAbonoCotizacion(){
     cacheConsultasReportes.clear();
     cacheAbonosReporte.clear();
     cerrarModalAbono();
-    await procesarReportes(true);
+    await Promise.all([actualizarMetaReporte(true),procesarReportes(true)]);
     await verDetalleDoc(cot.idDocumento);
   }catch(error){alert("No se pudo guardar el abono: "+error.message);}
   finally{boton.disabled=false;}
@@ -5572,6 +5778,8 @@ if(documentoActualizado){
       "Documento anulado correctamente."
     );
     await verDetalleDoc(id);
+    if(!document.getElementById("view-reporte").classList.contains("hidden"))
+      await Promise.all([actualizarMetaReporte(true),procesarReportes(true)]);
 
   }catch(error){
 
@@ -6232,7 +6440,7 @@ async function renderUsuarios(){
       <td>
         ${escapeHtml(u.role||"")}
         <br>
-        <small>${escapeHtml(u.area||"")}</small>
+        <small>${escapeHtml(u.area||"")}${u.activo===false?' · INACTIVO':''}</small>
       </td>
 
       <td>
@@ -6243,12 +6451,9 @@ async function renderUsuarios(){
           Editar
         </button>
 
-        <button
-          class="btn small danger"
-          onclick="eliminarUsuario('${escapeAttr(u.id)}')"
-        >
-          Eliminar
-        </button>
+        ${u.activo===false
+          ? `<button class="btn small primary" onclick="activarUsuario('${escapeAttr(u.id)}')">Reactivar</button>`
+          : `<button class="btn small danger" onclick="eliminarUsuario('${escapeAttr(u.id)}')">Desactivar</button>`}
       </td>
     </tr>
   `).join("");
@@ -6296,7 +6501,7 @@ async function guardarUsuario(event){
   const anterior=users.find(u=>u.id===id);
 
   const user={id:id||undefined,nombre,username,role,area,telefono,email,presupuestoMensual};
-  if(!email){alert("El correo es obligatorio para Supabase Auth.");return;}
+  if(!id&&!email){alert("El correo es obligatorio para crear una cuenta nueva.");return;}
   if((!id||pass)&&pass.length<8){alert("La contraseña debe tener al menos 8 caracteres.");return;}
   user.password=pass;
 
@@ -6324,7 +6529,8 @@ async function editarUsuario(id){
   document.getElementById("usrRole").value=u.role||"asesor";
   document.getElementById("usrArea").value=u.area||"";
   document.getElementById("usrTelefono").value=u.telefono||u.tel||"";
-  document.getElementById("usrEmail").value=u.email||u.correo||"";
+  const correoUsuario=u.email||u.correo||"";
+  document.getElementById("usrEmail").value=/@remisionario\.app$/i.test(correoUsuario)?"":correoUsuario;
   document.getElementById("usrPresupuestoMensual").value=u.presupuestoMensual??"";
   document.getElementById("formUserTitle").textContent="Editar Usuario";
   document.getElementById("btnCancelarEdicion").classList.remove("hidden");
@@ -6333,15 +6539,22 @@ async function editarUsuario(id){
 async function eliminarUsuario(id){
 
   if(id===currentUser.id){
-    alert("No puedes eliminar el usuario con el que estás conectado.");
+    alert("No puedes desactivar el usuario con el que estás conectado.");
     return;
   }
 
-  if(!confirm("¿Eliminar este usuario?"))return;
+  if(!confirm("¿Desactivar este usuario? Ya no podrá iniciar sesión en la aplicación. Sus documentos e imágenes se conservarán."))return;
+  try{
+    await eliminarUsuarioDB(id);
+    await renderUsuarios();
+  }catch(error){alert("No se pudo desactivar el usuario: "+error.message);}
+}
 
-  await eliminarUsuarioDB(id);
-
-  renderUsuarios();
+async function activarUsuario(id){
+  try{
+    await cambiarEstadoUsuarioDB(id,true);
+    await renderUsuarios();
+  }catch(error){alert("No se pudo reactivar el usuario: "+error.message);}
 }
 
 function cancelarEdicionUsuario(){
@@ -6455,6 +6668,7 @@ async function guardarConfiguracionEmpresa(event){
       });
     cacheConfiguracionEmpresa={...(cacheConfiguracionEmpresa||{}),nombre,logo,codigoAnulacion,metaGeneralMensual,fechaActualizacion:new Date().toISOString()};
     metaGeneralMensualEmpresa=metaGeneralMensual;
+    if(resumenMetaEmpresaGlobal)resumenMetaEmpresaGlobal={...resumenMetaEmpresaGlobal,metaGeneralMensual};
     renderizarMetaReporte(documentosMetaReporte,obtenerPeriodoMetaActual());
 
     aplicarLogo(logo);
