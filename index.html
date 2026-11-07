@@ -555,6 +555,10 @@ min-height:44px;
 #view-cotizacion{user-select:none}
 #view-cotizacion ::selection{background:transparent;color:inherit}
 @media(max-width:760px){.cot-materiales-tabla{min-width:850px}}
+.ticket-cierre{max-width:560px;margin:auto;padding:18px;border:1px solid var(--line);background:#fff;color:var(--ink);font-size:13px;line-height:1.45}
+.ticket-encabezado{text-align:center;margin-bottom:12px}.ticket-titulo{font-size:18px;font-weight:800}.ticket-codigo{font-size:19px;font-weight:800;letter-spacing:.5px;color:var(--brand)}
+.ticket-datos{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px}.ticket-datos span,.ticket-totales span{display:block;color:var(--ink-soft);font-size:11px}.ticket-datos b{display:block;overflow-wrap:anywhere}
+.ticket-cierre hr{border:0;border-top:1px dashed var(--line);margin:12px 0}.ticket-cierre h4{margin:10px 0 6px}.ticket-tabla{width:100%;border-collapse:collapse;table-layout:fixed;font-size:11px}.ticket-tabla th,.ticket-tabla td{text-align:left;vertical-align:top;padding:6px 4px;border-bottom:1px solid var(--line);overflow-wrap:anywhere}.ticket-tabla th:first-child,.ticket-tabla td:first-child{width:25%}.ticket-tabla th:nth-child(2),.ticket-tabla td:nth-child(2),.ticket-tabla th:nth-child(3),.ticket-tabla td:nth-child(3){width:37.5%}.ticket-celda-etiqueta{display:block;color:var(--ink-soft);font-size:9px;margin-top:2px}.ticket-tabla tfoot{font-weight:700}.ticket-observaciones div{margin-top:3px;overflow-wrap:anywhere}.ticket-acciones{text-align:right;margin-top:12px}
 
 </style>
 </head>
@@ -993,6 +997,18 @@ min-height:44px;
   </div>
   <div id="cierreCajaComprobante" class="hidden"></div>
 </div>
+<div class="card hidden" id="panelCierresCajaAdmin" style="margin-top:16px">
+  <div class="section-title">Historial de cierres de caja</div>
+  <p style="margin:0 0 12px;color:var(--ink-soft);font-size:13px">Consulta los comprobantes generados por las cajas, filtrados por mes, área o código.</p>
+  <div style="display:flex;align-items:end;gap:10px;flex-wrap:wrap">
+    <div class="field" style="margin:0;max-width:220px"><label for="adminCierresMes">Mes</label><input type="month" id="adminCierresMes" onchange="cargarCierresCajaAdmin()"></div>
+    <div class="field" style="margin:0;max-width:220px"><label for="adminCierresArea">Área</label><select id="adminCierresArea" onchange="renderizarCierresCajaAdmin()"><option value="">Todas las áreas</option></select></div>
+    <div class="field" style="margin:0;max-width:260px"><label for="adminCierresCodigo">Código de comprobante</label><input type="search" id="adminCierresCodigo" placeholder="Ej. CJA-20261106-001" oninput="renderizarCierresCajaAdmin()"></div>
+    <button type="button" class="btn secondary" onclick="cargarCierresCajaAdmin()">Actualizar cierres</button>
+  </div>
+  <div class="table-wrap" style="margin-top:12px"><table><thead><tr><th>Fecha</th><th>Área</th><th>Comprobante</th><th>Cajero</th><th class="num">Esperado</th><th class="num">Contado</th><th class="num">Diferencia</th><th>Acción</th></tr></thead><tbody id="tablaCierresCajaAdmin"><tr><td colspan="8" style="text-align:center">Selecciona un mes para consultar cierres.</td></tr></tbody></table></div>
+  <div id="detalleCierreCajaAdmin" class="hidden" style="margin-top:16px"></div>
+</div>
 <div class="card" id="panelMetasReportes" style="margin-bottom:16px">
   <div class="section-title" id="metaTituloReporte">Metas de la empresa <span id="metaPeriodoReporte" style="font-weight:400;color:var(--ink-soft)"></span></div>
   <div style="display:flex;align-items:end;gap:10px;flex-wrap:wrap;margin:0 0 12px">
@@ -1120,6 +1136,8 @@ const JSONBIN_API_KEY = "AQUI_TU_SECRET_KEY";
 const SUPABASE_URL="https://aryjbqyxuvybzcqhxdau.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_QhZNct59CHxydCxRvyYKwg_CPI5S6-J";
 const STORAGE_COTIZACIONES="cotizaciones-referencias";
+// Restricción temporal solicitada para el área WhatsApp. Cambiar a false para reactivar.
+const BLOQUEO_TEMPORAL_VENTA_WHATSAPP=true;
 let db=null;
 let supabaseClient=null;
 let supabaseActivo=false;
@@ -1148,8 +1166,26 @@ const consultasReportesPendientes=new Map();
 const CACHE_REPORTES_TTL=60000;
 let listenerReporteCaja=null;
 let claveListenerReporteCaja=null;
+
+function esAsesorWhatsApp(){
+  return currentUser?.role==="asesor"&&String(currentUser.area||"").trim().toUpperCase()==="WHATSAPP";
+}
+
+function aplicarBloqueoTemporalVentaWhatsApp(){
+  const selector=document.getElementById("cotVenta");
+  if(!selector)return;
+  const bloquear=BLOQUEO_TEMPORAL_VENTA_WHATSAPP&&esAsesorWhatsApp();
+  const modoExistente=cotizacionEditandoId?selector.value:"";
+  Array.from(selector.options).forEach(opcion=>{
+    if(!bloquear){opcion.hidden=false;return;}
+    opcion.hidden=opcion.value==="MUESTRA"||opcion.value==="PRODUCCIÓN";
+    if(cotizacionEditandoId&&opcion.value!==""&&opcion.value!==modoExistente)opcion.hidden=true;
+  });
+  selector.disabled=false;
+}
 let tokenListenerReporteCaja=0;
 let cierreCajaResumenActual=null;
+let cierresCajaAdmin=[];
 const cacheClientesPorDocumento=new Map();
 const cacheResultadosClientesBusqueda=new Map();
 const consultasClientesBusquedaPendientes=new Map();
@@ -1509,6 +1545,7 @@ async function logout(){
   cacheUsuarios=null;cacheRemisiones=null;cacheConfiguracionEmpresa=null;
   cacheConsultasReportes.clear();cacheAbonosReporte.clear();
   cacheClientesPorDocumento.clear();cacheResultadosClientesBusqueda.clear();
+  cotizacionEditandoId=null;
   if(supabaseClient)await supabaseClient.auth.signOut();
   currentUser=null;
   sessionStorage.removeItem(LS.session);
@@ -1526,15 +1563,20 @@ async function aplicarSesion(){
   document.getElementById("txtAreaUsuario").textContent="Área: "+(currentUser.area||"-");
   document.getElementById("remAsesor").value=currentUser.nombre||currentUser.username||"";
   const admin=currentUser.role==="admin", caja=currentUser.role==="caja";
+  const asesorWhatsApp=esAsesorWhatsApp();
+  document.getElementById("panelCierreCaja").classList.toggle("hidden",!caja);
+  document.getElementById("panelCierresCajaAdmin").classList.toggle("hidden",!admin);
+  if(admin&&!document.getElementById("adminCierresMes").value)document.getElementById("adminCierresMes").value=fechaHoy().slice(0,7);
   const puedeCotizar=admin||(currentUser.role==="asesor"&&String(currentUser.area||"").trim().toUpperCase()==="WHATSAPP");
   document.getElementById("tabCotizacion").classList.toggle("hidden",!puedeCotizar);
+  document.querySelector('[data-view="venta"]').classList.toggle("hidden",caja||(BLOQUEO_TEMPORAL_VENTA_WHATSAPP&&asesorWhatsApp));
+  aplicarBloqueoTemporalVentaWhatsApp();
   document.getElementById("contenedorFiltroAsesor")
   .classList.toggle("hidden",currentUser.role==="asesor");
   document.getElementById("contenedorFiltroArea")
   .classList.toggle("hidden",currentUser.role!=="admin");
   document.getElementById("contenedorConsolidadoArea")
   .classList.toggle("hidden",currentUser.role!=="admin");
-  document.querySelector('[data-view="venta"]').classList.toggle("hidden",caja);
   document.getElementById("tabReportes").classList.toggle("hidden",false);
   document.getElementById("tabUsuarios").classList.toggle("hidden",!admin);
   document.getElementById("tabAjustes").classList.toggle("hidden",!admin);
@@ -1542,7 +1584,9 @@ async function aplicarSesion(){
   if(!document.getElementById("repFechaInicio").value) document.getElementById("repFechaInicio").value=fechaHoy();
   if(!document.getElementById("repFechaFin").value) document.getElementById("repFechaFin").value=fechaHoy();
   await actualizarFiltrosReportes();
+  if(admin)await cargarCierresCajaAdmin();
   if(caja) showView("reporte");
+  else if(BLOQUEO_TEMPORAL_VENTA_WHATSAPP&&asesorWhatsApp)showView("cotizacion");
 }
 
 /* =========================================================
@@ -1603,6 +1647,51 @@ function formatearFechaCierre(fecha){
   return new Date(anio,mes-1,dia).toLocaleDateString("es-CO",{year:"numeric",month:"long",day:"numeric"});
 }
 
+async function cargarCierresCajaAdmin(){
+  if(currentUser?.role!=="admin")return;
+  const cuerpo=document.getElementById("tablaCierresCajaAdmin");
+  const mes=document.getElementById("adminCierresMes").value;
+  if(!mes){cuerpo.innerHTML='<tr><td colspan="8">Selecciona un mes para consultar cierres.</td></tr>';return;}
+  cuerpo.innerHTML='<tr><td colspan="8" style="text-align:center">Cargando cierres…</td></tr>';
+  try{
+    exigirSupabase();
+    const [anio,numeroMes]=mes.split("-").map(Number);
+    const inicio=`${mes}-01`;
+    const siguiente=new Date(Date.UTC(anio,numeroMes,1)).toISOString().slice(0,10);
+    const {data,error}=await supabaseClient.from("caja_cierres").select("*").gte("fecha",inicio).lt("fecha",siguiente).order("fecha",{ascending:false}).order("created_at",{ascending:false});
+    if(error)throw error;
+    cierresCajaAdmin=data||[];
+    const selector=document.getElementById("adminCierresArea");
+    const areaActual=selector.value;
+    const areas=[...new Set(cierresCajaAdmin.map(c=>String(c.area||"").trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"es"));
+    selector.innerHTML='<option value="">Todas las áreas</option>'+areas.map(area=>`<option value="${escapeAttr(area)}">${escapeHtml(area)}</option>`).join("");
+    if(areas.includes(areaActual))selector.value=areaActual;
+    renderizarCierresCajaAdmin();
+  }catch(error){
+    console.error("No se pudieron cargar los cierres de caja para Administración:",error);
+    cuerpo.innerHTML=`<tr><td colspan="8" style="color:var(--required)">No se pudieron cargar los cierres: ${escapeHtml(error.message||"Error de conexión")}</td></tr>`;
+  }
+}
+
+function renderizarCierresCajaAdmin(){
+  const cuerpo=document.getElementById("tablaCierresCajaAdmin");
+  if(!cuerpo)return;
+  const area=document.getElementById("adminCierresArea")?.value||"";
+  const codigo=normalizarTexto(document.getElementById("adminCierresCodigo")?.value||"");
+  const cierres=cierresCajaAdmin.filter(c=>(!area||c.area===area)&&(!codigo||normalizarTexto(c.numero_comprobante).includes(codigo)));
+  if(!cierres.length){cuerpo.innerHTML='<tr><td colspan="8" style="text-align:center">No hay cierres con esos filtros.</td></tr>';return;}
+  cuerpo.innerHTML=cierres.map(c=>`<tr><td>${escapeHtml(formatearFechaCierre(c.fecha))}</td><td>${escapeHtml(c.area||"—")}</td><td><strong>${escapeHtml(c.numero_comprobante||"—")}</strong></td><td>${escapeHtml(c.nombre_cajero||"—")}</td><td class="num">${money(c.total_esperado)}</td><td class="num">${money(c.total_contado)}</td><td class="num" style="color:${Number(c.diferencia||0)===0?"var(--success)":"var(--required)"}">${money(c.diferencia)}</td><td><button type="button" class="btn small secondary" onclick="verCierreCajaAdmin('${escapeAttr(c.id)}')">Ver comprobante</button></td></tr>`).join("");
+}
+
+function verCierreCajaAdmin(id){
+  const cierre=cierresCajaAdmin.find(c=>String(c.id)===String(id));
+  if(!cierre)return;
+  const detalle=document.getElementById("detalleCierreCajaAdmin");
+  detalle.classList.remove("hidden");
+  renderizarComprobanteCierreCaja(cierre,"detalleCierreCajaAdmin");
+  detalle.scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+
 function actualizarVistaPreviaCierreCaja(){
   if(!cierreCajaResumenActual||cierreCajaResumenActual.cierre)return;
   const base=parseValorCOP(document.getElementById("cierreCajaBaseInicial")?.value||0);
@@ -1656,30 +1745,37 @@ async function crearCierreCaja(){
   }finally{boton.disabled=false;boton.textContent="Cerrar caja y generar comprobante";}
 }
 
-function renderizarComprobanteCierreCaja(cierre){
+function renderizarComprobanteCierreCaja(cierre,contenedorId="cierreCajaComprobante"){
   const datos=cierre.datos||{};
   const metodos=datos.metodos||{};
-  const movimientos=datos.movimientos||[];
-  const filas=Object.entries(metodos).map(([metodo,m])=>`<tr><td>${escapeHtml(metodo)}</td><td class="num">${money(m.sistema)}</td><td class="num">${money(m.esperado)}</td><td class="num">${money(m.contado)}</td><td class="num">${money(m.diferencia)}</td></tr>`).join("");
-  const diferencia=Number(cierre.diferencia||0);
-  document.getElementById("cierreCajaComprobante").innerHTML=`<div id="cierreCajaImprimible" class="card" style="margin:0;border:1px solid var(--line)">
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap"><div><h3 style="margin:0 0 6px">Comprobante de cierre de caja</h3><div><strong>${escapeHtml(cierre.numero_comprobante||"")}</strong></div></div><div style="text-align:right"><strong>${escapeHtml(formatearFechaCierre(cierre.fecha))}</strong><br>${escapeHtml(cierre.area||"")}</div></div>
-    <p><strong>Cajero:</strong> ${escapeHtml(cierre.nombre_cajero||"")} · <strong>Registrado:</strong> ${escapeHtml(new Date(cierre.created_at).toLocaleString("es-CO"))}</p>
-    <p><strong>Base inicial:</strong> ${money(cierre.base_inicial)}</p>
-    <div class="table-wrap"><table><thead><tr><th>Método</th><th class="num">Sistema</th><th class="num">Esperado</th><th class="num">Contado</th><th class="num">Diferencia</th></tr></thead><tbody>${filas}</tbody><tfoot><tr><th>Totales</th><th class="num">${money(cierre.total_sistema)}</th><th class="num">${money(cierre.total_esperado)}</th><th class="num">${money(cierre.total_contado)}</th><th class="num">${money(diferencia)}</th></tr></tfoot></table></div>
-    <h4>Pagos incluidos</h4><div class="table-wrap"><table><thead><tr><th>Hora</th><th>Documento</th><th>Tipo</th><th>Cliente</th><th>Método</th><th class="num">Valor</th></tr></thead><tbody>${movimientos.map(m=>`<tr><td>${escapeHtml(m.hora||"—")}</td><td>${escapeHtml(m.documento||"—")}</td><td>${escapeHtml(m.tipo||"")}</td><td>${escapeHtml(m.cliente||"—")}</td><td>${escapeHtml(m.metodo||"SIN MÉTODO")}</td><td class="num">${money(m.valor||0)}</td></tr>`).join("")||'<tr><td colspan="6">Sin pagos registrados.</td></tr>'}</tbody></table></div>
-    ${datos.observaciones?`<p><strong>Observaciones:</strong> ${escapeHtml(datos.observaciones)}</p>`:""}
-    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button type="button" class="btn secondary" onclick="imprimirComprobanteCierreCaja()">Imprimir comprobante</button></div>
-  </div>`;
+  const movimientos=Array.isArray(datos.movimientos)?datos.movimientos:[];
+  const documentosIncluidos=new Set(movimientos.map(m=>String(m.documento||"").trim()).filter(Boolean)).size;
+  const idImprimible=contenedorId==="detalleCierreCajaAdmin"?"cierreCajaAdminImprimible":"cierreCajaImprimible";
+  const ordenMetodos=["EFECTIVO","005 TRANSFERENCIA","SAS TRANSFERENCIA","DATAFONO"];
+  const entradasMetodos=Object.entries(metodos).sort(([metodoA],[metodoB])=>{
+    const indiceA=ordenMetodos.indexOf(String(metodoA).trim().toUpperCase());
+    const indiceB=ordenMetodos.indexOf(String(metodoB).trim().toUpperCase());
+    return (indiceA<0?ordenMetodos.length:indiceA)-(indiceB<0?ordenMetodos.length:indiceB)||metodoA.localeCompare(metodoB,"es");
+  });
+  const filasMetodos=entradasMetodos.map(([metodo,m])=>`<tr><td><strong>${escapeHtml(metodo)}</strong></td><td><b>${money(m.sistema)}</b></td><td><b>${money(m.diferencia)}</b></td></tr>`).join("");
+  document.getElementById(contenedorId).innerHTML=`<article id="${idImprimible}" class="ticket-cierre">
+    <header class="ticket-encabezado"><div class="ticket-titulo">Comprobante de cierre de caja</div><div class="ticket-codigo">${escapeHtml(cierre.numero_comprobante||"")}</div></header>
+    <div class="ticket-datos"><div><span>Fecha</span><b>${escapeHtml(formatearFechaCierre(cierre.fecha))}</b></div><div><span>Área</span><b>${escapeHtml(cierre.area||"—")}</b></div><div><span>Cajero</span><b>${escapeHtml(cierre.nombre_cajero||"—")}</b></div><div><span>Registrado</span><b>${escapeHtml(cierre.created_at?new Date(cierre.created_at).toLocaleString("es-CO"):"—")}</b></div><div><span>Documentos incluidos</span><b>${documentosIncluidos}</b></div><div><span>Base inicial</span><b>${money(cierre.base_inicial)}</b></div></div>
+    <hr><h4>RESUMEN POR MÉTODO DE PAGO</h4><table class="ticket-tabla"><thead><tr><th>Método</th><th>Total</th><th>Diferencia</th></tr></thead><tbody>${filasMetodos}</tbody><tfoot><tr><th>TOTAL VENTAS</th><td><b>${money(cierre.total_sistema)}</b></td><td><b>${money(cierre.diferencia)}</b></td></tr></tfoot></table>
+    <hr><div class="ticket-observaciones"><b>Observaciones</b><div>${escapeHtml(datos.observaciones||"Sin observaciones")}</div></div>
+  </article><div class="ticket-acciones"><button type="button" class="btn secondary" onclick="imprimirComprobanteCierreCaja('${contenedorId}')">Imprimir comprobante</button></div>`;
 }
 
-function imprimirComprobanteCierreCaja(){
-  const comprobante=document.getElementById("cierreCajaImprimible");
+function imprimirComprobanteCierreCaja(contenedorId="cierreCajaComprobante"){
+  const idImprimible=contenedorId==="detalleCierreCajaAdmin"?"cierreCajaAdminImprimible":"cierreCajaImprimible";
+  const comprobante=document.getElementById(idImprimible);
   if(!comprobante)return;
-  const ventana=window.open("","_blank","width=900,height=700");
+  const ventana=window.open("","_blank","width=420,height=800");
   if(!ventana){alert("Permite las ventanas emergentes para imprimir el comprobante.");return;}
-  ventana.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Comprobante de cierre</title><style>body{font:14px Arial,sans-serif;color:#17212b;padding:24px}h3{margin-top:0}table{width:100%;border-collapse:collapse;margin-top:16px}th,td{padding:9px;border-bottom:1px solid #d7ddd3;text-align:left}.num{text-align:right}button{display:none!important}tfoot{font-weight:bold}@media print{body{padding:0}}</style></head><body>${comprobante.innerHTML}</body></html>`);
-  ventana.document.close();ventana.focus();ventana.print();
+  ventana.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Comprobante ${escapeHtml(comprobante.querySelector(".ticket-codigo")?.textContent||"cierre")}</title><style>
+    @page{size:80mm auto;margin:3mm}*{box-sizing:border-box}body{width:74mm;margin:0 auto;font:9pt Arial,sans-serif;color:#111;line-height:1.3}.ticket-cierre{width:100%;padding:0}.ticket-encabezado{text-align:center;margin-bottom:8px}.ticket-titulo{font-size:13pt;font-weight:700;letter-spacing:.3px}.ticket-codigo{font-size:12pt;font-weight:700;margin-top:3px}.ticket-datos{display:grid;grid-template-columns:1fr 1fr;gap:5px 8px}.ticket-datos span,.ticket-totales span{display:block;color:#444;font-size:8pt}.ticket-datos b{display:block;overflow-wrap:anywhere}hr{border:0;border-top:1px dashed #555;margin:8px 0}h4{margin:7px 0 5px;font-size:9pt}.ticket-tabla{width:100%;border-collapse:collapse;table-layout:fixed;font-size:7.2pt}.ticket-tabla th,.ticket-tabla td{text-align:left;vertical-align:top;padding:4px 2px;border-bottom:1px solid #aaa;overflow-wrap:anywhere}.ticket-tabla th:first-child,.ticket-tabla td:first-child{width:25%}.ticket-tabla th:nth-child(2),.ticket-tabla td:nth-child(2),.ticket-tabla th:nth-child(3),.ticket-tabla td:nth-child(3){width:37.5%}.ticket-celda-etiqueta{display:block;color:#444;font-size:6.5pt;margin-top:2px}.ticket-tabla tfoot{font-weight:bold}.ticket-observaciones div{margin-top:2px;overflow-wrap:anywhere}.ticket-acciones{display:none!important}@media screen{body{padding:12px}.ticket-cierre{border:1px solid #ccc;padding:12px}.ticket-acciones{display:block!important;margin-top:12px}}
+  </style></head><body>${comprobante.outerHTML}<script>window.onload=()=>{window.focus();window.print();};<\/script></body></html>`);
+  ventana.document.close();
 }
 
 function showView(view){
@@ -1692,6 +1788,10 @@ function showView(view){
   const permisos={venta:["admin","asesor"],cotizacion:["admin","asesor"],reporte:["admin","caja","asesor"],usuarios:["admin"],ajustes:["admin"]};
 
   const areaWhatsApp=String(currentUser.area||"").trim().toUpperCase()==="WHATSAPP";
+  if(view==="venta"&&BLOQUEO_TEMPORAL_VENTA_WHATSAPP&&esAsesorWhatsApp()){
+    alert("Nueva Remisión está deshabilitada temporalmente para el área de WhatsApp.");
+    return;
+  }
   if(permisos[view] && !permisos[view].includes(currentUser.role)){
 
     alert("No tienes permisos para acceder a esta sección.");
@@ -2394,6 +2494,7 @@ function formatearCampoCOP(campo){
 }
 
 function actualizarModoVentaCotizacion(){
+  aplicarBloqueoTemporalVentaWhatsApp();
   const venta=normalizarTexto(document.getElementById("cotVenta").value);
   const usarItems=venta==="cotizacion";
   const usarMateriales=venta==="muestra"||venta==="produccion";
@@ -2766,6 +2867,11 @@ async function guardarCotizacion(){
   const detalleOrigenCliente=document.getElementById("cotOtroOrigen").value.trim();
   const ciudadPais=document.getElementById("cotCiudadPais").value.trim();
   const venta=document.getElementById("cotVenta").value;
+  if(BLOQUEO_TEMPORAL_VENTA_WHATSAPP&&esAsesorWhatsApp()&&!cotizacionEditandoId&&venta!=="Cotización"){
+    alert("Temporalmente, el área de WhatsApp solo puede crear cotizaciones.");
+    aplicarBloqueoTemporalVentaWhatsApp();
+    return;
+  }
   const ventaEsCotizacion=venta==="Cotización";
   const diseno=document.getElementById("cotDiseno").value;
   const total=parseValorCOP(document.getElementById("cotTotalPedido").value);
@@ -4221,6 +4327,10 @@ async function guardarRemisionCompleta(){
 
   if(!currentUser){
     alert("La sesión no está activa.");
+    return;
+  }
+  if(BLOQUEO_TEMPORAL_VENTA_WHATSAPP&&esAsesorWhatsApp()){
+    alert("Nueva Remisión está deshabilitada temporalmente para el área de WhatsApp.");
     return;
   }
   const fecha=fechaHoy();
