@@ -688,7 +688,7 @@ min-height:44px;
 </div>
 
 <div class="field"><label>Ciudad / Municipio <span class="req">*</span></label><input type="text" id="remClienteCiudad" placeholder="ej. Medellín, Bogotá, Bello..." required></div>
-<div class="field"><label>Teléfono / WhatsApp <span class="req">*</span></label><input type="tel" id="remClienteTel" placeholder="ej. 3001234567" required></div>
+<div class="field"><label>Teléfono / WhatsApp <span class="req">*</span></label><input type="tel" id="remClienteTel" placeholder="ej. 3001234567" required pattern="\S+" title="No uses espacios en el teléfono." oninput="this.value=this.value.replace(/\s/g,'')"></div>
 <div class="field"><label>Correo Electrónico <span id="reqEmail" class="req" style="display:none">*</span></label><input type="email" id="remClienteEmail" placeholder="correo@ejemplo.com"></div>
 </div>
 
@@ -797,6 +797,7 @@ min-height:44px;
     <option>005 TRANSFERENCIA</option>
     <option>SAS TRANSFERENCIA</option>
     <option>DATAFONO</option>
+    <option>PAGO MIXTO</option>
   </select>
 </div>
 <div class="field"><label>Descuento Global Adicional (%)</label><input type="number" id="remDescGlobal" min="0" max="100" step="0.01" value="0" oninput="calcularTotales()"></div>
@@ -821,10 +822,10 @@ min-height:44px;
   </div>
   <div class="section-title" style="margin-top:15px">Datos del Cliente</div>
   <div class="grid-3">
-    <div class="field cliente-nombre-wrap"><label>Identificación (NIT / Cédula) <span class="req">*</span></label><input type="text" id="cotNit" autocomplete="off" required aria-required="true"><div id="cotClienteSugerenciasDoc" class="cliente-sugerencias hidden"></div></div>
+    <div class="field cliente-nombre-wrap"><label>Identificación (NIT / Cédula) <span class="req">*</span></label><input type="text" id="cotNit" autocomplete="off" required aria-required="true" pattern="\S+" title="No uses espacios en el documento." oninput="this.value=this.value.replace(/\s/g,'')"><div id="cotClienteSugerenciasDoc" class="cliente-sugerencias hidden"></div></div>
     <div class="field"><label>Empresa <span class="req">*</span></label><input type="text" id="cotEmpresa" required aria-required="true"></div>
     <div class="field cliente-nombre-wrap"><label>Contacto (nombre del cliente) <span class="req">*</span></label><input type="text" id="cotClienteNombre" autocomplete="off" required aria-required="true"><div id="cotClienteSugerenciasNombre" class="cliente-sugerencias hidden"></div></div>
-    <div class="field"><label>Celular <span class="req">*</span></label><input type="tel" id="cotCelular" required aria-required="true"></div>
+    <div class="field"><label>Celular <span class="req">*</span></label><input type="tel" id="cotCelular" required aria-required="true" pattern="\S+" title="No uses espacios en el teléfono." oninput="this.value=this.value.replace(/\s/g,'')"></div>
     <div class="field"><label>¿De dónde viene el cliente? <span class="req">*</span></label><select id="cotOrigenCliente" required aria-required="true" onchange="actualizarOtroOrigenCotizacion()"><option value="">-- SELECCIONE--</option><option>WHATSAPP</option><option>INSTAGRAM</option><option>PUBLICIDAD</option><option>REFERIDO PUNTO DE VENTA</option><option>REFERIDO POR CLIENTE</option><option>FACEBOOK</option><option>TIKTOK</option><option>GOOGLE / BUSCADOR</option><option>CLIENTE RECURRENTE</option><option>OTRO</option></select></div>
     <div class="field hidden" id="cotOtroOrigenWrap"><label>Especifica el origen <span class="req">*</span></label><input type="text" id="cotOtroOrigen" aria-required="true" disabled></div>
     <div class="field"><label>Ciudad / País del cliente <span class="req">*</span></label><input type="text" id="cotCiudadPais" placeholder="ej. Medellín, Colombia" required aria-required="true"></div>
@@ -932,7 +933,9 @@ min-height:44px;
       <select id="repFiltroEstado">
         <option value="TODOS">-- Todos los estados --</option>
         <option value="Pendiente">Pendiente</option>
+        <option value="Abonada">Abonada</option>
         <option value="Pagada">Pagada</option>
+        <option value="No pagada">No pagada</option>
         <option value="Anulada">Anulada</option>
       </select>
     </div>
@@ -945,6 +948,7 @@ min-height:44px;
     <option value="005 TRANSFERENCIA">005 TRANSFERENCIA</option>
     <option value="SAS TRANSFERENCIA">SAS TRANSFERENCIA</option>
     <option value="DATAFONO">DATAFONO</option>
+    <option value="PAGO MIXTO">PAGO MIXTO</option>
   </select>
   </div>
 
@@ -972,19 +976,27 @@ min-height:44px;
 <div class="card hidden" id="panelCierreCaja" style="margin-top:16px">
   <div class="section-title">Cierre del día · Caja</div>
   <p style="margin:0 0 12px;color:var(--ink-soft);font-size:13px">Compara los pagos registrados hoy con el dinero y los soportes que tienes físicamente. Las cotizaciones se cuentan por sus abonos recibidos; se excluyen documentos anulados y pendientes.</p>
-  <div class="grid-3" style="margin-bottom:12px">
+  <div class="grid-5" style="margin-bottom:12px">
     <div class="kpi-card"><div class="kpi-title">Fecha del cierre</div><div class="kpi-value" id="cierreCajaFecha">—</div></div>
     <div class="kpi-card"><div class="kpi-title">Área de Caja</div><div class="kpi-value" id="cierreCajaArea">—</div></div>
     <div class="kpi-card"><div class="kpi-title">Estado</div><div class="kpi-value" id="cierreCajaEstado">Cargando…</div></div>
+    <div class="kpi-card"><div class="kpi-title">Documentos incluidos</div><div class="kpi-value" id="cierreCajaCantidadDocumentos">0</div></div>
+    <div class="kpi-card"><div class="kpi-title">Hora de apertura</div><div class="kpi-value" id="cierreCajaHoraApertura">—</div></div>
   </div>
-  <div id="cierreCajaFormulario">
+  <div id="cierreCajaApertura" class="hidden">
+    <div class="section-title">Apertura de caja</div>
+    <p style="margin:0 0 12px;color:var(--ink-soft);font-size:13px">Cuenta la base disponible al iniciar el día y regístrala. Ese valor se incluirá automáticamente en el efectivo esperado al cierre.</p>
+    <div style="display:flex;align-items:end;gap:10px;flex-wrap:wrap">
+      <div class="field" style="margin:0;max-width:360px"><label>Base inicial de caja ($)</label><div class="currency-input"><span>$</span><input type="text" id="aperturaCajaBaseInicial" inputmode="numeric" placeholder="0" onblur="formatearCampoCOP(this)"></div></div>
+      <button type="button" class="btn primary" id="btnRegistrarAperturaCaja" onclick="registrarAperturaCaja()">Registrar apertura</button>
+    </div>
+  </div>
+  <div id="cierreCajaFormulario" class="hidden">
     <div class="grid-3" style="align-items:end">
-      <div class="field"><label>Base inicial de caja ($)</label><div class="currency-input"><span>$</span><input type="text" id="cierreCajaBaseInicial" inputmode="numeric" placeholder="0" onblur="formatearCampoCOP(this)" oninput="actualizarVistaPreviaCierreCaja()"></div><small>Se suma al efectivo esperado. El efectivo contado debe incluir esta base.</small></div>
-      <div class="kpi-card"><div class="kpi-title">Total efectivo en caja</div><div class="kpi-value" id="cierreCajaTotalEsperado">$0</div></div>
+      <div class="kpi-card"><div class="kpi-title">Base inicial registrada</div><div class="kpi-value" id="cierreCajaBaseInicial">$0</div><small>Registrada durante la apertura. Se suma al efectivo esperado.</small></div>
+      <div class="kpi-card"><div class="kpi-title">Total esperado</div><div class="kpi-value" id="cierreCajaTotalEsperado">$0</div></div>
       <div class="kpi-card"><div class="kpi-title">Total contado</div><div class="kpi-value" id="cierreCajaTotalContado">$0</div></div>
     </div>
-    <div class="section-title" style="margin-top:12px">Pagos registrados para el cierre</div>
-    <div class="table-wrap" style="margin:12px 0"><table><thead><tr><th>Hora</th><th>Documento</th><th>Tipo</th><th>Cliente</th><th>Método</th><th class="num">Valor</th></tr></thead><tbody id="cierreCajaTablaMovimientos"><tr><td colspan="6" style="text-align:center">Cargando pagos del día…</td></tr></tbody></table></div>
     <div class="table-wrap" style="margin:12px 0"><table><thead><tr><th>Método de pago</th><th class="num">Registrado hoy</th><th class="num">Esperado con base</th><th class="num">Conteo real</th><th class="num">Diferencia</th></tr></thead><tbody id="cierreCajaTablaMetodos"><tr><td colspan="5" style="text-align:center">Cargando pagos del día…</td></tr></tbody></table></div>
     <div class="grid-2" style="align-items:end">
       <div class="field"><label>Observaciones</label><textarea id="cierreCajaObservaciones" rows="2" placeholder="Obligatorias si hay diferencias"></textarea></div>
@@ -1081,7 +1093,7 @@ min-height:44px;
 <div class="field"><label>Contraseña <span class="req">*</span></label><input type="text" id="usrPass" placeholder="••••••••"></div>
 <div class="field"><label>Rol <span class="req">*</span></label><select id="usrRole"><option value="asesor">Asesor</option><option value="caja">Caja</option><option value="admin">Administrador</option></select></div>
 <div class="field"><label>Área asignada <span class="req">*</span></label><input type="text" id="usrArea" placeholder="ej. General, Bordados, Ventas..." required></div>
-<div class="field"><label>Teléfono de contacto para PDF</label><input type="tel" id="usrTelefono" autocomplete="tel"></div>
+<div class="field"><label>Teléfono de contacto para PDF</label><input type="tel" id="usrTelefono" autocomplete="tel" pattern="\S+" title="No uses espacios en el teléfono." oninput="this.value=this.value.replace(/\s/g,'')"></div>
 <div class="field"><label>Correo de contacto para PDF</label><input type="email" id="usrEmail" autocomplete="email"><small>Al editar, déjalo vacío para conservar el acceso actual. El correo es obligatorio al crear un usuario.</small></div>
 <div class="field"><label>Presupuesto Mensual</label><input type="number" id="usrPresupuestoMensual" min="0" step="1000" placeholder="ej. 20000000"></div>
 <button type="submit" class="btn primary">Guardar Usuario</button><button type="button" class="btn secondary hidden" id="btnCancelarEdicion" onclick="cancelarEdicionUsuario()">Cancelar edición</button>
@@ -1121,6 +1133,8 @@ min-height:44px;
 </main>
 
 <div id="abonoCotizacionModal" class="modal hidden"><div class="modal-card" style="max-width:520px"><div style="display:flex;justify-content:space-between;align-items:center"><h2 id="abonoCotizacionTitulo">Registrar abono</h2><button class="btn secondary" onclick="cerrarModalAbono()">Cerrar</button></div><div id="abonoCotizacionResumen" class="status"></div><div class="field"><label>Valor del abono</label><div class="currency-input"><span>$</span><input type="text" id="abonoCotizacionValor" inputmode="numeric" onblur="formatearCampoCOP(this)" aria-label="Valor del abono en pesos colombianos"></div></div><div class="field"><label>Método de pago</label><select id="abonoCotizacionMetodo"><option value="">-- Seleccione --</option><option>EFECTIVO</option><option>005 TRANSFERENCIA</option><option>SAS TRANSFERENCIA</option><option>DATAFONO</option></select></div><div class="field"><label>Fecha del abono</label><input type="date" id="abonoCotizacionFecha"></div><div style="text-align:right"><button class="btn secondary" onclick="cerrarModalAbono()">Cancelar</button><button class="btn primary" id="btnGuardarAbonoCotizacion" onclick="registrarAbonoCotizacion()">Registrar abono</button></div></div></div>
+<div id="pagoMixtoModal" class="modal hidden"><div class="modal-card" style="max-width:620px"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><h2 style="margin:0">Registrar pago mixto</h2><button class="btn secondary" onclick="cerrarModalPagoMixto()">Cerrar</button></div><p id="pagoMixtoResumen" class="status"></p><p>Registra los dos componentes en sus métodos correspondientes. La suma debe ser igual al total del documento.</p><div class="grid-2"><div class="field"><label>Primer método</label><select id="pagoMixtoMetodo1"><option>EFECTIVO</option><option>005 TRANSFERENCIA</option><option>SAS TRANSFERENCIA</option><option>DATAFONO</option></select></div><div class="field"><label>Valor</label><div class="currency-input"><span>$</span><input id="pagoMixtoValor1" type="text" inputmode="numeric" onblur="formatearCampoCOP(this)"></div></div><div class="field"><label>Segundo método</label><select id="pagoMixtoMetodo2"><option>005 TRANSFERENCIA</option><option>EFECTIVO</option><option>SAS TRANSFERENCIA</option><option>DATAFONO</option></select></div><div class="field"><label>Valor</label><div class="currency-input"><span>$</span><input id="pagoMixtoValor2" type="text" inputmode="numeric" onblur="formatearCampoCOP(this)"></div></div></div><div id="pagoMixtoValidacion" class="status"></div><div style="text-align:right;margin-top:14px"><button class="btn secondary" onclick="cerrarModalPagoMixto()">Cancelar</button><button class="btn primary" id="btnGuardarPagoMixto" onclick="registrarPagoMixto()">Registrar pago</button></div></div></div>
+<div id="noPagadaCotizacionModal" class="modal hidden"><div class="modal-card" style="max-width:520px"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><h2 style="margin:0">Marcar cotización como no pagada</h2><button class="btn secondary" onclick="cerrarModalNoPagada()">Cerrar</button></div><p id="noPagadaCotizacionResumen" class="status"></p><div class="field"><label for="noPagadaCotizacionComentario">Motivo o comentario <span style="color:#c53030">*</span></label><textarea id="noPagadaCotizacionComentario" rows="4" minlength="3" maxlength="500" required placeholder="Ej.: Precios muy costosos"></textarea><small>Obligatorio, máximo 500 caracteres.</small></div><div style="text-align:right;margin-top:14px"><button class="btn secondary" onclick="cerrarModalNoPagada()">Cancelar</button><button class="btn danger" id="btnConfirmarNoPagada" onclick="confirmarCotizacionNoPagada()">Guardar como no pagada</button></div></div></div>
 <div id="detalleModal" class="modal hidden">
 <div class="modal-card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><h2 style="margin-top:0">Detalle del documento</h2><button class="btn secondary" onclick="cerrarDetalle()">Cerrar</button></div><div id="detalleContenido"></div></div>
 </div>
@@ -1250,7 +1264,10 @@ function datosDesdeFila(tabla,fila){
     doc[original]=v;
   });
   if(tabla==="perfiles"){doc.role=fila.rol;doc.username=fila.usuario;doc.email=fila.email||doc.email||"";}
-  if(tabla==="remisiones")doc.id=fila.id_documento;
+  if(tabla==="remisiones"){
+    doc.id=fila.id_documento;
+    if(!doc.fechaCreacion&&fila.datos?.fechaCreacion)doc.fechaCreacion=fila.datos.fechaCreacion;
+  }
   if(tabla==="clientes")doc.id=fila.documento;
   if(tabla==="abonos_cotizaciones"){doc.id=fila.id;if(fila.id_documento==null)doc.idDocumento=fila.datos?.idDocumento||"";}
   return doc;
@@ -1540,7 +1557,8 @@ async function logout(){
   detenerListenerReporteCaja();
   cierreCajaResumenActual=null;
   resumenMetaEmpresaGlobal=null;
-  document.getElementById("cierreCajaBaseInicial").value="";
+  document.getElementById("cierreCajaBaseInicial").textContent="$0";
+  document.getElementById("aperturaCajaBaseInicial").value="";
   document.getElementById("cierreCajaObservaciones").value="";
   cacheUsuarios=null;cacheRemisiones=null;cacheConfiguracionEmpresa=null;
   cacheConsultasReportes.clear();cacheAbonosReporte.clear();
@@ -1594,40 +1612,57 @@ async function aplicarSesion(){
    ========================================================= */
 async function cargarCierreCaja(confirmarReemplazo=false){
   if(currentUser?.role!=="caja")return;
-  const yaHayConteo=[...document.querySelectorAll(".cierre-caja-contado")].some(input=>input.value.trim()!=="")||document.getElementById("cierreCajaBaseInicial")?.value.trim()!=="";
+  const yaHayConteo=[...document.querySelectorAll(".cierre-caja-contado")].some(input=>input.value.trim()!=="");
   if(confirmarReemplazo&&yaHayConteo&&!confirm("Actualizar los pagos del servidor borrará los conteos que aún no has guardado. ¿Continuar?"))return;
   const estado=document.getElementById("cierreCajaEstado");
   document.getElementById("btnCrearCierreCaja").disabled=true;
   estado.textContent="Cargando…";
   try{
-    const {data,error}=await supabaseClient.rpc("resumen_cierre_caja");
-    if(error)throw error;
-    cierreCajaResumenActual=data||null;
+    const [resumenRespuesta,aperturaRespuesta]=await Promise.all([
+      supabaseClient.rpc("resumen_cierre_caja"),
+      supabaseClient.rpc("consultar_apertura_caja")
+    ]);
+    if(resumenRespuesta.error)throw resumenRespuesta.error;
+    if(aperturaRespuesta.error)throw aperturaRespuesta.error;
+    cierreCajaResumenActual={...(resumenRespuesta.data||{}),apertura:aperturaRespuesta.data?.apertura||null};
     if(!cierreCajaResumenActual)throw new Error("No se recibió el resumen de caja.");
     document.getElementById("cierreCajaFecha").textContent=formatearFechaCierre(cierreCajaResumenActual.fecha);
     document.getElementById("cierreCajaArea").textContent=cierreCajaResumenActual.area||currentUser.area||"—";
+    const apertura=cierreCajaResumenActual.apertura||null;
+    const movimientos=cierreCajaResumenActual.movimientos||[];
+    const documentosIncluidos=new Set(movimientos.map(m=>String(m.documento||"").trim()).filter(Boolean)).size;
+    document.getElementById("cierreCajaCantidadDocumentos").textContent=String(documentosIncluidos);
+    document.getElementById("cierreCajaHoraApertura").textContent=apertura?.created_at?formatearHoraCierre(apertura.created_at):"—";
     if(cierreCajaResumenActual.cierre){
       estado.textContent="CERRADO";
+      document.getElementById("cierreCajaApertura").classList.add("hidden");
       document.getElementById("cierreCajaFormulario").classList.add("hidden");
       document.getElementById("cierreCajaComprobante").classList.remove("hidden");
       renderizarComprobanteCierreCaja(cierreCajaResumenActual.cierre);
       return;
     }
-    estado.textContent="ABIERTO";
+    if(!apertura){
+      estado.textContent="APERTURA PENDIENTE";
+      document.getElementById("cierreCajaApertura").classList.remove("hidden");
+      document.getElementById("cierreCajaFormulario").classList.add("hidden");
+      document.getElementById("cierreCajaComprobante").classList.add("hidden");
+      document.getElementById("aperturaCajaBaseInicial").value="";
+      return;
+    }
+    estado.textContent="ABIERTO · APERTURA REGISTRADA";
+    document.getElementById("cierreCajaApertura").classList.add("hidden");
     document.getElementById("cierreCajaFormulario").classList.remove("hidden");
     document.getElementById("cierreCajaComprobante").classList.add("hidden");
-    const movimientos=cierreCajaResumenActual.movimientos||[];
-    document.getElementById("cierreCajaTablaMovimientos").innerHTML=movimientos.map(m=>`<tr><td>${escapeHtml(m.hora||"—")}</td><td>${escapeHtml(m.documento||"—")}</td><td>${escapeHtml(m.tipo||"")}</td><td>${escapeHtml(m.cliente||"—")}</td><td>${escapeHtml(m.metodo||"SIN MÉTODO")}</td><td class="num">${money(m.valor||0)}</td></tr>`).join("")||'<tr><td colspan="6" style="text-align:center;color:var(--ink-soft)">No hay pagos registrados hoy.</td></tr>';
+    document.getElementById("cierreCajaBaseInicial").textContent=money(apertura.base_inicial||0);
     const metodos=cierreCajaResumenActual.metodosSistema||{};
     document.getElementById("cierreCajaTablaMetodos").innerHTML=Object.entries(metodos).map(([metodo,sistema])=>`
       <tr data-cierre-metodo="${escapeAttr(metodo)}" data-cierre-sistema="${Number(sistema)||0}">
         <td>${escapeHtml(metodo||"SIN MÉTODO")}</td>
         <td class="num">${money(sistema)}</td>
-        <td class="num cierre-caja-esperado">${money((Number(sistema)||0)+(metodo==="EFECTIVO"?parseValorCOP(document.getElementById("cierreCajaBaseInicial").value):0))}</td>
+        <td class="num cierre-caja-esperado">${money((Number(sistema)||0)+(metodo==="EFECTIVO"?Number(apertura.base_inicial||0):0))}</td>
         <td class="num" style="min-width:150px"><div class="currency-input"><span>$</span><input type="text" class="cierre-caja-contado" data-metodo="${escapeAttr(metodo)}" inputmode="numeric" placeholder="0" oninput="actualizarVistaPreviaCierreCaja()" onblur="formatearCampoCOP(this);actualizarVistaPreviaCierreCaja()" aria-label="Conteo real de ${escapeAttr(metodo)}"></div></td>
         <td class="num cierre-caja-diferencia">${money(0)}</td>
       </tr>`).join("")||'<tr><td colspan="5">No hay métodos de pago configurados.</td></tr>';
-    document.getElementById("cierreCajaBaseInicial").value="";
     document.getElementById("cierreCajaObservaciones").value="";
     actualizarVistaPreviaCierreCaja();
     document.getElementById("btnCrearCierreCaja").disabled=false;
@@ -1636,15 +1671,38 @@ async function cargarCierreCaja(confirmarReemplazo=false){
     cierreCajaResumenActual=null;
     document.getElementById("btnCrearCierreCaja").disabled=true;
     estado.textContent="ERROR";
-    document.getElementById("cierreCajaTablaMovimientos").innerHTML=`<tr><td colspan="6" style="color:var(--required)">No se pudieron cargar los pagos del día.</td></tr>`;
     document.getElementById("cierreCajaTablaMetodos").innerHTML=`<tr><td colspan="5" style="color:var(--required)">No se pudieron cargar los pagos del día: ${escapeHtml(error.message||"Error de conexión")}</td></tr>`;
   }
+}
+
+async function registrarAperturaCaja(){
+  if(currentUser?.role!=="caja")return;
+  const input=document.getElementById("aperturaCajaBaseInicial");
+  if(!input.value.trim()){alert("Ingresa la base contada. Si no hay base, escribe 0.");input.focus();return;}
+  const base=parseValorCOP(input.value);
+  if(base<0){alert("La base inicial no puede ser negativa.");input.focus();return;}
+  if(!confirm(`¿Confirmas la apertura de caja con una base de ${money(base)}?`))return;
+  const boton=document.getElementById("btnRegistrarAperturaCaja");boton.disabled=true;
+  try{
+    exigirSupabase();
+    const {error}=await supabaseClient.rpc("registrar_apertura_caja",{p_base_inicial:base});
+    if(error)throw error;
+    await cargarCierreCaja();
+  }catch(error){console.error("No se pudo registrar la apertura de caja:",error);alert("No se pudo registrar la apertura: "+(error.message||"Error de conexión"));}
+  finally{boton.disabled=false;}
 }
 
 function formatearFechaCierre(fecha){
   if(!fecha)return"—";
   const [anio,mes,dia]=String(fecha).slice(0,10).split("-").map(Number);
   return new Date(anio,mes-1,dia).toLocaleDateString("es-CO",{year:"numeric",month:"long",day:"numeric"});
+}
+
+function formatearHoraCierre(fechaHora){
+  if(!fechaHora)return"—";
+  const fecha=new Date(fechaHora);
+  if(Number.isNaN(fecha.getTime()))return"—";
+  return new Intl.DateTimeFormat("es-CO",{timeZone:"America/Bogota",hour:"numeric",minute:"2-digit",second:"2-digit",hour12:true}).format(fecha);
 }
 
 async function cargarCierresCajaAdmin(){
@@ -1694,7 +1752,7 @@ function verCierreCajaAdmin(id){
 
 function actualizarVistaPreviaCierreCaja(){
   if(!cierreCajaResumenActual||cierreCajaResumenActual.cierre)return;
-  const base=parseValorCOP(document.getElementById("cierreCajaBaseInicial")?.value||0);
+  const base=Number(cierreCajaResumenActual.apertura?.base_inicial||0);
   let totalEsperado=0,totalContado=0;
   document.querySelectorAll("#cierreCajaTablaMetodos tr[data-cierre-metodo]").forEach(fila=>{
     const metodo=fila.dataset.cierreMetodo;
@@ -1717,14 +1775,13 @@ function actualizarVistaPreviaCierreCaja(){
 
 async function crearCierreCaja(){
   if(currentUser?.role!=="caja"||!cierreCajaResumenActual)return;
-  const baseInput=document.getElementById("cierreCajaBaseInicial");
+  const base=Number(cierreCajaResumenActual.apertura?.base_inicial||0);
+  if(!cierreCajaResumenActual.apertura){alert("Registra la apertura de caja antes de realizar el cierre.");return;}
   const conteos={};
   for(const input of document.querySelectorAll(".cierre-caja-contado")){
     if(!input.value.trim()){alert(`Ingresa el conteo real de ${input.dataset.metodo}. Si no hubo movimiento, escribe 0.`);input.focus();return;}
     conteos[input.dataset.metodo]=parseValorCOP(input.value);
   }
-  if(!baseInput.value.trim()){alert("Ingresa la base inicial de caja. Si no aplica, escribe 0.");baseInput.focus();return;}
-  const base=parseValorCOP(baseInput.value);
   const observaciones=document.getElementById("cierreCajaObservaciones").value.trim();
   const hayDiferencias=Object.entries(cierreCajaResumenActual.metodosSistema||{}).some(([metodo,valor])=>{
     const esperado=Number(valor||0)+(metodo==="EFECTIVO"?base:0);
@@ -1735,7 +1792,7 @@ async function crearCierreCaja(){
   const boton=document.getElementById("btnCrearCierreCaja");
   boton.disabled=true;boton.textContent="Guardando cierre…";
   try{
-    const {data,error}=await supabaseClient.rpc("crear_cierre_caja",{p_base_inicial:base,p_conteos:conteos,p_observaciones:observaciones});
+    const {data,error}=await supabaseClient.rpc("crear_cierre_caja",{p_conteos:conteos,p_observaciones:observaciones});
     if(error)throw error;
     if(data?.error)throw new Error(data.error);
     await cargarCierreCaja();
@@ -1760,7 +1817,7 @@ function renderizarComprobanteCierreCaja(cierre,contenedorId="cierreCajaComproba
   const filasMetodos=entradasMetodos.map(([metodo,m])=>`<tr><td><strong>${escapeHtml(metodo)}</strong></td><td><b>${money(m.sistema)}</b></td><td><b>${money(m.diferencia)}</b></td></tr>`).join("");
   document.getElementById(contenedorId).innerHTML=`<article id="${idImprimible}" class="ticket-cierre">
     <header class="ticket-encabezado"><div class="ticket-titulo">Comprobante de cierre de caja</div><div class="ticket-codigo">${escapeHtml(cierre.numero_comprobante||"")}</div></header>
-    <div class="ticket-datos"><div><span>Fecha</span><b>${escapeHtml(formatearFechaCierre(cierre.fecha))}</b></div><div><span>Área</span><b>${escapeHtml(cierre.area||"—")}</b></div><div><span>Cajero</span><b>${escapeHtml(cierre.nombre_cajero||"—")}</b></div><div><span>Registrado</span><b>${escapeHtml(cierre.created_at?new Date(cierre.created_at).toLocaleString("es-CO"):"—")}</b></div><div><span>Documentos incluidos</span><b>${documentosIncluidos}</b></div><div><span>Base inicial</span><b>${money(cierre.base_inicial)}</b></div></div>
+    <div class="ticket-datos"><div><span>Fecha</span><b>${escapeHtml(formatearFechaCierre(cierre.fecha))}</b></div><div><span>Área</span><b>${escapeHtml(cierre.area||"—")}</b></div><div><span>Cajero</span><b>${escapeHtml(cierre.nombre_cajero||"—")}</b></div><div><span>Hora de apertura</span><b>${escapeHtml(formatearHoraCierre(datos.horaApertura))}</b></div><div><span>Hora de cierre</span><b>${escapeHtml(formatearHoraCierre(datos.horaCierre||cierre.created_at))}</b></div><div><span>Documentos incluidos</span><b>${documentosIncluidos}</b></div><div><span>Base inicial</span><b>${money(cierre.base_inicial)}</b></div></div>
     <hr><h4>RESUMEN POR MÉTODO DE PAGO</h4><table class="ticket-tabla"><thead><tr><th>Método</th><th>Total</th><th>Diferencia</th></tr></thead><tbody>${filasMetodos}</tbody><tfoot><tr><th>TOTAL VENTAS</th><td><b>${money(cierre.total_sistema)}</b></td><td><b>${money(cierre.diferencia)}</b></td></tr></tfoot></table>
     <hr><div class="ticket-observaciones"><b>Observaciones</b><div>${escapeHtml(datos.observaciones||"Sin observaciones")}</div></div>
   </article><div class="ticket-acciones"><button type="button" class="btn secondary" onclick="imprimirComprobanteCierreCaja('${contenedorId}')">Imprimir comprobante</button></div>`;
@@ -2432,9 +2489,9 @@ async function buscarClienteCotizacionPorDocumento(){
 function seleccionarClienteCotizacion(cliente){
   if(!cliente) return;
   document.getElementById("cotClienteNombre").value=cliente.nomCliente||"";
-  document.getElementById("cotNit").value=cliente.docCliente||cliente.id||"";
+  document.getElementById("cotNit").value=String(cliente.docCliente||cliente.id||"").replace(/\s/g,"");
   document.getElementById("cotEmpresa").value=cliente.empresa||"";
-  document.getElementById("cotCelular").value=cliente.telCliente||"";
+  document.getElementById("cotCelular").value=String(cliente.telCliente||"").replace(/\s/g,"");
   document.getElementById("cotCiudadPais").value=cliente.ciudadPais||cliente.ciudadCliente||"";
   document.getElementById("cotOrigenCliente").value=cliente.origenCliente||"";
   document.getElementById("cotOtroOrigen").value=cliente.detalleOrigenCliente||"";
@@ -2766,7 +2823,7 @@ async function editarCotizacion(id){
   ["cotPrediseno","cotFechaSolicitud","cotFechaEntrega","cotAsesor","cotNit","cotEmpresa","cotClienteNombre","cotCelular","cotCiudadPais","cotVenta","cotDiseno","cotColorBase","cotMedidaLogo","cotLineaCorte","cotColorFondo","cotOrientacionLogo","cotCantidadCortes","cotColorLogo","cotDistanciaLogos","cotEspecificacionDiseno","cotNotas"].forEach(idCampo=>{
     const campo=document.getElementById(idCampo);
     const propiedad={cotPrediseno:"idDocumento",cotFechaSolicitud:"fechaSolicitud",cotFechaEntrega:"fechaEntrega",cotAsesor:"asesor",cotNit:"docCliente",cotEmpresa:"empresa",cotClienteNombre:"nomCliente",cotCelular:"telCliente",cotCiudadPais:"ciudadPais",cotVenta:"venta",cotDiseno:"diseno",cotColorBase:"colorBase",cotMedidaLogo:"medidaLogo",cotLineaCorte:"lineaCorte",cotColorFondo:"colorFondo",cotOrientacionLogo:"orientacionLogo",cotCantidadCortes:"cantidadCortes",cotColorLogo:"colorLogo",cotDistanciaLogos:"distanciaLogos",cotEspecificacionDiseno:"especificacionDiseno",cotNotas:"notas"}[idCampo];
-    if(campo)campo.value=doc[propiedad]??"";
+    if(campo){const valor=doc[propiedad]??"";campo.value=["cotNit","cotCelular"].includes(idCampo)?String(valor).replace(/\s/g,""):valor;}
   });
   document.getElementById("cotOrigenCliente").value=doc.origenCliente||"";
   document.getElementById("cotOtroOrigen").value=doc.detalleOrigenCliente||"";
@@ -2851,6 +2908,26 @@ function cancelarEdicionCotizacion(){
   showView("reporte");
 }
 
+async function confirmarDocumentoDuplicado({docCliente,fecha,total,excluirId=null}){
+  if(!docCliente||!fecha||!(Number(total)>0))return true;
+  try{
+    exigirSupabase();
+    const {data,error}=await supabaseClient.rpc("verificar_documento_duplicado",{
+      p_fecha:fecha,
+      p_documento_cliente:docCliente,
+      p_total:Number(total),
+      p_excluir_id:excluirId
+    });
+    if(error)throw error;
+    if(!data?.duplicado)return true;
+    return confirm("Ya existe otro documento para este cliente con el mismo valor y fecha. ¿Deseas continuar de todos modos?");
+  }catch(error){
+    console.error("No se pudo verificar si el documento está duplicado:",error);
+    alert("No se pudo comprobar si ya existe un documento con esos datos. No se guardó; vuelve a intentarlo.");
+    return false;
+  }
+}
+
 async function guardarCotizacion(){
   if(!currentUser || (currentUser.role!=="admin"&&!(currentUser.role==="asesor"&&String(currentUser.area||"").trim().toUpperCase()==="WHATSAPP"))){
     alert("Nueva Cotización está disponible para el área de WhatsApp.");
@@ -2860,9 +2937,9 @@ async function guardarCotizacion(){
   const fechaSolicitud=document.getElementById("cotFechaSolicitud").value||fechaHoy();
   const fechaEntrega=document.getElementById("cotFechaEntrega").value;
   const nomCliente=document.getElementById("cotClienteNombre").value.trim();
-  const docCliente=document.getElementById("cotNit").value.trim();
+  const docCliente=document.getElementById("cotNit").value.replace(/\s/g,"");
   const empresa=document.getElementById("cotEmpresa").value.trim();
-  const telCliente=document.getElementById("cotCelular").value.trim();
+  const telCliente=document.getElementById("cotCelular").value.replace(/\s/g,"");
   const origenCliente=document.getElementById("cotOrigenCliente").value;
   const detalleOrigenCliente=document.getElementById("cotOtroOrigen").value.trim();
   const ciudadPais=document.getElementById("cotCiudadPais").value.trim();
@@ -2899,6 +2976,8 @@ async function guardarCotizacion(){
   });
 
   if(!validarCamposCotizacion())return;
+
+  if(!await confirmarDocumentoDuplicado({docCliente,fecha:fechaSolicitud,total,excluirId:cotizacionEditandoId||null}))return;
 
   const boton=document.getElementById("btnGuardarCotizacion");
   const textoBotonOriginal=boton.textContent;
@@ -2959,7 +3038,7 @@ async function guardarCotizacion(){
     const estadoPago=totalAbonado>=total?"Pagada":totalAbonado>0?"Abonada":"Pendiente";
     const resumenFiscal=calcularResumenFiscalCotizacion({venta,items:ventaEsCotizacion?cotItemsActuales:[],materiales});
     const cotizacion={
-      idDocumento,consecutivo,tipoDoc:"Cotización",estado:estadoPago==="Pagada"?"Pagada":"Pendiente",estadoPago,
+      idDocumento,consecutivo,tipoDoc:"Cotización",estado:estadoPago,estadoPago,
       fecha:fechaSolicitud,fechaSolicitud,fechaEntrega,fechaCreacion:cotizacionOriginal?.fechaCreacion||ahora,
       docCliente,empresa,nomCliente,telCliente,ciudadPais,origenCliente,detalleOrigenCliente:origenCliente==="Otro"?detalleOrigenCliente:"",
       asesor:cotizacionOriginal?.asesor||currentUser.nombre||currentUser.username||"",area:cotizacionOriginal?.area||currentUser.area||"",
@@ -4037,7 +4116,7 @@ async function editarDocumento(id){
     doc.tipoPersona || "Natural";
 
   document.getElementById("remClienteDoc").value =
-    doc.docCliente || "";
+    String(doc.docCliente || "").replace(/\s/g,"");
 
   document.getElementById("remClienteNombre").value =
     doc.nomCliente || "";
@@ -4046,7 +4125,7 @@ async function editarDocumento(id){
     doc.ciudadCliente || "";
 
   document.getElementById("remClienteTel").value =
-    doc.telCliente || "";
+    String(doc.telCliente || "").replace(/\s/g,"");
 
   document.getElementById("remClienteEmail").value =
     doc.emailCliente || "";
@@ -4108,7 +4187,7 @@ async function buscarCliente(){
 
       document.getElementById("remClienteNombre").value=data.nomCliente||"";
       document.getElementById("remClienteCiudad").value=data.ciudadCliente||"";
-      document.getElementById("remClienteTel").value=data.telCliente||"";
+      document.getElementById("remClienteTel").value=String(data.telCliente||"").replace(/\s/g,"");
       document.getElementById("remClienteEmail").value=data.emailCliente||"";
 
       if(data.tipoPersona)
@@ -4293,10 +4372,10 @@ function seleccionarClientePorNombre(cliente){
 
   if(!cliente) return;
 
-  document.getElementById("remClienteDoc").value=cliente.docCliente||"";
+  document.getElementById("remClienteDoc").value=String(cliente.docCliente||"").replace(/\s/g,"");
   document.getElementById("remClienteNombre").value=cliente.nomCliente||"";
   document.getElementById("remClienteCiudad").value=cliente.ciudadCliente||"";
-  document.getElementById("remClienteTel").value=cliente.telCliente||"";
+  document.getElementById("remClienteTel").value=String(cliente.telCliente||"").replace(/\s/g,"");
   document.getElementById("remClienteEmail").value=cliente.emailCliente||"";
 
   if(cliente.tipoPersona)
@@ -4338,10 +4417,10 @@ async function guardarRemisionCompleta(){
 
   const tipoDoc=document.getElementById("remTipoDoc").value;
   const tipoPersona=document.getElementById("remTipoPersona").value;
-  const docCliente=document.getElementById("remClienteDoc").value.trim();
+  const docCliente=document.getElementById("remClienteDoc").value.replace(/\s/g,"");
   const nomCliente=document.getElementById("remClienteNombre").value.trim();
   const ciudadCliente=document.getElementById("remClienteCiudad").value.trim();
-  const telCliente=document.getElementById("remClienteTel").value.trim();
+  const telCliente=document.getElementById("remClienteTel").value.replace(/\s/g,"");
   const emailCliente=document.getElementById("remClienteEmail").value.trim();
   const formaPago=document.getElementById("remFormaPago").value;
   const descGlobalPct=Math.max(0,Math.min(100,Number(document.getElementById("remDescGlobal").value)||0));
@@ -4392,6 +4471,8 @@ if(camposObligatorios.some(([id, valor]) => !valor)){
   }
 
   const total=calcularTotales();
+
+  if(!await confirmarDocumentoDuplicado({docCliente,fecha,total,excluirId:window.documentoEditandoId||null}))return;
 
   try{
 
@@ -4742,7 +4823,8 @@ if(currentUser.role==="asesor"&&inicio===obtenerPeriodoMetaActual().inicio&&fin=
 
       if(
         formaPagoFiltro!=="TODOS" &&
-        (r.formaPago||"")!==formaPagoFiltro
+        (r.formaPago||"")!==formaPagoFiltro &&
+        !(normalizarTexto(r.formaPago)==="pago mixto" && Array.isArray(r.pagos) && r.pagos.some(p=>String(p.formaPago||p.metodo||"").trim().toUpperCase()===formaPagoFiltro))
       ){
         return false;
       }
@@ -5073,6 +5155,8 @@ datosRemisiones.forEach(r=>{
     }catch(error){console.warn("No se pudo exportar el historial de abonos:",error);}
     const filasAbonos=[["Cotización","Fecha de abono","Cliente","Asesor","Área","Forma de pago","Registrado por","Estado","Valor"]];
     abonosCotizaciones.forEach(a=>filasAbonos.push([a.idDocumento||"",a.fecha||"",a.nomCliente||"",a.asesor||"",a.area||"",a.formaPago||"",a.usuario||"",abonoCotizacionAnulado(a)?"Anulada":"Activa",Number(a.valor||0)]));
+    const filasPagosMixtos=[["Documento","Fecha","Cliente","Asesor","Área","Método","Valor"]];
+    datosRemisiones.filter(r=>normalizarTexto(r.formaPago)==="pago mixto"&&Array.isArray(r.pagos)).forEach(r=>r.pagos.forEach(p=>filasPagosMixtos.push([r.idDocumento||"",r.fecha||"",r.nomCliente||"",r.asesor||"",r.area||"",p.formaPago||p.metodo||"",Number(p.valor||0)])));
 
     const libro=XLSX.utils.book_new();
 
@@ -5082,6 +5166,7 @@ const hojaProductos=XLSX.utils.aoa_to_sheet(productos);
 const hojaAsesores=XLSX.utils.aoa_to_sheet(consolidadoAsesores);
 const hojaAreas=XLSX.utils.aoa_to_sheet(consolidadoAreas);
 const hojaAbonos=XLSX.utils.aoa_to_sheet(filasAbonos);
+const hojaPagosMixtos=XLSX.utils.aoa_to_sheet(filasPagosMixtos);
 
 
 /* =========================================================
@@ -5122,6 +5207,7 @@ convertirHojaAMayusculas(hojaDetalle);
 convertirHojaAMayusculas(hojaProductos);
 convertirHojaAMayusculas(hojaAsesores);
 convertirHojaAMayusculas(hojaAreas);
+convertirHojaAMayusculas(hojaPagosMixtos);
 
 
 XLSX.utils.book_append_sheet(libro,hojaResumen,"Resumen");
@@ -5130,6 +5216,7 @@ XLSX.utils.book_append_sheet(libro,hojaProductos,"Productos");
 XLSX.utils.book_append_sheet(libro,hojaAsesores,"Por Asesor");
 XLSX.utils.book_append_sheet(libro,hojaAreas,"Por Área");
 XLSX.utils.book_append_sheet(libro,hojaAbonos,"Abonos de cotización");
+XLSX.utils.book_append_sheet(libro,hojaPagosMixtos,"Pagos mixtos");
 
     hojaResumen["!cols"]=[
       {wch:28},
@@ -5218,6 +5305,8 @@ XLSX.utils.book_append_sheet(libro,hojaAbonos,"Abonos de cotización");
     aplicarFormatoMoneda(hojaAsesores,[3]);
     aplicarFormatoMoneda(hojaAreas,[2]);
     aplicarFormatoMoneda(hojaAbonos,[7]);
+    aplicarFormatoMoneda(hojaPagosMixtos,[6]);
+    hojaPagosMixtos["!cols"]=[{wch:18},{wch:14},{wch:28},{wch:24},{wch:18},{wch:24},{wch:16}];
     hojaAbonos["!cols"]=[{wch:18},{wch:16},{wch:28},{wch:24},{wch:18},{wch:24},{wch:24},{wch:18}];
 
     const hoy=fechaHoy();
@@ -5291,18 +5380,15 @@ function renderConsolidadoFormaPago(datos){
   const map={};
 
   datos.forEach(r=>{
-
-    const k=r.formaPago||"N/A";
-
-    if(!map[k])
-      map[k]={
-        formaPago:k,
-        cantidad:0,
-        total:0
-      };
-
-    map[k].cantidad++;
-    map[k].total+=Number(r.total||0);
+    const pagosMixtos=normalizarTexto(r.formaPago)==="pago mixto"&&Array.isArray(r.pagos)&&r.pagos.length
+      ? r.pagos.map(p=>({metodo:String(p.formaPago||p.metodo||"N/A").trim().toUpperCase(),valor:Number(p.valor||0)}))
+      : [{metodo:r.formaPago||"N/A",valor:Number(r.total||0)}];
+    pagosMixtos.forEach(p=>{
+      const k=p.metodo||"N/A";
+      if(!map[k])map[k]={formaPago:k,cantidad:0,total:0};
+      map[k].cantidad++;
+      map[k].total+=p.valor;
+    });
 
   });
 
@@ -5395,7 +5481,7 @@ function renderTablaDetalleRemisiones(datos){
     <span class="badge ${
       r.estado==="Pagada"
         ? "success"
-        : r.estado==="Anulada"
+        : ["Anulada","No pagada"].includes(r.estado)
           ? "danger"
           : "warning"
     }">
@@ -5423,8 +5509,6 @@ function renderTablaDetalleRemisiones(datos){
         </button>
 
         ${r.tipoDoc==="Cotización"&&puedeGestionarCotizacion(r)&&r.estado!=="Anulada"?`<button class="btn small primary" onclick="editarCotizacion('${escapeAttr(r.idDocumento||r.id||"")}')">Editar cotización</button>`:""}
-
-        ${r.tipoDoc==="Cotización"&&puedeAbonarCotizacion(r)&&r.estado!=="Anulada"&&r.estado!=="Pagada"&&r.estadoPago!=="Pagada"&&Number(r.totalAbonado||0)<Number(r.total||0)?`<button class="btn small primary" onclick="abrirModalAbono('${escapeAttr(r.idDocumento||r.id||"")}')">Abonar</button>`:""}
 
         ${
           r.estado==="Pendiente" && r.tipoDoc!=="Cotización"
@@ -5463,7 +5547,7 @@ function renderTablaDetalleRemisiones(datos){
           r.esAbonoCotizacion
             ? (r.estado==="Anulada"?'<span class="badge danger">ANULADO</span>':currentUser.role==="admin"?`<button class="btn small danger" onclick="anularAbonoCotizacion('${escapeAttr(r.idDocumento||"")}','${escapeAttr(r.idAbono||"")}')">Anular</button>`:"")
             : r.tipoDoc==="Cotización"
-              ? (puedeAbonarCotizacion(r) && r.estado!=="Anulada" && r.estado!=="Pagada" && r.estadoPago!=="Pagada" && Number(r.totalAbonado||0)<Number(r.total||0) ? `<button class="btn small primary" onclick="abrirModalAbono('${escapeAttr(r.idDocumento||r.id||"")}')">Abonar</button>` : "")
+              ? (currentUser.role==="caja"&&String(currentUser.area||"").trim().toUpperCase()==="WHATSAPP"&&String(r.area||"").trim().toUpperCase()==="WHATSAPP"&&!['anulada','abonada','pagada','no pagada'].includes(String(r.estado||"").trim().toLowerCase())&&Number(r.totalAbonado||0)===0?`<button class="btn small danger" onclick="abrirModalNoPagada('${escapeAttr(r.idDocumento||r.id||"")}')">No pagada</button>`:"" )
 
             : `
 
@@ -5475,9 +5559,9 @@ function renderTablaDetalleRemisiones(datos){
                   ? `
                     <button
                       class="btn small primary"
-                      onclick="marcarComoPagada('${escapeAttr(r.idDocumento||r.id||"")}')"
+                      onclick="pagarDocumentoReporte('${escapeAttr(r.idDocumento||r.id||"")}')"
                     >
-                      Pagar
+                      ${normalizarTexto(r.formaPago)==="pago mixto"?"Registrar pagos":"Pagar"}
                     </button>
                   `
 
@@ -5518,7 +5602,7 @@ async function abrirModalAbono(id){
   try{cot=await obtenerCotizacionParaAccion(id);}
   catch(error){console.error("No se pudo cargar la cotización para registrar un abono:",error);alert("No se pudo consultar la cotización: "+error.message);return;}
   if(!cot||!puedeAbonarCotizacion(cot)){alert("Caja solo puede registrar abonos de cotizaciones de su misma área.");return;}
-  if(cot.estado==="Anulada"||cot.estado==="Pagada"||cot.estadoPago==="Pagada"||Number(cot.totalAbonado||0)>=Number(cot.total||0)){alert("Esta cotización ya no tiene saldo pendiente.");return;}
+  if(["anulada","pagada","no pagada"].includes(String(cot.estado||"").trim().toLowerCase())||cot.estadoPago==="Pagada"||Number(cot.totalAbonado||0)>=Number(cot.total||0)){alert("Esta cotización ya no tiene saldo pendiente.");return;}
   cotizacionSeleccionadaAbono=cot;abonoCotizacionEnEdicion=null;
   document.getElementById("abonoCotizacionTitulo").textContent="Registrar abono";
   document.getElementById("btnGuardarAbonoCotizacion").textContent="Registrar abono";
@@ -5528,6 +5612,52 @@ async function abrirModalAbono(id){
   document.getElementById("abonoCotizacionMetodo").value="";
   document.getElementById("abonoCotizacionFecha").value=fechaHoy();
   document.getElementById("abonoCotizacionModal").classList.remove("hidden");
+}
+let cotizacionSeleccionadaNoPagada=null;
+async function abrirModalNoPagada(id){
+  if(currentUser?.role!=="caja"||String(currentUser.area||"").trim().toUpperCase()!=="WHATSAPP"){
+    alert("Esta opción está disponible únicamente para Caja WhatsApp.");
+    return;
+  }
+  let cotizacion;
+  try{cotizacion=await obtenerCotizacionParaAccion(id);}
+  catch(error){console.error("No se pudo consultar la cotización:",error);alert("No se pudo consultar la cotización: "+error.message);return;}
+  if(!cotizacion||cotizacion.tipoDoc!=="Cotización"||String(cotizacion.area||"").trim().toUpperCase()!=="WHATSAPP"){
+    alert("Solo puedes marcar cotizaciones de tu área.");
+    return;
+  }
+  if(["anulada","pagada","no pagada"].includes(String(cotizacion.estado||"").trim().toLowerCase())||Number(cotizacion.totalAbonado||0)>0){
+    alert("Solo se pueden marcar cotizaciones pendientes que no tengan abonos.");
+    return;
+  }
+  cotizacionSeleccionadaNoPagada=cotizacion;
+  document.getElementById("noPagadaCotizacionResumen").innerHTML=`<strong>${escapeHtml(cotizacion.idDocumento||id)}</strong> · ${escapeHtml(cotizacion.nomCliente||"Cliente")}`;
+  document.getElementById("noPagadaCotizacionComentario").value="";
+  document.getElementById("noPagadaCotizacionModal").classList.remove("hidden");
+  document.getElementById("noPagadaCotizacionComentario").focus();
+}
+function cerrarModalNoPagada(){
+  document.getElementById("noPagadaCotizacionModal").classList.add("hidden");
+  cotizacionSeleccionadaNoPagada=null;
+}
+async function confirmarCotizacionNoPagada(){
+  const cotizacion=cotizacionSeleccionadaNoPagada;
+  const comentario=document.getElementById("noPagadaCotizacionComentario").value.trim();
+  if(!cotizacion){alert("Selecciona una cotización.");return;}
+  if(comentario.length<3){alert("Escribe un comentario de al menos 3 caracteres.");document.getElementById("noPagadaCotizacionComentario").focus();return;}
+  const boton=document.getElementById("btnConfirmarNoPagada");
+  boton.disabled=true;
+  try{
+    await operarCotizacion(cotizacion.idDocumento,"marcar_no_pagada",{comentario});
+    cacheRemisiones=null;
+    cacheConsultasReportes.clear();
+    cacheAbonosReporte.clear();
+    cerrarModalNoPagada();
+    await procesarReportes(true);
+  }catch(error){
+    console.error("No se pudo marcar la cotización como no pagada:",error);
+    alert("No se pudo actualizar la cotización: "+error.message);
+  }finally{boton.disabled=false;}
 }
 async function editarAbonoCotizacion(idDocumento,idAbono){try{const snap=await db.collection("abonosCotizaciones").doc(idAbono).get();if(!snap.exists)throw new Error("No se encontró el abono.");const abono={id:snap.id,...snap.data()};cotizacionSeleccionadaAbono=datosRemisiones.find(d=>(d.idDocumento||d.id)===idDocumento);if(!cotizacionSeleccionadaAbono)throw new Error("No se encontró la cotización.");if(!puedeGestionarCotizacion(cotizacionSeleccionadaAbono))throw new Error("Solo Administración o el asesor de WhatsApp que creó esta cotización pueden editar abonos.");if(abonoCotizacionAnulado(abono))throw new Error("No se puede editar un abono anulado.");abonoCotizacionEnEdicion=abono;document.getElementById("abonoCotizacionTitulo").textContent="Editar abono";document.getElementById("btnGuardarAbonoCotizacion").textContent="Guardar cambios";document.getElementById("abonoCotizacionResumen").innerHTML=`<strong>${escapeHtml(idDocumento)}</strong> · ${escapeHtml(abono.nomCliente||cotizacionSeleccionadaAbono.nomCliente||"Cliente")}`;document.getElementById("abonoCotizacionValor").value=Number(abono.valor)>0?formatearValorCOP(abono.valor):"";document.getElementById("abonoCotizacionValor").removeAttribute("max");document.getElementById("abonoCotizacionMetodo").value=abono.formaPago||"";document.getElementById("abonoCotizacionFecha").value=abono.fecha||fechaHoy();document.getElementById("abonoCotizacionModal").classList.remove("hidden");}catch(error){console.error("No se pudo abrir la edición del abono:",error);alert("No se pudo abrir el abono: "+error.message);}}
 async function anularAbonoCotizacion(idDocumento,idAbono){
@@ -5586,7 +5716,7 @@ async function registrarAbonoCotizacion(){
   const valor=parseValorCOP(document.getElementById("abonoCotizacionValor").value);
   const formaPago=document.getElementById("abonoCotizacionMetodo").value;
   const fecha=document.getElementById("abonoCotizacionFecha").value||fechaHoy();
-  if(!cot||!puedeAbonarCotizacion(cot)||abonoCotizacionEnEdicion&&!puedeGestionarCotizacion(cot)){alert("No tienes permiso para registrar este abono de cotización.");return;}
+  if(!cot||!puedeAbonarCotizacion(cot)||["anulada","pagada","no pagada"].includes(String(cot.estado||"").trim().toLowerCase())||abonoCotizacionEnEdicion&&!puedeGestionarCotizacion(cot)){alert("No tienes permiso para registrar este abono de cotización.");return;}
   if(!(valor>0)||!formaPago){alert("Ingresa un valor y elige la forma de pago.");return;}
   const boton=document.getElementById("btnGuardarAbonoCotizacion");
   boton.disabled=true;
@@ -5649,9 +5779,60 @@ function textoDescripcionItem(item){
   return `${tipo} · ${descripcion}`;
 }
 
-async function verDetalleDoc(id){let doc=datosRemisiones.find(d=>String(d.idDocumento||d.id||"").trim()===String(id||"").trim());try{const s=await db.collection("remisiones").doc(String(id)).get();if(s.exists){const datos=s.data()||{};doc={...datos,id:s.id,idDocumento:datos.idDocumento||s.id};}}catch(e){console.warn("No se pudo actualizar el documento",e);}if(!doc){alert("No se encontró el documento para mostrar el detalle.");return;}const esCot=doc.tipoDoc==="Cotización",puedeGestionar=esCot&&puedeGestionarCotizacion(doc),puedeAbonar=esCot&&puedeAbonarCotizacion(doc),puedeVerPdfProduccion=puedeGestionar,hist=[];if(esCot){try{const snap=await db.collection("abonosCotizaciones").where("idDocumento","==",doc.idDocumento).get();snap.docs.forEach(d=>hist.push({id:d.id,...d.data()}));hist.sort((a,b)=>String(a.fechaHora||a.fecha).localeCompare(String(b.fechaHora||b.fecha)));}catch(e){console.warn("No se pudo cargar el historial de abonos",e);}}const abonado=Math.max(Number(doc.totalAbonado||0),hist.filter(x=>!abonoCotizacionAnulado(x)).reduce((a,x)=>a+Number(x.valor||0),0));const pagada=String(doc.estado||"").toLowerCase()==="pagada"||abonado>=Number(doc.total||0);const saldo=pagada?0:Math.max(0,Number(doc.total||0)-abonado);const items=esCot?(doc.venta==="Cotización"&&Array.isArray(doc.items)&&doc.items.length?doc.items:obtenerMaterialesCotizacion(doc).map(m=>({descripcion:[m.tipo,m.medida].filter(Boolean).join(" · "),cantidad:m.metros||0,precioUnitario:m.valorUnitario||0,ivaAplicado:!!m.ivaAplicado,ivaPct:m.ivaPct||0,descuento:0,subtotal:m.valorTotal||0}))):(Array.isArray(doc.items)?doc.items:[]);let ims={imagenes:[],errores:[]};if(esCot){try{ims=await obtenerImagenesCotizacionFirmadas(doc.imagenesReferencia);}catch(error){console.warn("No se pudieron cargar las imágenes de la cotización:",error);ims.errores=[error.message||String(error)];}}document.getElementById("detalleContenido").innerHTML=`<div class="grid-2"><div><strong>Documento:</strong> ${escapeHtml(doc.idDocumento||id)}</div><div><strong>Fecha:</strong> ${escapeHtml(doc.fecha||"")}</div><div><strong>${esCot?"Identificación":"Documento cliente"}:</strong> ${escapeHtml(doc.docCliente||"")}</div>${esCot?`<div><strong>Empresa:</strong> ${escapeHtml(doc.empresa||"")}</div><div><strong>Contacto:</strong> ${escapeHtml(doc.nomCliente||"")}</div>`:`<div><strong>Cliente:</strong> ${escapeHtml(doc.nomCliente||"")}</div>`}${esCot?`<div><strong>Ciudad / País:</strong> ${escapeHtml(doc.ciudadPais||"")}</div><div><strong>Origen:</strong> ${escapeHtml(doc.origenCliente||"")}</div>`:""}<div><strong>Ciudad:</strong> ${escapeHtml(doc.ciudadCliente||"")}</div><div><strong>Teléfono:</strong> ${escapeHtml(doc.telCliente||"")}</div><div><strong>Asesor:</strong> ${escapeHtml(doc.asesor||"")}</div><div><strong>Área:</strong> ${escapeHtml(doc.area||"")}</div><div><strong>Forma de pago:</strong> ${escapeHtml(doc.formaPago||"")}</div><div><strong>Tipo:</strong> ${escapeHtml(doc.tipoDoc||"")}</div><div><strong>Estado:</strong> ${escapeHtml(pagada?"Pagada":doc.estado||"Pendiente")}</div>${esCot?`<div><strong>Pago:</strong> ${escapeHtml(doc.estadoPago||(pagada?"Pagada":abonado>0?"Abonada":"Pendiente"))}</div><div><strong>Válido hasta:</strong> ${escapeHtml(doc.fechaEntrega||"")}</div><div style="color:#c53030"><strong>Saldo pendiente:</strong> ${money(saldo)}</div>${doc.ordenProduccion?`<div><strong>Orden:</strong> ${escapeHtml(doc.ordenProduccion.idOrden||"Creada")} · ${escapeHtml(doc.ordenProduccion.estado||"Creada")}</div>`:""}`:""}</div><div class="table-wrap"><table><thead><tr><th>Descripción</th><th>Cantidad</th><th>Precio</th><th>IVA</th><th>Descuento</th><th>Subtotal</th></tr></thead><tbody>${items.map(i=>`<tr><td>${escapeHtml(textoDescripcionItem(i))}</td><td>${formatNumber(i.cantidad||0)}</td><td>${money(i.precioUnitario||0)}</td><td>${i.ivaAplicado?`${i.ivaPct||19}%`:"IVA incluido"}</td><td>${money(i.descuento||0)}</td><td>${money(i.subtotal||0)}</td></tr>`).join("")||'<tr><td colspan="6">Sin productos registrados.</td></tr>'}</tbody></table></div><div class="total-box">Total: ${money(doc.total||0)}</div>${esCot?`<h3>Historial de abonos</h3><div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Método</th><th>Registrado por</th><th>Valor</th>${puedeGestionar?"<th>Acción</th>":""}</tr></thead><tbody>${hist.map(a=>`<tr><td>${escapeHtml(a.fecha||"")}</td><td>${escapeHtml(a.formaPago||"")}</td><td>${escapeHtml(a.usuario||"")}</td><td>${money(a.valor||0)}</td>${puedeGestionar?`<td>${abonoCotizacionAnulado(a)?'<span class="badge danger">ANULADO</span>':`${currentUser.role==="admin"?`<button class="btn small danger" onclick="anularAbonoCotizacion('${escapeAttr(doc.idDocumento)}','${escapeAttr(a.id)}')">Anular</button>`:""}<button class="btn small secondary" onclick="editarAbonoCotizacion('${escapeAttr(doc.idDocumento)}','${escapeAttr(a.id)}')">Editar</button>`}</td>`:""}</tr>`).join("")||`<tr><td colspan="${puedeGestionar?5:4}">Sin abonos registrados.</td></tr>`}</tbody></table></div><h3>Imágenes de referencia</h3>${ims.imagenes.map((im,i)=>`<img src="${escapeAttr(im.url)}" alt="Imagen ${i+1}" style="max-width:180px;max-height:180px;object-fit:contain;margin:5px">`).join("")||"<p>Sin imágenes guardadas.</p>"}${doc.notas?`<p><strong>Indicaciones:</strong> ${escapeHtml(doc.notas)}</p>`:""}<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:24px">${puedeGestionar&&doc.estado!=="Anulada"?`<button class="btn primary" onclick="editarCotizacion('${escapeAttr(doc.idDocumento)}')">Editar cotización</button>`:""}${puedeAbonar&&!pagada?`<button class="btn primary" onclick="abrirModalAbono('${escapeAttr(doc.idDocumento)}')">Abonar</button>`:""}${puedeGestionar?`<button class="btn primary" onclick="generarPDFCotizacion('${escapeAttr(doc.idDocumento)}','cotizacion')">PDF de cotización</button>`:""}${puedeVerPdfProduccion? (doc.ordenProduccion?`<button class="btn primary" onclick="generarPDFCotizacion('${escapeAttr(doc.idDocumento)}','produccion')">PDF de orden de producción</button>`:`<button class="btn primary" onclick="crearOrdenProduccionCotizacion('${escapeAttr(doc.idDocumento)}')">Crear orden de producción</button>`):""}</div>`:`<p>${escapeHtml(doc.observaciones||"")}</p><button class="btn primary" onclick="imprimirDocumento('${escapeAttr(doc.idDocumento)}')">Imprimir</button>`}</div>`;document.getElementById("detalleModal").classList.remove("hidden");}
+
+let pagoMixtoDocumentoSeleccionado=null;
+
+function pagarDocumentoReporte(id){
+  const doc=datosRemisiones.find(r=>String(r.idDocumento||r.id||"")===String(id));
+  if(normalizarTexto(doc?.formaPago)==="pago mixto")return abrirModalPagoMixto(id);
+  return marcarComoPagada(id);
+}
+
+function abrirModalPagoMixto(id){
+  const doc=datosRemisiones.find(r=>String(r.idDocumento||r.id||"")===String(id));
+  if(!doc){alert("No se encontró la remisión para registrar el pago.");return;}
+  if(!["admin","caja"].includes(currentUser?.role)){alert("No tienes permisos para registrar este pago.");return;}
+  if(doc.estado==="Pagada"||doc.estado==="Anulada"){alert("La remisión ya no está disponible para pago.");return;}
+  pagoMixtoDocumentoSeleccionado=doc;
+  document.getElementById("pagoMixtoResumen").innerHTML=`<strong>${escapeHtml(doc.idDocumento||id)}</strong> · ${escapeHtml(doc.nomCliente||"Cliente")} · Total: <strong>${money(doc.total||0)}</strong>`;
+  document.getElementById("pagoMixtoValor1").value="";
+  document.getElementById("pagoMixtoValor2").value="";
+  document.getElementById("pagoMixtoMetodo1").value="EFECTIVO";
+  document.getElementById("pagoMixtoMetodo2").value="005 TRANSFERENCIA";
+  document.getElementById("pagoMixtoValidacion").textContent="";
+  document.getElementById("pagoMixtoModal").classList.remove("hidden");
+}
+
+function cerrarModalPagoMixto(){document.getElementById("pagoMixtoModal").classList.add("hidden");pagoMixtoDocumentoSeleccionado=null;}
+
+async function registrarPagoMixto(){
+  const doc=pagoMixtoDocumentoSeleccionado;if(!doc)return;
+  const metodo1=document.getElementById("pagoMixtoMetodo1").value;
+  const metodo2=document.getElementById("pagoMixtoMetodo2").value;
+  const valor1=parseValorCOP(document.getElementById("pagoMixtoValor1").value);
+  const valor2=parseValorCOP(document.getElementById("pagoMixtoValor2").value);
+  const total=Number(doc.total||0), aviso=document.getElementById("pagoMixtoValidacion");
+  if(metodo1===metodo2){aviso.textContent="Selecciona dos métodos de pago diferentes.";return;}
+  if(valor1<=0||valor2<=0){aviso.textContent="Los dos valores deben ser mayores que cero.";return;}
+  if(Math.round((valor1+valor2)*100)!==Math.round(total*100)){aviso.textContent=`La suma debe ser exactamente ${money(total)}.`;return;}
+  const boton=document.getElementById("btnGuardarPagoMixto");boton.disabled=true;
+  try{
+    exigirSupabase();
+    const pagos=[{formaPago:metodo1,valor:valor1},{formaPago:metodo2,valor:valor2}];
+    const {error}=await supabaseClient.rpc("registrar_pago_mixto",{p_id_documento:doc.idDocumento||doc.id,p_pagos:pagos});
+    if(error)throw error;
+    doc.estado="Pagada";doc.pagos=pagos;
+    const id=doc.idDocumento||doc.id;cerrarModalPagoMixto();cacheConsultasReportes.clear();
+    if(Array.isArray(cacheRemisiones)){const cached=cacheRemisiones.find(r=>String(r.idDocumento||r.id)===String(id));if(cached){cached.estado="Pagada";cached.pagos=pagos;}}
+    await verDetalleDoc(id);
+    if(document.getElementById("view-reporte")&&!document.getElementById("view-reporte").classList.contains("hidden"))await Promise.all([actualizarMetaReporte(true),procesarReportes(true)]);
+  }catch(error){console.error("No se pudo registrar el pago mixto",error);aviso.textContent=`No se pudo registrar el pago: ${error.message||error}`;}
+  finally{boton.disabled=false;}
+}
 
 /* Marcar como pagada la factura, campo exclusivo para caja y Administrador*/ 
+
+async function verDetalleDoc(id){let doc=datosRemisiones.find(d=>String(d.idDocumento||d.id||"").trim()===String(id||"").trim());try{const s=await db.collection("remisiones").doc(String(id)).get();if(s.exists){const datos=s.data()||{};doc={...datos,id:s.id,idDocumento:datos.idDocumento||s.id};}}catch(e){console.warn("No se pudo actualizar el documento",e);}if(!doc){alert("No se encontró el documento para mostrar el detalle.");return;}const esCot=doc.tipoDoc==="Cotización",puedeGestionar=esCot&&puedeGestionarCotizacion(doc),puedeAbonar=esCot&&puedeAbonarCotizacion(doc),puedeVerPdfProduccion=puedeGestionar,hist=[];if(esCot){try{const snap=await db.collection("abonosCotizaciones").where("idDocumento","==",doc.idDocumento).get();snap.docs.forEach(d=>hist.push({id:d.id,...d.data()}));hist.sort((a,b)=>String(a.fechaHora||a.fecha).localeCompare(String(b.fechaHora||b.fecha)));}catch(e){console.warn("No se pudo cargar el historial de abonos",e);}}const abonado=Math.max(Number(doc.totalAbonado||0),hist.filter(x=>!abonoCotizacionAnulado(x)).reduce((a,x)=>a+Number(x.valor||0),0));const pagada=String(doc.estado||"").toLowerCase()==="pagada"||abonado>=Number(doc.total||0),noPagada=String(doc.estado||"").trim().toLowerCase()==="no pagada";const saldo=pagada?0:Math.max(0,Number(doc.total||0)-abonado);const items=esCot?(doc.venta==="Cotización"&&Array.isArray(doc.items)&&doc.items.length?doc.items:obtenerMaterialesCotizacion(doc).map(m=>({descripcion:[m.tipo,m.medida].filter(Boolean).join(" · "),cantidad:m.metros||0,precioUnitario:m.valorUnitario||0,ivaAplicado:!!m.ivaAplicado,ivaPct:m.ivaPct||0,descuento:0,subtotal:m.valorTotal||0}))):(Array.isArray(doc.items)?doc.items:[]);let ims={imagenes:[],errores:[]};if(esCot){try{ims=await obtenerImagenesCotizacionFirmadas(doc.imagenesReferencia);}catch(error){console.warn("No se pudieron cargar las imágenes de la cotización:",error);ims.errores=[error.message||String(error)];}}document.getElementById("detalleContenido").innerHTML=`<div class="grid-2"><div><strong>Documento:</strong> ${escapeHtml(doc.idDocumento||id)}</div><div><strong>Fecha:</strong> ${escapeHtml(doc.fecha||"")}</div><div><strong>${esCot?"Identificación":"Documento cliente"}:</strong> ${escapeHtml(doc.docCliente||"")}</div>${esCot?`<div><strong>Empresa:</strong> ${escapeHtml(doc.empresa||"")}</div><div><strong>Contacto:</strong> ${escapeHtml(doc.nomCliente||"")}</div>`:`<div><strong>Cliente:</strong> ${escapeHtml(doc.nomCliente||"")}</div>`}${esCot?`<div><strong>Ciudad / País:</strong> ${escapeHtml(doc.ciudadPais||"")}</div><div><strong>Origen:</strong> ${escapeHtml(doc.origenCliente||"")}</div>`:""}<div><strong>Ciudad:</strong> ${escapeHtml(doc.ciudadCliente||"")}</div><div><strong>Teléfono:</strong> ${escapeHtml(doc.telCliente||"")}</div><div><strong>Asesor:</strong> ${escapeHtml(doc.asesor||"")}</div><div><strong>Área:</strong> ${escapeHtml(doc.area||"")}</div><div><strong>Forma de pago:</strong> ${escapeHtml(doc.formaPago||"")}</div><div><strong>Tipo:</strong> ${escapeHtml(doc.tipoDoc||"")}</div><div><strong>Estado:</strong> ${escapeHtml(pagada?"Pagada":doc.estado||"Pendiente")}</div>${esCot?`<div><strong>Pago:</strong> ${escapeHtml(doc.estadoPago||(pagada?"Pagada":abonado>0?"Abonada":"Pendiente"))}</div><div><strong>Válido hasta:</strong> ${escapeHtml(doc.fechaEntrega||"")}</div><div style="color:#c53030"><strong>Saldo pendiente:</strong> ${money(saldo)}</div>${noPagada&&doc.motivoNoPagada?`<div style="grid-column:1/-1"><strong>Motivo de no pago:</strong> ${escapeHtml(doc.motivoNoPagada)}</div>`:""}${doc.ordenProduccion?`<div><strong>Orden:</strong> ${escapeHtml(doc.ordenProduccion.idOrden||"Creada")} · ${escapeHtml(doc.ordenProduccion.estado||"Creada")}</div>`:""}`:""}</div><div class="table-wrap"><table><thead><tr><th>Descripción</th><th>Cantidad</th><th>Precio</th><th>IVA</th><th>Descuento</th><th>Subtotal</th></tr></thead><tbody>${items.map(i=>`<tr><td>${escapeHtml(textoDescripcionItem(i))}</td><td>${formatNumber(i.cantidad||0)}</td><td>${money(i.precioUnitario||0)}</td><td>${i.ivaAplicado?`${i.ivaPct||19}%`:"IVA incluido"}</td><td>${money(i.descuento||0)}</td><td>${money(i.subtotal||0)}</td></tr>`).join("")||'<tr><td colspan="6">Sin productos registrados.</td></tr>'}</tbody></table></div><div class="total-box">Total: ${money(doc.total||0)}</div>${esCot?`<h3>Historial de abonos</h3><div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Método</th><th>Registrado por</th><th>Valor</th>${puedeGestionar?"<th>Acción</th>":""}</tr></thead><tbody>${hist.map(a=>`<tr><td>${escapeHtml(a.fecha||"")}</td><td>${escapeHtml(a.formaPago||"")}</td><td>${escapeHtml(a.usuario||"")}</td><td>${money(a.valor||0)}</td>${puedeGestionar?`<td>${abonoCotizacionAnulado(a)?'<span class="badge danger">ANULADO</span>':`${currentUser.role==="admin"?`<button class="btn small danger" onclick="anularAbonoCotizacion('${escapeAttr(doc.idDocumento)}','${escapeAttr(a.id)}')">Anular</button>`:""}<button class="btn small secondary" onclick="editarAbonoCotizacion('${escapeAttr(doc.idDocumento)}','${escapeAttr(a.id)}')">Editar</button>`}</td>`:""}</tr>`).join("")||`<tr><td colspan="${puedeGestionar?5:4}">Sin abonos registrados.</td></tr>`}</tbody></table></div><h3>Imágenes de referencia</h3>${ims.imagenes.map((im,i)=>`<img src="${escapeAttr(im.url)}" alt="Imagen ${i+1}" style="max-width:180px;max-height:180px;object-fit:contain;margin:5px">`).join("")||"<p>Sin imágenes guardadas.</p>"}${doc.notas?`<p><strong>Indicaciones:</strong> ${escapeHtml(doc.notas)}</p>`:""}<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:24px">${puedeGestionar&&doc.estado!=="Anulada"?`<button class="btn primary" onclick="editarCotizacion('${escapeAttr(doc.idDocumento)}')">Editar cotización</button>`:""}${puedeAbonar&&!pagada&&!noPagada?`<button class="btn primary" onclick="abrirModalAbono('${escapeAttr(doc.idDocumento)}')">Abonar</button>`:""}${puedeGestionar?`<button class="btn primary" onclick="generarPDFCotizacion('${escapeAttr(doc.idDocumento)}','cotizacion')">PDF de cotización</button>`:""}${puedeVerPdfProduccion? (doc.ordenProduccion?`<button class="btn primary" onclick="generarPDFCotizacion('${escapeAttr(doc.idDocumento)}','produccion')">PDF de orden de producción</button>`:`<button class="btn primary" onclick="crearOrdenProduccionCotizacion('${escapeAttr(doc.idDocumento)}')">Crear orden de producción</button>`):""}</div>`:`<p>${escapeHtml(doc.observaciones||"")}</p><button class="btn primary" onclick="imprimirDocumento('${escapeAttr(doc.idDocumento)}')">Imprimir</button>`}</div>`;document.getElementById("detalleModal").classList.remove("hidden");}
 
 async function marcarComoPagada(id){
 
@@ -5812,11 +5993,34 @@ async function registrarFveDianAbono(idAbono){
 
 /* Agrega botón Anular, exclusivo para Admin*/
 
+function obtenerFechaCreacionParaAnulacion(documento){
+  const valor=documento?.fechaCreacion||documento?.fecha_creacion||documento?.created_at||
+    (documento?.fecha?`${String(documento.fecha).slice(0,10)}T00:00:00-05:00`:null);
+  if(!valor)return null;
+  const fecha=new Date(valor);
+  return Number.isNaN(fecha.getTime())?null:fecha;
+}
+
+function validarPlazoAnulacion(documento,mostrarAlerta=true){
+  const creado=obtenerFechaCreacionParaAnulacion(documento);
+  if(!creado)return true;
+  if(Date.now()-creado.getTime()<=24*60*60*1000)return true;
+  if(mostrarAlerta)alert("No se puede anular este documento: el plazo máximo de 24 horas desde su creación ya venció.");
+  return false;
+}
+
 async function anularDocumento(id){
 
   try{
 
     exigirSupabase();
+
+    let documento=datosRemisiones.find(r=>String(r.idDocumento||r.id||"")===String(id))||
+      cacheRemisiones?.find(r=>String(r.idDocumento||r.id||"")===String(id));
+    const consultaDocumento=await db.collection("remisiones").doc(id).get();
+    if(consultaDocumento.exists)documento={...consultaDocumento.data(),id:consultaDocumento.id,idDocumento:consultaDocumento.data()?.idDocumento||consultaDocumento.id};
+    if(!documento){alert("No se encontró el documento que se va a anular.");return;}
+    if(documento&&!validarPlazoAnulacion(documento))return;
 
     /* =========================================
        CONFIRMAR ANULACIÓN
@@ -5946,37 +6150,6 @@ async function anularDocumento(id){
 
       return;
     }
-        if(cacheRemisiones){
-
-  const documentoCacheado =
-    cacheRemisiones.find(
-      r=>(r.idDocumento||r.id)===id
-    );
-
-  if(documentoCacheado){
-
-    documentoCacheado.estado="Anulada";
-    documentoCacheado.codigoAnulacion=codigo;
-    documentoCacheado.observacionAnulacion=observacion.trim();
-    documentoCacheado.fechaAnulacion=new Date().toISOString();
-
-  }
-
-}
-
-const documentoActualizado =
-  datosRemisiones.find(
-    r=>(r.idDocumento||r.id)===id
-  );
-
-if(documentoActualizado){
-
-  documentoActualizado.estado="Anulada";
-  documentoActualizado.codigoAnulacion=codigo;
-  documentoActualizado.observacionAnulacion=observacion.trim();
-
-}
-      
     /* =========================================
        ANULAR DOCUMENTO
        ========================================= */
@@ -5997,6 +6170,11 @@ if(documentoActualizado){
           new Date().toISOString(),
 
       });
+    const fechaAnulacion=new Date().toISOString();
+    for(const lista of [cacheRemisiones,datosRemisiones]){
+      const registro=lista?.find(r=>(r.idDocumento||r.id)===id);
+      if(registro){registro.estado="Anulada";registro.codigoAnulacion=codigo;registro.observacionAnulacion=observacion.trim();registro.fechaAnulacion=fechaAnulacion;}
+    }
     cacheConsultasReportes.clear();
 
 
@@ -6026,6 +6204,7 @@ if(documentoActualizado){
   }
 
 }
+
 
 function cerrarDetalle(){
   document.getElementById("detalleModal").classList.add("hidden");
@@ -6712,7 +6891,7 @@ async function guardarUsuario(event){
   const pass=document.getElementById("usrPass").value;
   const role=document.getElementById("usrRole").value;
   const area=document.getElementById("usrArea").value.trim();
-  const telefono=document.getElementById("usrTelefono").value.trim();
+  const telefono=document.getElementById("usrTelefono").value.replace(/\s/g,"");
   const email=document.getElementById("usrEmail").value.trim();
   const presupuestoMensual=Number(
   document.getElementById("usrPresupuestoMensual").value||0
@@ -6769,7 +6948,7 @@ async function editarUsuario(id){
   document.getElementById("usrPass").placeholder="Dejar vacío para conservar";
   document.getElementById("usrRole").value=u.role||"asesor";
   document.getElementById("usrArea").value=u.area||"";
-  document.getElementById("usrTelefono").value=u.telefono||u.tel||"";
+  document.getElementById("usrTelefono").value=String(u.telefono||u.tel||"").replace(/\s/g,"");
   const correoUsuario=u.email||u.correo||"";
   document.getElementById("usrEmail").value=/@remisionario\.app$/i.test(correoUsuario)?"":correoUsuario;
   document.getElementById("usrPresupuestoMensual").value=u.presupuestoMensual??"";
