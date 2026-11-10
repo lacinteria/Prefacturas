@@ -32,6 +32,18 @@ body{margin:0;background:var(--bg);color:var(--ink);line-height:1.4}
 .user-badge{display:flex;align-items:center;gap:8px;font-size:13px}.role-tag{background:var(--brand);color:#fff;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;text-transform:uppercase}
 main{padding:20px;max-width:1250px;margin:0 auto}.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-bottom:16px}
 .section-title{font-size:15px;font-weight:700;color:var(--brand-dark);margin:0 0 12px;border-bottom:1px solid var(--line);padding-bottom:6px}
+.report-disclosure{padding:0;overflow:hidden}
+.report-disclosure>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0;padding:14px 18px;color:var(--brand-dark);font-size:15px;font-weight:700}
+.report-disclosure>summary::-webkit-details-marker{display:none}
+.report-disclosure>summary::after{content:"＋";font-size:17px;line-height:1;color:var(--brand)}
+.report-disclosure[open]>summary{border-bottom:1px solid var(--line)}
+.report-disclosure[open]>summary::after{content:"−"}
+.report-disclosure-content{padding:16px 18px}
+.report-disclosure-content>.section-title:first-child{margin-top:0}
+.report-inner-disclosure>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;margin-bottom:12px;border-bottom:1px solid var(--line);color:var(--brand-dark);font-size:15px;font-weight:700}
+.report-inner-disclosure>summary::-webkit-details-marker{display:none}
+.report-inner-disclosure>summary::after{content:"＋";font-size:16px;color:var(--brand)}
+.report-inner-disclosure[open]>summary::after{content:"−"}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.grid-5{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
 .grid-6{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
@@ -43,6 +55,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid rgba(14,107,82,.15);bo
 .btn.primary{background:var(--brand);color:#fff}.btn.secondary{background:var(--surface-alt);color:var(--ink)}.btn.danger{background:#C53030;color:#fff}.btn.small{padding:5px 10px;font-size:12px}
 .btn:disabled{opacity:.55;cursor:not-allowed}
 .table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:13.5px}th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th.num,td.num{text-align:right}
+#cierreCajaTablaMetodos .cierre-caja-ventas-dia{font-weight:700}
 .meta-progress-track{height:10px;background:var(--surface-alt);border-radius:999px;overflow:hidden;margin-top:10px}
 .meta-progress-fill{height:100%;width:0;background:var(--brand);border-radius:inherit;transition:width .25s ease}
 .total-box{text-align:right;font-size:18px;font-weight:700;margin-top:15px;color:var(--brand-dark)}
@@ -889,8 +902,9 @@ min-height:44px;
 </section>
 
 <section id="view-reporte" class="hidden">
-<div class="card">
-  <div class="section-title">Filtros de Búsqueda y Consolidación</div>
+<details class="card report-disclosure">
+  <summary class="report-disclosure-title">Filtros de búsqueda y consolidación</summary>
+  <div class="report-disclosure-content">
 
   <div class="grid-6" style="align-items:end">
 
@@ -935,7 +949,7 @@ min-height:44px;
         <option value="Pendiente">Pendiente</option>
         <option value="Abonada">Abonada</option>
         <option value="Pagada">Pagada</option>
-        <option value="No pagada">No pagada</option>
+        <option value="No vendida">No vendida</option>
         <option value="Anulada">Anulada</option>
       </select>
     </div>
@@ -960,10 +974,9 @@ min-height:44px;
     placeholder="Nombre o número de documento"
   >
   </div>
-</div>
-
   </div>
 </div>
+</details>
 <div style="margin-top:12px;text-align:right;display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap">
   <button class="btn primary" onclick="actualizarMetaReporte();procesarReportes(true)">
     Filtrar y Actualizar Consolidado
@@ -973,8 +986,18 @@ min-height:44px;
     📊 Descargar Excel
   </button>
 </div>
+<details class="card report-disclosure hidden" id="panelPagoRapidoCaja" style="margin-top:16px">
+  <summary class="report-disclosure-title">Pago rápido · Caja</summary>
+  <div class="report-disclosure-content">
+    <div class="grid-3" style="align-items:end">
+      <div class="kpi-card"><div class="kpi-title">Fecha y asesor</div><div class="field" style="margin:8px 0 0"><label for="pagoRapidoFecha">Fecha</label><input type="date" id="pagoRapidoFecha" readonly></div><div class="field" style="margin:8px 0 0"><label for="pagoRapidoAsesor">Asesor</label><select id="pagoRapidoAsesor"><option value="">Selecciona un asesor</option></select></div></div>
+      <div class="kpi-card"><div class="kpi-title">Valor</div><div class="field" style="margin:8px 0 0"><label for="pagoRapidoValor">Valor de la venta</label><div class="currency-input"><span>$</span><input type="text" id="pagoRapidoValor" inputmode="numeric" placeholder="0" onblur="formatearCampoCOP(this)" aria-label="Valor de venta en pesos colombianos"></div></div></div>
+      <div class="kpi-card"><div class="kpi-title">Método de pago</div><div class="field" style="margin:8px 0 0"><label for="pagoRapidoMetodo">Método</label><select id="pagoRapidoMetodo"><option value="">Selecciona método de pago</option><option>EFECTIVO</option><option>005 TRANSFERENCIA</option><option>SAS TRANSFERENCIA</option><option>DATAFONO</option></select></div><button type="button" class="btn primary" id="btnPagoRapido" style="width:100%;margin-top:10px" onclick="registrarPagoRapido()">Pagar e imprimir</button></div>
+    </div>
+  </div>
+</details>
 <div class="card hidden" id="panelCierreCaja" style="margin-top:16px">
-  <div class="section-title">Cierre del día · Caja</div>
+  <details class="report-inner-disclosure"><summary>Cierre del día · Caja</summary><div class="report-inner-content">
   <p style="margin:0 0 12px;color:var(--ink-soft);font-size:13px">Compara los pagos registrados hoy con el dinero y los soportes que tienes físicamente. Las cotizaciones se cuentan por sus abonos recibidos; se excluyen documentos anulados y pendientes.</p>
   <div class="grid-5" style="margin-bottom:12px">
     <div class="kpi-card"><div class="kpi-title">Fecha del cierre</div><div class="kpi-value" id="cierreCajaFecha">—</div></div>
@@ -997,7 +1020,7 @@ min-height:44px;
       <div class="kpi-card"><div class="kpi-title">Total esperado</div><div class="kpi-value" id="cierreCajaTotalEsperado">$0</div></div>
       <div class="kpi-card"><div class="kpi-title">Total contado</div><div class="kpi-value" id="cierreCajaTotalContado">$0</div></div>
     </div>
-    <div class="table-wrap" style="margin:12px 0"><table><thead><tr><th>Método de pago</th><th class="num">Registrado hoy</th><th class="num">Esperado con base</th><th class="num">Conteo real</th><th class="num">Diferencia</th></tr></thead><tbody id="cierreCajaTablaMetodos"><tr><td colspan="5" style="text-align:center">Cargando pagos del día…</td></tr></tbody></table></div>
+    <div class="table-wrap" style="margin:12px 0"><table><thead><tr><th>Método de pago</th><th class="num">Ventas del día</th><th class="num">Totales incluido base</th><th class="num">Conteo real</th><th class="num">Diferencia</th></tr></thead><tbody id="cierreCajaTablaMetodos"><tr><td colspan="5" style="text-align:center">Cargando pagos del día…</td></tr></tbody></table></div>
     <div class="grid-2" style="align-items:end">
       <div class="field"><label>Observaciones</label><textarea id="cierreCajaObservaciones" rows="2" placeholder="Obligatorias si hay diferencias"></textarea></div>
       <div class="kpi-card"><div class="kpi-title">Diferencia total</div><div class="kpi-value" id="cierreCajaDiferencia">$0</div></div>
@@ -1008,9 +1031,10 @@ min-height:44px;
     </div>
   </div>
   <div id="cierreCajaComprobante" class="hidden"></div>
+  </div></details>
 </div>
 <div class="card hidden" id="panelCierresCajaAdmin" style="margin-top:16px">
-  <div class="section-title">Historial de cierres de caja</div>
+  <details class="report-inner-disclosure"><summary>Historial de cierres de caja</summary><div class="report-inner-content">
   <p style="margin:0 0 12px;color:var(--ink-soft);font-size:13px">Consulta los comprobantes generados por las cajas, filtrados por mes, área o código.</p>
   <div style="display:flex;align-items:end;gap:10px;flex-wrap:wrap">
     <div class="field" style="margin:0;max-width:220px"><label for="adminCierresMes">Mes</label><input type="month" id="adminCierresMes" onchange="cargarCierresCajaAdmin()"></div>
@@ -1020,9 +1044,10 @@ min-height:44px;
   </div>
   <div class="table-wrap" style="margin-top:12px"><table><thead><tr><th>Fecha</th><th>Área</th><th>Comprobante</th><th>Cajero</th><th class="num">Esperado</th><th class="num">Contado</th><th class="num">Diferencia</th><th>Acción</th></tr></thead><tbody id="tablaCierresCajaAdmin"><tr><td colspan="8" style="text-align:center">Selecciona un mes para consultar cierres.</td></tr></tbody></table></div>
   <div id="detalleCierreCajaAdmin" class="hidden" style="margin-top:16px"></div>
+  </div></details>
 </div>
 <div class="card" id="panelMetasReportes" style="margin-bottom:16px">
-  <div class="section-title" id="metaTituloReporte">Metas de la empresa <span id="metaPeriodoReporte" style="font-weight:400;color:var(--ink-soft)"></span></div>
+  <details class="report-inner-disclosure"><summary id="metaTituloReporte">Metas de la empresa <span id="metaPeriodoReporte" style="font-weight:400;color:var(--ink-soft)"></span></summary><div class="report-inner-content">
   <div style="display:flex;align-items:end;gap:10px;flex-wrap:wrap;margin:0 0 12px">
     <div class="field" style="margin:0;max-width:220px"><label for="metaMesSelector">Consultar mes</label><input type="month" id="metaMesSelector" onchange="actualizarMetaReporte(true)"></div>
     <span id="metaCierreEstado" style="font-size:12px;color:var(--ink-soft);flex:1;min-width:240px">Cargando estado del cierre…</span>
@@ -1038,12 +1063,15 @@ min-height:44px;
   <div id="metaEstadoReporte" style="font-size:12px;color:var(--ink-soft);margin-top:8px;text-align:center" aria-live="polite">Cargando metas...</div>
   <div class="section-title" id="metaTablaTituloReporte" style="margin-top:16px">Presupuesto mensual por asesor</div>
   <div class="table-wrap"><table><thead><tr><th>Asesor</th><th>Área</th><th class="num">Presupuesto mensual</th><th class="num">Vendido</th><th class="num">Faltante</th><th class="num">Cumplimiento</th></tr></thead><tbody id="tablaMetasAsesoresReporte"><tr><td colspan="6" style="text-align:center;color:var(--ink-soft)">Cargando presupuestos...</td></tr></tbody></table></div>
+  </div></details>
 </div>
-<div class="grid-3" style="margin-bottom:16px">
+<details class="report-disclosure card" style="margin-bottom:16px"><summary class="report-disclosure-title">Indicadores del período</summary><div class="report-disclosure-content">
+<div class="grid-3" style="margin-bottom:0">
 <div class="kpi-card"><div class="kpi-title">Total Facturado</div><div class="kpi-value" id="kpiTotalVentas">$0</div></div>
 <div class="kpi-card"><div class="kpi-title">Remisiones / Docs Realizados</div><div class="kpi-value" id="kpiCantRemisiones">0</div></div>
 <div class="kpi-card"><div class="kpi-title">Promedio por Venta</div><div class="kpi-value" id="kpiTicketPromedio">$0</div></div>
-</div>
+</div></div></details>
+<details class="report-disclosure card" style="margin-bottom:16px"><summary class="report-disclosure-title">Consolidados del período</summary><div class="report-disclosure-content">
 <div style="margin-bottom:16px">
 
   <div style="text-align:left;margin-bottom:8px;font-size:13px;color:var(--ink-soft)">
@@ -1080,6 +1108,7 @@ min-height:44px;
 <div id="contenedorConsolidadoArea" class="card" style="margin:0"><div class="section-title">Consolidado por Área</div><div class="table-wrap"><table><thead><tr><th>Área</th><th class="num">Remisiones</th><th class="num">Total ($)</th></tr></thead><tbody id="tblConsolidadoAreasBody"><tr><td colspan="3" style="text-align:center;color:var(--ink-soft)">No hay datos.</td></tr></tbody></table></div></div>
 </div>
 </div>
+ </div></details>
 <div class="card"><div class="section-title">Detalle de Documentos Emitidos</div><div class="table-wrap"><table><thead><tr><th>Nº Documento / Tipo</th><th>Cliente / Doc</th><th>Ciudad</th><th>Teléfono</th><th>Asesor / Área</th><th>Pago</th><th>Estado</th><th class="num">Total</th><th>Acción</th></tr></thead><tbody id="tablaReportesBody"><tr><td colspan="9" style="text-align:center;color:var(--ink-soft)">Cargando datos...</td></tr></tbody></table></div></div>
 </section>
 
@@ -1094,7 +1123,7 @@ min-height:44px;
 <div class="field"><label>Rol <span class="req">*</span></label><select id="usrRole"><option value="asesor">Asesor</option><option value="caja">Caja</option><option value="admin">Administrador</option></select></div>
 <div class="field"><label>Área asignada <span class="req">*</span></label><input type="text" id="usrArea" placeholder="ej. General, Bordados, Ventas..." required></div>
 <div class="field"><label>Teléfono de contacto para PDF</label><input type="tel" id="usrTelefono" autocomplete="tel" pattern="\S+" title="No uses espacios en el teléfono." oninput="this.value=this.value.replace(/\s/g,'')"></div>
-<div class="field"><label>Correo de contacto para PDF</label><input type="email" id="usrEmail" autocomplete="email"><small>Al editar, déjalo vacío para conservar el acceso actual. El correo es obligatorio al crear un usuario.</small></div>
+<div class="field"><label>Correo de contacto para PDF</label><input type="email" id="usrEmail" autocomplete="email"><small>Opcional. Si se deja vacío, la cuenta usará un correo interno y no podrá recibir recuperación automática de contraseña hasta asignarle un correo real.</small></div>
 <div class="field"><label>Presupuesto Mensual</label><input type="number" id="usrPresupuestoMensual" min="0" step="1000" placeholder="ej. 20000000"></div>
 <button type="submit" class="btn primary">Guardar Usuario</button><button type="button" class="btn secondary hidden" id="btnCancelarEdicion" onclick="cancelarEdicionUsuario()">Cancelar edición</button>
 </form></div>
@@ -1134,7 +1163,7 @@ min-height:44px;
 
 <div id="abonoCotizacionModal" class="modal hidden"><div class="modal-card" style="max-width:520px"><div style="display:flex;justify-content:space-between;align-items:center"><h2 id="abonoCotizacionTitulo">Registrar abono</h2><button class="btn secondary" onclick="cerrarModalAbono()">Cerrar</button></div><div id="abonoCotizacionResumen" class="status"></div><div class="field"><label>Valor del abono</label><div class="currency-input"><span>$</span><input type="text" id="abonoCotizacionValor" inputmode="numeric" onblur="formatearCampoCOP(this)" aria-label="Valor del abono en pesos colombianos"></div></div><div class="field"><label>Método de pago</label><select id="abonoCotizacionMetodo"><option value="">-- Seleccione --</option><option>EFECTIVO</option><option>005 TRANSFERENCIA</option><option>SAS TRANSFERENCIA</option><option>DATAFONO</option></select></div><div class="field"><label>Fecha del abono</label><input type="date" id="abonoCotizacionFecha"></div><div style="text-align:right"><button class="btn secondary" onclick="cerrarModalAbono()">Cancelar</button><button class="btn primary" id="btnGuardarAbonoCotizacion" onclick="registrarAbonoCotizacion()">Registrar abono</button></div></div></div>
 <div id="pagoMixtoModal" class="modal hidden"><div class="modal-card" style="max-width:620px"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><h2 style="margin:0">Registrar pago mixto</h2><button class="btn secondary" onclick="cerrarModalPagoMixto()">Cerrar</button></div><p id="pagoMixtoResumen" class="status"></p><p>Registra los dos componentes en sus métodos correspondientes. La suma debe ser igual al total del documento.</p><div class="grid-2"><div class="field"><label>Primer método</label><select id="pagoMixtoMetodo1"><option>EFECTIVO</option><option>005 TRANSFERENCIA</option><option>SAS TRANSFERENCIA</option><option>DATAFONO</option></select></div><div class="field"><label>Valor</label><div class="currency-input"><span>$</span><input id="pagoMixtoValor1" type="text" inputmode="numeric" onblur="formatearCampoCOP(this)"></div></div><div class="field"><label>Segundo método</label><select id="pagoMixtoMetodo2"><option>005 TRANSFERENCIA</option><option>EFECTIVO</option><option>SAS TRANSFERENCIA</option><option>DATAFONO</option></select></div><div class="field"><label>Valor</label><div class="currency-input"><span>$</span><input id="pagoMixtoValor2" type="text" inputmode="numeric" onblur="formatearCampoCOP(this)"></div></div></div><div id="pagoMixtoValidacion" class="status"></div><div style="text-align:right;margin-top:14px"><button class="btn secondary" onclick="cerrarModalPagoMixto()">Cancelar</button><button class="btn primary" id="btnGuardarPagoMixto" onclick="registrarPagoMixto()">Registrar pago</button></div></div></div>
-<div id="noPagadaCotizacionModal" class="modal hidden"><div class="modal-card" style="max-width:520px"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><h2 style="margin:0">Marcar cotización como no pagada</h2><button class="btn secondary" onclick="cerrarModalNoPagada()">Cerrar</button></div><p id="noPagadaCotizacionResumen" class="status"></p><div class="field"><label for="noPagadaCotizacionComentario">Motivo o comentario <span style="color:#c53030">*</span></label><textarea id="noPagadaCotizacionComentario" rows="4" minlength="3" maxlength="500" required placeholder="Ej.: Precios muy costosos"></textarea><small>Obligatorio, máximo 500 caracteres.</small></div><div style="text-align:right;margin-top:14px"><button class="btn secondary" onclick="cerrarModalNoPagada()">Cancelar</button><button class="btn danger" id="btnConfirmarNoPagada" onclick="confirmarCotizacionNoPagada()">Guardar como no pagada</button></div></div></div>
+<div id="noPagadaCotizacionModal" class="modal hidden"><div class="modal-card" style="max-width:520px"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><h2 style="margin:0">Marcar cotización como no vendida</h2><button class="btn secondary" onclick="cerrarModalNoPagada()">Cerrar</button></div><p id="noPagadaCotizacionResumen" class="status"></p><div class="field"><label for="noPagadaCotizacionComentario">Motivo o comentario <span style="color:#c53030">*</span></label><textarea id="noPagadaCotizacionComentario" rows="4" minlength="3" maxlength="500" required placeholder="Ej.: Precios muy costosos"></textarea><small>Obligatorio, máximo 500 caracteres.</small></div><div style="text-align:right;margin-top:14px"><button class="btn secondary" onclick="cerrarModalNoPagada()">Cancelar</button><button class="btn danger" id="btnConfirmarNoPagada" onclick="confirmarCotizacionNoPagada()">Guardar como no vendida</button></div></div></div>
 <div id="detalleModal" class="modal hidden">
 <div class="modal-card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><h2 style="margin-top:0">Detalle del documento</h2><button class="btn secondary" onclick="cerrarDetalle()">Cerrar</button></div><div id="detalleContenido"></div></div>
 </div>
@@ -1166,6 +1195,7 @@ let cotItemEditandoIndex=null;
 let imagenesCotizacionExistentes=[];
 let imagenesCotizacionEliminadas=[];
 let datosRemisiones = [];
+let pagoRapidoSolicitudId=null;
 let cacheRemisiones=null;
 let cacheUsuarios=null;
 let cacheUsuariosAt=0;
@@ -1582,6 +1612,7 @@ async function aplicarSesion(){
   document.getElementById("remAsesor").value=currentUser.nombre||currentUser.username||"";
   const admin=currentUser.role==="admin", caja=currentUser.role==="caja";
   const asesorWhatsApp=esAsesorWhatsApp();
+  document.getElementById("panelPagoRapidoCaja").classList.toggle("hidden",!caja);
   document.getElementById("panelCierreCaja").classList.toggle("hidden",!caja);
   document.getElementById("panelCierresCajaAdmin").classList.toggle("hidden",!admin);
   if(admin&&!document.getElementById("adminCierresMes").value)document.getElementById("adminCierresMes").value=fechaHoy().slice(0,7);
@@ -1601,6 +1632,7 @@ async function aplicarSesion(){
   await cargarConfiguracion();
   if(!document.getElementById("repFechaInicio").value) document.getElementById("repFechaInicio").value=fechaHoy();
   if(!document.getElementById("repFechaFin").value) document.getElementById("repFechaFin").value=fechaHoy();
+  document.getElementById("pagoRapidoFecha").value=fechaHoy();
   await actualizarFiltrosReportes();
   if(admin)await cargarCierresCajaAdmin();
   if(caja) showView("reporte");
@@ -1658,7 +1690,7 @@ async function cargarCierreCaja(confirmarReemplazo=false){
     document.getElementById("cierreCajaTablaMetodos").innerHTML=Object.entries(metodos).map(([metodo,sistema])=>`
       <tr data-cierre-metodo="${escapeAttr(metodo)}" data-cierre-sistema="${Number(sistema)||0}">
         <td>${escapeHtml(metodo||"SIN MÉTODO")}</td>
-        <td class="num">${money(sistema)}</td>
+        <td class="num cierre-caja-ventas-dia">${money(sistema)}</td>
         <td class="num cierre-caja-esperado">${money((Number(sistema)||0)+(metodo==="EFECTIVO"?Number(apertura.base_inicial||0):0))}</td>
         <td class="num" style="min-width:150px"><div class="currency-input"><span>$</span><input type="text" class="cierre-caja-contado" data-metodo="${escapeAttr(metodo)}" inputmode="numeric" placeholder="0" oninput="actualizarVistaPreviaCierreCaja()" onblur="formatearCampoCOP(this);actualizarVistaPreviaCierreCaja()" aria-label="Conteo real de ${escapeAttr(metodo)}"></div></td>
         <td class="num cierre-caja-diferencia">${money(0)}</td>
@@ -1807,6 +1839,19 @@ function renderizarComprobanteCierreCaja(cierre,contenedorId="cierreCajaComproba
   const metodos=datos.metodos||{};
   const movimientos=Array.isArray(datos.movimientos)?datos.movimientos:[];
   const documentosIncluidos=new Set(movimientos.map(m=>String(m.documento||"").trim()).filter(Boolean)).size;
+  const documentosPorAsesor=new Map();
+  movimientos.forEach(m=>{
+    if(!m.documento||String(m.tipo||"").toLowerCase()==="abono de cotización")return;
+    const asesor=String(m.asesor||"Sin asesor").trim()||"Sin asesor";
+    if(!documentosPorAsesor.has(asesor))documentosPorAsesor.set(asesor,new Map());
+    const documentos=documentosPorAsesor.get(asesor);
+    const documento=String(m.documento).trim();
+    documentos.set(documento,(documentos.get(documento)||0)+Number(m.valor||0));
+  });
+  const filasAsesores=[...documentosPorAsesor.entries()].sort(([a],[b])=>a.localeCompare(b,"es")).map(([asesor,documentos])=>{
+    const total=[...documentos.values()].reduce((suma,valor)=>suma+valor,0);
+    return `<tr><td>${escapeHtml(asesor)}</td><td>${documentos.size}</td><td><b>${money(total)}</b></td></tr>`;
+  }).join("");
   const idImprimible=contenedorId==="detalleCierreCajaAdmin"?"cierreCajaAdminImprimible":"cierreCajaImprimible";
   const ordenMetodos=["EFECTIVO","005 TRANSFERENCIA","SAS TRANSFERENCIA","DATAFONO"];
   const entradasMetodos=Object.entries(metodos).sort(([metodoA],[metodoB])=>{
@@ -1820,6 +1865,7 @@ function renderizarComprobanteCierreCaja(cierre,contenedorId="cierreCajaComproba
     <div class="ticket-datos"><div><span>Fecha</span><b>${escapeHtml(formatearFechaCierre(cierre.fecha))}</b></div><div><span>Área</span><b>${escapeHtml(cierre.area||"—")}</b></div><div><span>Cajero</span><b>${escapeHtml(cierre.nombre_cajero||"—")}</b></div><div><span>Hora de apertura</span><b>${escapeHtml(formatearHoraCierre(datos.horaApertura))}</b></div><div><span>Hora de cierre</span><b>${escapeHtml(formatearHoraCierre(datos.horaCierre||cierre.created_at))}</b></div><div><span>Documentos incluidos</span><b>${documentosIncluidos}</b></div><div><span>Base inicial</span><b>${money(cierre.base_inicial)}</b></div></div>
     <hr><h4>RESUMEN POR MÉTODO DE PAGO</h4><table class="ticket-tabla"><thead><tr><th>Método</th><th>Total</th><th>Diferencia</th></tr></thead><tbody>${filasMetodos}</tbody><tfoot><tr><th>TOTAL VENTAS</th><td><b>${money(cierre.total_sistema)}</b></td><td><b>${money(cierre.diferencia)}</b></td></tr></tfoot></table>
     <hr><div class="ticket-observaciones"><b>Observaciones</b><div>${escapeHtml(datos.observaciones||"Sin observaciones")}</div></div>
+    <hr><h4>CONSOLIDADO POR ASESOR</h4><table class="ticket-tabla ticket-tabla-asesores"><thead><tr><th>Asesor</th><th>Remisiones</th><th>Total</th></tr></thead><tbody>${filasAsesores||'<tr><td colspan="3">Sin remisiones registradas.</td></tr>'}</tbody></table>
   </article><div class="ticket-acciones"><button type="button" class="btn secondary" onclick="imprimirComprobanteCierreCaja('${contenedorId}')">Imprimir comprobante</button></div>`;
 }
 
@@ -1875,6 +1921,7 @@ function showView(view){
   if(view==="cotizacion"){document.getElementById("cotFechaSolicitud").value=fechaHoy();document.getElementById("cotAsesor").value=currentUser.nombre||currentUser.username||"";cargarSiguienteNumeroPrefactura();}
 
   if(view==="reporte"){
+    document.getElementById("pagoRapidoFecha").value=fechaHoy();
     document.getElementById("panelCierreCaja").classList.toggle("hidden",currentUser.role!=="caja");
     actualizarMetaReporte();
     procesarReportes();
@@ -2228,6 +2275,47 @@ async function operarCotizacion(id,accion,datos={}){
   const {data,error}=await supabaseClient.rpc("gestionar_cotizacion",{p_id_documento:id,p_accion:accion,p_datos:datos});
   if(error)throw error;
   return data;
+}
+
+async function registrarPagoRapido(){
+  if(currentUser?.role!=="caja"){
+    alert("El pago rápido está disponible únicamente para Caja.");
+    return;
+  }
+  const asesorId=document.getElementById("pagoRapidoAsesor").value;
+  const valor=parseValorCOP(document.getElementById("pagoRapidoValor").value);
+  const metodo=document.getElementById("pagoRapidoMetodo").value;
+  if(!asesorId){alert("Selecciona el asesor que realizó la venta.");return;}
+  if(!(valor>0)){alert("Ingresa un valor mayor que cero.");document.getElementById("pagoRapidoValor").focus();return;}
+  if(!metodo){alert("Selecciona el método de pago.");return;}
+  const ventanaImpresion=window.open("","_blank","width=420,height=700");
+  if(!ventanaImpresion){alert("Permite las ventanas emergentes para poder imprimir la remisión y vuelve a intentarlo.");return;}
+  const boton=document.getElementById("btnPagoRapido");
+  boton.disabled=true;boton.textContent="Registrando…";
+  if(!pagoRapidoSolicitudId)pagoRapidoSolicitudId=crypto.randomUUID();
+  try{
+    exigirSupabase();
+    const {data,error}=await supabaseClient.rpc("registrar_pago_rapido",{
+      p_operacion_id:pagoRapidoSolicitudId,p_asesor_id:asesorId,p_valor:valor,p_metodo:metodo
+    });
+    if(error)throw error;
+    if(data?.error)throw new Error(data.error);
+    const doc={...(data?.documento||{}),idDocumento:data?.idDocumento||data?.documento?.idDocumento};
+    if(!doc.idDocumento)throw new Error("No se recibió el número de la remisión creada.");
+    const indice=datosRemisiones.findIndex(r=>(r.idDocumento||r.id)===doc.idDocumento);
+    if(indice>=0)datosRemisiones[indice]=doc;else datosRemisiones.unshift(doc);
+    cacheRemisiones=null;cacheConsultasReportes.clear();
+    document.getElementById("pagoRapidoFecha").value=fechaHoy();
+    document.getElementById("pagoRapidoValor").value="";
+    document.getElementById("pagoRapidoMetodo").value="";
+    pagoRapidoSolicitudId=null;
+    imprimirDocumento(doc.idDocumento,ventanaImpresion);
+    await Promise.all([actualizarMetaReporte(true),procesarReportes(true)]);
+  }catch(error){
+    ventanaImpresion.close();
+    console.error("No se pudo registrar el pago rápido:",error);
+    alert("No se pudo registrar el pago rápido: "+(error.message||"Error de conexión"));
+  }finally{boton.disabled=false;boton.textContent="Pagar e imprimir";}
 }
 
 async function cargarSiguienteNumeroPrefactura(){
@@ -5481,11 +5569,11 @@ function renderTablaDetalleRemisiones(datos){
     <span class="badge ${
       r.estado==="Pagada"
         ? "success"
-        : ["Anulada","No pagada"].includes(r.estado)
+        : ["Anulada","No pagada","No vendida"].includes(r.estado)
           ? "danger"
           : "warning"
     }">
-      ${escapeHtml(r.estado||"Pendiente")}
+      ${escapeHtml(String(r.estado||"Pendiente").trim().toLowerCase()==="no pagada"?"No vendida":r.estado||"Pendiente")}
     </span>
   </td>
 
@@ -5547,7 +5635,7 @@ function renderTablaDetalleRemisiones(datos){
           r.esAbonoCotizacion
             ? (r.estado==="Anulada"?'<span class="badge danger">ANULADO</span>':currentUser.role==="admin"?`<button class="btn small danger" onclick="anularAbonoCotizacion('${escapeAttr(r.idDocumento||"")}','${escapeAttr(r.idAbono||"")}')">Anular</button>`:"")
             : r.tipoDoc==="Cotización"
-              ? (currentUser.role==="caja"&&String(currentUser.area||"").trim().toUpperCase()==="WHATSAPP"&&String(r.area||"").trim().toUpperCase()==="WHATSAPP"&&!['anulada','abonada','pagada','no pagada'].includes(String(r.estado||"").trim().toLowerCase())&&Number(r.totalAbonado||0)===0?`<button class="btn small danger" onclick="abrirModalNoPagada('${escapeAttr(r.idDocumento||r.id||"")}')">No pagada</button>`:"" )
+              ? (esAsesorWhatsApp()&&puedeGestionarCotizacion(r)&&String(r.area||"").trim().toUpperCase()==="WHATSAPP"&&!['anulada','abonada','pagada','no pagada','no vendida'].includes(String(r.estado||"").trim().toLowerCase())&&Number(r.totalAbonado||0)===0?`<button class="btn small danger" onclick="abrirModalNoPagada('${escapeAttr(r.idDocumento||r.id||"")}')">No vendida</button>`:"" )
 
             : `
 
@@ -5602,7 +5690,7 @@ async function abrirModalAbono(id){
   try{cot=await obtenerCotizacionParaAccion(id);}
   catch(error){console.error("No se pudo cargar la cotización para registrar un abono:",error);alert("No se pudo consultar la cotización: "+error.message);return;}
   if(!cot||!puedeAbonarCotizacion(cot)){alert("Caja solo puede registrar abonos de cotizaciones de su misma área.");return;}
-  if(["anulada","pagada","no pagada"].includes(String(cot.estado||"").trim().toLowerCase())||cot.estadoPago==="Pagada"||Number(cot.totalAbonado||0)>=Number(cot.total||0)){alert("Esta cotización ya no tiene saldo pendiente.");return;}
+  if(["anulada","pagada","no pagada","no vendida"].includes(String(cot.estado||"").trim().toLowerCase())||cot.estadoPago==="Pagada"||Number(cot.totalAbonado||0)>=Number(cot.total||0)){alert("Esta cotización ya no tiene saldo pendiente.");return;}
   cotizacionSeleccionadaAbono=cot;abonoCotizacionEnEdicion=null;
   document.getElementById("abonoCotizacionTitulo").textContent="Registrar abono";
   document.getElementById("btnGuardarAbonoCotizacion").textContent="Registrar abono";
@@ -5615,8 +5703,8 @@ async function abrirModalAbono(id){
 }
 let cotizacionSeleccionadaNoPagada=null;
 async function abrirModalNoPagada(id){
-  if(currentUser?.role!=="caja"||String(currentUser.area||"").trim().toUpperCase()!=="WHATSAPP"){
-    alert("Esta opción está disponible únicamente para Caja WhatsApp.");
+  if(!esAsesorWhatsApp()){
+    alert("Esta opción está disponible únicamente para asesores de WhatsApp.");
     return;
   }
   let cotizacion;
@@ -5626,7 +5714,7 @@ async function abrirModalNoPagada(id){
     alert("Solo puedes marcar cotizaciones de tu área.");
     return;
   }
-  if(["anulada","pagada","no pagada"].includes(String(cotizacion.estado||"").trim().toLowerCase())||Number(cotizacion.totalAbonado||0)>0){
+  if(["anulada","pagada","no pagada","no vendida"].includes(String(cotizacion.estado||"").trim().toLowerCase())||Number(cotizacion.totalAbonado||0)>0){
     alert("Solo se pueden marcar cotizaciones pendientes que no tengan abonos.");
     return;
   }
@@ -5648,14 +5736,14 @@ async function confirmarCotizacionNoPagada(){
   const boton=document.getElementById("btnConfirmarNoPagada");
   boton.disabled=true;
   try{
-    await operarCotizacion(cotizacion.idDocumento,"marcar_no_pagada",{comentario});
+    await operarCotizacion(cotizacion.idDocumento,"marcar_no_vendida",{comentario});
     cacheRemisiones=null;
     cacheConsultasReportes.clear();
     cacheAbonosReporte.clear();
     cerrarModalNoPagada();
     await procesarReportes(true);
   }catch(error){
-    console.error("No se pudo marcar la cotización como no pagada:",error);
+    console.error("No se pudo marcar la cotización como no vendida:",error);
     alert("No se pudo actualizar la cotización: "+error.message);
   }finally{boton.disabled=false;}
 }
@@ -5716,7 +5804,7 @@ async function registrarAbonoCotizacion(){
   const valor=parseValorCOP(document.getElementById("abonoCotizacionValor").value);
   const formaPago=document.getElementById("abonoCotizacionMetodo").value;
   const fecha=document.getElementById("abonoCotizacionFecha").value||fechaHoy();
-  if(!cot||!puedeAbonarCotizacion(cot)||["anulada","pagada","no pagada"].includes(String(cot.estado||"").trim().toLowerCase())||abonoCotizacionEnEdicion&&!puedeGestionarCotizacion(cot)){alert("No tienes permiso para registrar este abono de cotización.");return;}
+  if(!cot||!puedeAbonarCotizacion(cot)||["anulada","pagada","no pagada","no vendida"].includes(String(cot.estado||"").trim().toLowerCase())||abonoCotizacionEnEdicion&&!puedeGestionarCotizacion(cot)){alert("No tienes permiso para registrar este abono de cotización.");return;}
   if(!(valor>0)||!formaPago){alert("Ingresa un valor y elige la forma de pago.");return;}
   const boton=document.getElementById("btnGuardarAbonoCotizacion");
   boton.disabled=true;
@@ -5832,7 +5920,7 @@ async function registrarPagoMixto(){
 
 /* Marcar como pagada la factura, campo exclusivo para caja y Administrador*/ 
 
-async function verDetalleDoc(id){let doc=datosRemisiones.find(d=>String(d.idDocumento||d.id||"").trim()===String(id||"").trim());try{const s=await db.collection("remisiones").doc(String(id)).get();if(s.exists){const datos=s.data()||{};doc={...datos,id:s.id,idDocumento:datos.idDocumento||s.id};}}catch(e){console.warn("No se pudo actualizar el documento",e);}if(!doc){alert("No se encontró el documento para mostrar el detalle.");return;}const esCot=doc.tipoDoc==="Cotización",puedeGestionar=esCot&&puedeGestionarCotizacion(doc),puedeAbonar=esCot&&puedeAbonarCotizacion(doc),puedeVerPdfProduccion=puedeGestionar,hist=[];if(esCot){try{const snap=await db.collection("abonosCotizaciones").where("idDocumento","==",doc.idDocumento).get();snap.docs.forEach(d=>hist.push({id:d.id,...d.data()}));hist.sort((a,b)=>String(a.fechaHora||a.fecha).localeCompare(String(b.fechaHora||b.fecha)));}catch(e){console.warn("No se pudo cargar el historial de abonos",e);}}const abonado=Math.max(Number(doc.totalAbonado||0),hist.filter(x=>!abonoCotizacionAnulado(x)).reduce((a,x)=>a+Number(x.valor||0),0));const pagada=String(doc.estado||"").toLowerCase()==="pagada"||abonado>=Number(doc.total||0),noPagada=String(doc.estado||"").trim().toLowerCase()==="no pagada";const saldo=pagada?0:Math.max(0,Number(doc.total||0)-abonado);const items=esCot?(doc.venta==="Cotización"&&Array.isArray(doc.items)&&doc.items.length?doc.items:obtenerMaterialesCotizacion(doc).map(m=>({descripcion:[m.tipo,m.medida].filter(Boolean).join(" · "),cantidad:m.metros||0,precioUnitario:m.valorUnitario||0,ivaAplicado:!!m.ivaAplicado,ivaPct:m.ivaPct||0,descuento:0,subtotal:m.valorTotal||0}))):(Array.isArray(doc.items)?doc.items:[]);let ims={imagenes:[],errores:[]};if(esCot){try{ims=await obtenerImagenesCotizacionFirmadas(doc.imagenesReferencia);}catch(error){console.warn("No se pudieron cargar las imágenes de la cotización:",error);ims.errores=[error.message||String(error)];}}document.getElementById("detalleContenido").innerHTML=`<div class="grid-2"><div><strong>Documento:</strong> ${escapeHtml(doc.idDocumento||id)}</div><div><strong>Fecha:</strong> ${escapeHtml(doc.fecha||"")}</div><div><strong>${esCot?"Identificación":"Documento cliente"}:</strong> ${escapeHtml(doc.docCliente||"")}</div>${esCot?`<div><strong>Empresa:</strong> ${escapeHtml(doc.empresa||"")}</div><div><strong>Contacto:</strong> ${escapeHtml(doc.nomCliente||"")}</div>`:`<div><strong>Cliente:</strong> ${escapeHtml(doc.nomCliente||"")}</div>`}${esCot?`<div><strong>Ciudad / País:</strong> ${escapeHtml(doc.ciudadPais||"")}</div><div><strong>Origen:</strong> ${escapeHtml(doc.origenCliente||"")}</div>`:""}<div><strong>Ciudad:</strong> ${escapeHtml(doc.ciudadCliente||"")}</div><div><strong>Teléfono:</strong> ${escapeHtml(doc.telCliente||"")}</div><div><strong>Asesor:</strong> ${escapeHtml(doc.asesor||"")}</div><div><strong>Área:</strong> ${escapeHtml(doc.area||"")}</div><div><strong>Forma de pago:</strong> ${escapeHtml(doc.formaPago||"")}</div><div><strong>Tipo:</strong> ${escapeHtml(doc.tipoDoc||"")}</div><div><strong>Estado:</strong> ${escapeHtml(pagada?"Pagada":doc.estado||"Pendiente")}</div>${esCot?`<div><strong>Pago:</strong> ${escapeHtml(doc.estadoPago||(pagada?"Pagada":abonado>0?"Abonada":"Pendiente"))}</div><div><strong>Válido hasta:</strong> ${escapeHtml(doc.fechaEntrega||"")}</div><div style="color:#c53030"><strong>Saldo pendiente:</strong> ${money(saldo)}</div>${noPagada&&doc.motivoNoPagada?`<div style="grid-column:1/-1"><strong>Motivo de no pago:</strong> ${escapeHtml(doc.motivoNoPagada)}</div>`:""}${doc.ordenProduccion?`<div><strong>Orden:</strong> ${escapeHtml(doc.ordenProduccion.idOrden||"Creada")} · ${escapeHtml(doc.ordenProduccion.estado||"Creada")}</div>`:""}`:""}</div><div class="table-wrap"><table><thead><tr><th>Descripción</th><th>Cantidad</th><th>Precio</th><th>IVA</th><th>Descuento</th><th>Subtotal</th></tr></thead><tbody>${items.map(i=>`<tr><td>${escapeHtml(textoDescripcionItem(i))}</td><td>${formatNumber(i.cantidad||0)}</td><td>${money(i.precioUnitario||0)}</td><td>${i.ivaAplicado?`${i.ivaPct||19}%`:"IVA incluido"}</td><td>${money(i.descuento||0)}</td><td>${money(i.subtotal||0)}</td></tr>`).join("")||'<tr><td colspan="6">Sin productos registrados.</td></tr>'}</tbody></table></div><div class="total-box">Total: ${money(doc.total||0)}</div>${esCot?`<h3>Historial de abonos</h3><div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Método</th><th>Registrado por</th><th>Valor</th>${puedeGestionar?"<th>Acción</th>":""}</tr></thead><tbody>${hist.map(a=>`<tr><td>${escapeHtml(a.fecha||"")}</td><td>${escapeHtml(a.formaPago||"")}</td><td>${escapeHtml(a.usuario||"")}</td><td>${money(a.valor||0)}</td>${puedeGestionar?`<td>${abonoCotizacionAnulado(a)?'<span class="badge danger">ANULADO</span>':`${currentUser.role==="admin"?`<button class="btn small danger" onclick="anularAbonoCotizacion('${escapeAttr(doc.idDocumento)}','${escapeAttr(a.id)}')">Anular</button>`:""}<button class="btn small secondary" onclick="editarAbonoCotizacion('${escapeAttr(doc.idDocumento)}','${escapeAttr(a.id)}')">Editar</button>`}</td>`:""}</tr>`).join("")||`<tr><td colspan="${puedeGestionar?5:4}">Sin abonos registrados.</td></tr>`}</tbody></table></div><h3>Imágenes de referencia</h3>${ims.imagenes.map((im,i)=>`<img src="${escapeAttr(im.url)}" alt="Imagen ${i+1}" style="max-width:180px;max-height:180px;object-fit:contain;margin:5px">`).join("")||"<p>Sin imágenes guardadas.</p>"}${doc.notas?`<p><strong>Indicaciones:</strong> ${escapeHtml(doc.notas)}</p>`:""}<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:24px">${puedeGestionar&&doc.estado!=="Anulada"?`<button class="btn primary" onclick="editarCotizacion('${escapeAttr(doc.idDocumento)}')">Editar cotización</button>`:""}${puedeAbonar&&!pagada&&!noPagada?`<button class="btn primary" onclick="abrirModalAbono('${escapeAttr(doc.idDocumento)}')">Abonar</button>`:""}${puedeGestionar?`<button class="btn primary" onclick="generarPDFCotizacion('${escapeAttr(doc.idDocumento)}','cotizacion')">PDF de cotización</button>`:""}${puedeVerPdfProduccion? (doc.ordenProduccion?`<button class="btn primary" onclick="generarPDFCotizacion('${escapeAttr(doc.idDocumento)}','produccion')">PDF de orden de producción</button>`:`<button class="btn primary" onclick="crearOrdenProduccionCotizacion('${escapeAttr(doc.idDocumento)}')">Crear orden de producción</button>`):""}</div>`:`<p>${escapeHtml(doc.observaciones||"")}</p><button class="btn primary" onclick="imprimirDocumento('${escapeAttr(doc.idDocumento)}')">Imprimir</button>`}</div>`;document.getElementById("detalleModal").classList.remove("hidden");}
+async function verDetalleDoc(id){let doc=datosRemisiones.find(d=>String(d.idDocumento||d.id||"").trim()===String(id||"").trim());try{const s=await db.collection("remisiones").doc(String(id)).get();if(s.exists){const datos=s.data()||{};doc={...datos,id:s.id,idDocumento:datos.idDocumento||s.id};}}catch(e){console.warn("No se pudo actualizar el documento",e);}if(!doc){alert("No se encontró el documento para mostrar el detalle.");return;}const esCot=doc.tipoDoc==="Cotización",puedeGestionar=esCot&&puedeGestionarCotizacion(doc),puedeAbonar=esCot&&puedeAbonarCotizacion(doc),puedeVerPdfProduccion=puedeGestionar,hist=[];if(esCot){try{const snap=await db.collection("abonosCotizaciones").where("idDocumento","==",doc.idDocumento).get();snap.docs.forEach(d=>hist.push({id:d.id,...d.data()}));hist.sort((a,b)=>String(a.fechaHora||a.fecha).localeCompare(String(b.fechaHora||b.fecha)));}catch(e){console.warn("No se pudo cargar el historial de abonos",e);}}const abonado=Math.max(Number(doc.totalAbonado||0),hist.filter(x=>!abonoCotizacionAnulado(x)).reduce((a,x)=>a+Number(x.valor||0),0));const pagada=String(doc.estado||"").toLowerCase()==="pagada"||abonado>=Number(doc.total||0),noPagada=["no pagada","no vendida"].includes(String(doc.estado||"").trim().toLowerCase());const saldo=pagada?0:Math.max(0,Number(doc.total||0)-abonado);const estadoVisible=noPagada?"No vendida":doc.estado||"Pendiente";const items=esCot?(doc.venta==="Cotización"&&Array.isArray(doc.items)&&doc.items.length?doc.items:obtenerMaterialesCotizacion(doc).map(m=>({descripcion:[m.tipo,m.medida].filter(Boolean).join(" · "),cantidad:m.metros||0,precioUnitario:m.valorUnitario||0,ivaAplicado:!!m.ivaAplicado,ivaPct:m.ivaPct||0,descuento:0,subtotal:m.valorTotal||0}))):(Array.isArray(doc.items)?doc.items:[]);let ims={imagenes:[],errores:[]};if(esCot){try{ims=await obtenerImagenesCotizacionFirmadas(doc.imagenesReferencia);}catch(error){console.warn("No se pudieron cargar las imágenes de la cotización:",error);ims.errores=[error.message||String(error)];}}document.getElementById("detalleContenido").innerHTML=`<div class="grid-2"><div><strong>Documento:</strong> ${escapeHtml(doc.idDocumento||id)}</div><div><strong>Fecha:</strong> ${escapeHtml(doc.fecha||"")}</div><div><strong>${esCot?"Identificación":"Documento cliente"}:</strong> ${escapeHtml(doc.docCliente||"")}</div>${esCot?`<div><strong>Empresa:</strong> ${escapeHtml(doc.empresa||"")}</div><div><strong>Contacto:</strong> ${escapeHtml(doc.nomCliente||"")}</div>`:`<div><strong>Cliente:</strong> ${escapeHtml(doc.nomCliente||"")}</div>`}${esCot?`<div><strong>Ciudad / País:</strong> ${escapeHtml(doc.ciudadPais||"")}</div><div><strong>Origen:</strong> ${escapeHtml(doc.origenCliente||"")}</div>`:""}<div><strong>Ciudad:</strong> ${escapeHtml(doc.ciudadCliente||"")}</div><div><strong>Teléfono:</strong> ${escapeHtml(doc.telCliente||"")}</div><div><strong>Asesor:</strong> ${escapeHtml(doc.asesor||"")}</div><div><strong>Área:</strong> ${escapeHtml(doc.area||"")}</div><div><strong>Forma de pago:</strong> ${escapeHtml(doc.formaPago||"")}</div><div><strong>Tipo:</strong> ${escapeHtml(doc.tipoDoc||"")}</div><div><strong>Estado:</strong> ${escapeHtml(pagada?"Pagada":estadoVisible)}</div>${esCot?`<div><strong>Pago:</strong> ${escapeHtml(doc.estadoPago||(pagada?"Pagada":abonado>0?"Abonada":"Pendiente"))}</div><div><strong>Válido hasta:</strong> ${escapeHtml(doc.fechaEntrega||"")}</div><div style="color:#c53030"><strong>Saldo pendiente:</strong> ${money(saldo)}</div>${noPagada&&(doc.motivoNoVendida||doc.motivoNoPagada)?`<div style="grid-column:1/-1"><strong>Motivo:</strong> ${escapeHtml(doc.motivoNoVendida||doc.motivoNoPagada)}</div>`:""}${doc.ordenProduccion?`<div><strong>Orden:</strong> ${escapeHtml(doc.ordenProduccion.idOrden||"Creada")} · ${escapeHtml(doc.ordenProduccion.estado||"Creada")}</div>`:""}`:""}</div><div class="table-wrap"><table><thead><tr><th>Descripción</th><th>Cantidad</th><th>Precio</th><th>IVA</th><th>Descuento</th><th>Subtotal</th></tr></thead><tbody>${items.map(i=>`<tr><td>${escapeHtml(textoDescripcionItem(i))}</td><td>${formatNumber(i.cantidad||0)}</td><td>${money(i.precioUnitario||0)}</td><td>${i.ivaAplicado?`${i.ivaPct||19}%`:"IVA incluido"}</td><td>${money(i.descuento||0)}</td><td>${money(i.subtotal||0)}</td></tr>`).join("")||'<tr><td colspan="6">Sin productos registrados.</td></tr>'}</tbody></table></div><div class="total-box">Total: ${money(doc.total||0)}</div>${esCot?`<h3>Historial de abonos</h3><div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Método</th><th>Registrado por</th><th>Valor</th>${puedeGestionar?"<th>Acción</th>":""}</tr></thead><tbody>${hist.map(a=>`<tr><td>${escapeHtml(a.fecha||"")}</td><td>${escapeHtml(a.formaPago||"")}</td><td>${escapeHtml(a.usuario||"")}</td><td>${money(a.valor||0)}</td>${puedeGestionar?`<td>${abonoCotizacionAnulado(a)?'<span class="badge danger">ANULADO</span>':`${currentUser.role==="admin"?`<button class="btn small danger" onclick="anularAbonoCotizacion('${escapeAttr(doc.idDocumento)}','${escapeAttr(a.id)}')">Anular</button>`:""}<button class="btn small secondary" onclick="editarAbonoCotizacion('${escapeAttr(doc.idDocumento)}','${escapeAttr(a.id)}')">Editar</button>`}</td>`:""}</tr>`).join("")||`<tr><td colspan="${puedeGestionar?5:4}">Sin abonos registrados.</td></tr>`}</tbody></table></div><h3>Imágenes de referencia</h3>${ims.imagenes.map((im,i)=>`<img src="${escapeAttr(im.url)}" alt="Imagen ${i+1}" style="max-width:180px;max-height:180px;object-fit:contain;margin:5px">`).join("")||"<p>Sin imágenes guardadas.</p>"}${doc.notas?`<p><strong>Indicaciones:</strong> ${escapeHtml(doc.notas)}</p>`:""}<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:24px">${puedeGestionar&&doc.estado!=="Anulada"?`<button class="btn primary" onclick="editarCotizacion('${escapeAttr(doc.idDocumento)}')">Editar cotización</button>`:""}${puedeAbonar&&!pagada&&!noPagada?`<button class="btn primary" onclick="abrirModalAbono('${escapeAttr(doc.idDocumento)}')">Abonar</button>`:""}${puedeGestionar?`<button class="btn primary" onclick="generarPDFCotizacion('${escapeAttr(doc.idDocumento)}','cotizacion')">PDF de cotización</button>`:""}${puedeVerPdfProduccion? (doc.ordenProduccion?`<button class="btn primary" onclick="generarPDFCotizacion('${escapeAttr(doc.idDocumento)}','produccion')">PDF de orden de producción</button>`:`<button class="btn primary" onclick="crearOrdenProduccionCotizacion('${escapeAttr(doc.idDocumento)}')">Crear orden de producción</button>`):""}</div>`:`<p>${escapeHtml(doc.observaciones||"")}</p><button class="btn primary" onclick="imprimirDocumento('${escapeAttr(doc.idDocumento)}')">Imprimir</button>`}</div>`;document.getElementById("detalleModal").classList.remove("hidden");}
 
 async function marcarComoPagada(id){
 
@@ -6289,13 +6377,14 @@ async function generarPDFCotizacion(id,tipoPdf="cotizacion",ventanaPreabierta=nu
   pop.document.close();
  }catch(e){pop.close();console.error(e);alert("No se pudo preparar el PDF: "+e.message);}
 }
-async function imprimirDocumento(id){
+async function imprimirDocumento(id,ventanaExistente=null){
 
 const doc=datosRemisiones.find(r=>r.idDocumento===id);
 
 if(!doc)return;
 
-const w=window.open("","_blank","width=400,height=700");
+const w=ventanaExistente||window.open("","_blank","width=400,height=700");
+if(!w)return;
 
 const items=(doc.items||[])
 .map(i=>`
@@ -6921,7 +7010,6 @@ async function guardarUsuario(event){
   const anterior=users.find(u=>u.id===id);
 
   const user={id:id||undefined,nombre,username,role,area,telefono,email,presupuestoMensual};
-  if(!id&&!email){alert("El correo es obligatorio para crear una cuenta nueva.");return;}
   if((!id||pass)&&pass.length<8){alert("La contraseña debe tener al menos 8 caracteres.");return;}
   user.password=pass;
 
@@ -7220,9 +7308,11 @@ async function actualizarFiltrosReportes(){
 
   const a=document.getElementById("repFiltroAsesor");
   const ar=document.getElementById("repFiltroArea");
+  const pagoRapidoAsesor=document.getElementById("pagoRapidoAsesor");
 
   const oldA=a.value;
   const oldAr=ar.value;
+  const oldAsesorPagoRapido=pagoRapidoAsesor.value;
 
   a.innerHTML=
     '<option value="TODOS">-- Todos los Asesores --</option>'+
@@ -7240,11 +7330,18 @@ async function actualizarFiltrosReportes(){
       )
       .join("");
 
+  pagoRapidoAsesor.innerHTML=
+    '<option value="">Selecciona un asesor</option>'+usuariosAsesores
+      .map(u=>`<option value="${escapeAttr(u.id||"")}">${escapeHtml(u.nombre||u.username||"Asesor")}</option>`)
+      .join("");
+
   if(asesores.includes(oldA))
     a.value=oldA;
 
   if(areas.includes(oldAr))
     ar.value=oldAr;
+  if(usuariosAsesores.some(u=>String(u.id||"")===oldAsesorPagoRapido))
+    pagoRapidoAsesor.value=oldAsesorPagoRapido;
 }
 
 function normalizarArea(area){
