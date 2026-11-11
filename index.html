@@ -986,16 +986,6 @@ min-height:44px;
     📊 Descargar Excel
   </button>
 </div>
-<details class="card report-disclosure hidden" id="panelPagoRapidoCaja" style="margin-top:16px">
-  <summary class="report-disclosure-title">Pago rápido · Caja</summary>
-  <div class="report-disclosure-content">
-    <div class="grid-3" style="align-items:end">
-      <div class="kpi-card"><div class="kpi-title">Fecha y asesor</div><div class="field" style="margin:8px 0 0"><label for="pagoRapidoFecha">Fecha</label><input type="date" id="pagoRapidoFecha" readonly></div><div class="field" style="margin:8px 0 0"><label for="pagoRapidoAsesor">Asesor</label><select id="pagoRapidoAsesor"><option value="">Selecciona un asesor</option></select></div></div>
-      <div class="kpi-card"><div class="kpi-title">Valor</div><div class="field" style="margin:8px 0 0"><label for="pagoRapidoValor">Valor de la venta</label><div class="currency-input"><span>$</span><input type="text" id="pagoRapidoValor" inputmode="numeric" placeholder="0" onblur="formatearCampoCOP(this)" aria-label="Valor de venta en pesos colombianos"></div></div></div>
-      <div class="kpi-card"><div class="kpi-title">Método de pago</div><div class="field" style="margin:8px 0 0"><label for="pagoRapidoMetodo">Método</label><select id="pagoRapidoMetodo"><option value="">Selecciona método de pago</option><option>EFECTIVO</option><option>005 TRANSFERENCIA</option><option>SAS TRANSFERENCIA</option><option>DATAFONO</option></select></div><button type="button" class="btn primary" id="btnPagoRapido" style="width:100%;margin-top:10px" onclick="registrarPagoRapido()">Pagar e imprimir</button></div>
-    </div>
-  </div>
-</details>
 <div class="card hidden" id="panelCierreCaja" style="margin-top:16px">
   <details class="report-inner-disclosure"><summary>Cierre del día · Caja</summary><div class="report-inner-content">
   <p style="margin:0 0 12px;color:var(--ink-soft);font-size:13px">Compara los pagos registrados hoy con el dinero y los soportes que tienes físicamente. Las cotizaciones se cuentan por sus abonos recibidos; se excluyen documentos anulados y pendientes.</p>
@@ -1109,6 +1099,16 @@ min-height:44px;
 </div>
 </div>
  </div></details>
+<details class="card report-disclosure hidden" id="panelPagoRapidoCaja" style="margin-bottom:16px">
+  <summary class="report-disclosure-title">Pago rápido · Caja</summary>
+  <div class="report-disclosure-content">
+    <div class="grid-3" style="align-items:end">
+      <div class="kpi-card"><div class="kpi-title">Fecha y asesor</div><div class="field" style="margin:8px 0 0"><label for="pagoRapidoFecha">Fecha</label><input type="date" id="pagoRapidoFecha" readonly></div><div class="field" style="margin:8px 0 0"><label for="pagoRapidoAsesor">Asesor</label><select id="pagoRapidoAsesor"><option value="">Selecciona un asesor</option></select></div></div>
+      <div class="kpi-card"><div class="kpi-title">Valor</div><div class="field" style="margin:8px 0 0"><label for="pagoRapidoValor">Valor de la venta</label><div class="currency-input"><span>$</span><input type="text" id="pagoRapidoValor" inputmode="numeric" placeholder="0" onblur="formatearCampoCOP(this)" aria-label="Valor de venta en pesos colombianos"></div></div></div>
+      <div class="kpi-card"><div class="kpi-title">Método de pago</div><div class="field" style="margin:8px 0 0"><label for="pagoRapidoMetodo">Método</label><select id="pagoRapidoMetodo"><option value="">Selecciona método de pago</option><option>EFECTIVO</option><option>005 TRANSFERENCIA</option></select></div><button type="button" class="btn primary" id="btnPagoRapido" style="width:100%;margin-top:10px" onclick="registrarPagoRapido()">Pagar e imprimir</button></div>
+    </div>
+  </div>
+</details>
 <div class="card"><div class="section-title">Detalle de Documentos Emitidos</div><div class="table-wrap"><table><thead><tr><th>Nº Documento / Tipo</th><th>Cliente / Doc</th><th>Ciudad</th><th>Teléfono</th><th>Asesor / Área</th><th>Pago</th><th>Estado</th><th class="num">Total</th><th>Acción</th></tr></thead><tbody id="tablaReportesBody"><tr><td colspan="9" style="text-align:center;color:var(--ink-soft)">Cargando datos...</td></tr></tbody></table></div></div>
 </section>
 
@@ -7330,17 +7330,31 @@ async function actualizarFiltrosReportes(){
       )
       .join("");
 
-  pagoRapidoAsesor.innerHTML=
-    '<option value="">Selecciona un asesor</option>'+usuariosAsesores
-      .map(u=>`<option value="${escapeAttr(u.id||"")}">${escapeHtml(u.nombre||u.username||"Asesor")}</option>`)
-      .join("");
+  const esCajaShangai=currentUser.role==="caja"&&normalizarArea(currentUser.area).startsWith("shang");
+  const asesorFijoShangai=esCajaShangai
+    ? usuariosAsesores.find(u=>normalizarArea(u.nombre||u.username).replace("shanghai","shangai")==="otros shangai")
+    : null;
+  if(esCajaShangai){
+    pagoRapidoAsesor.innerHTML=asesorFijoShangai
+      ? `<option value="${escapeAttr(asesorFijoShangai.id||"")}">${escapeHtml(asesorFijoShangai.nombre||asesorFijoShangai.username||"OTROS SHANGAI")}</option>`
+      : '<option value="">No se encontró el asesor OTROS SHANGAI en esta área</option>';
+    pagoRapidoAsesor.disabled=true;
+  }else{
+    pagoRapidoAsesor.disabled=false;
+    pagoRapidoAsesor.innerHTML=
+      '<option value="">Selecciona un asesor</option>'+usuariosAsesores
+        .map(u=>`<option value="${escapeAttr(u.id||"")}">${escapeHtml(u.nombre||u.username||"Asesor")}</option>`)
+        .join("");
+  }
 
   if(asesores.includes(oldA))
     a.value=oldA;
 
   if(areas.includes(oldAr))
     ar.value=oldAr;
-  if(usuariosAsesores.some(u=>String(u.id||"")===oldAsesorPagoRapido))
+  if(asesorFijoShangai)
+    pagoRapidoAsesor.value=String(asesorFijoShangai.id||"");
+  else if(!esCajaShangai&&usuariosAsesores.some(u=>String(u.id||"")===oldAsesorPagoRapido))
     pagoRapidoAsesor.value=oldAsesorPagoRapido;
 }
 
