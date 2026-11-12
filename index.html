@@ -621,6 +621,7 @@ min-height:44px;
     <button type="button" id="tabCotizacion" class="tab-btn hidden" data-view="cotizacion" onclick="showView('cotizacion')">Nueva Cotización</button>
     <button type="button" id="tabReportes" class="tab-btn hidden" data-view="reporte" onclick="showView('reporte')">Reportes</button>
     <button type="button" id="tabUsuarios" class="tab-btn hidden" data-view="usuarios" onclick="showView('usuarios')">Gestión Usuarios</button>
+    <button type="button" id="tabClientes" class="tab-btn hidden" data-view="clientes" onclick="showView('clientes')">Gestión Clientes</button>
     <button type="button" id="tabAjustes" class="tab-btn hidden" data-view="ajustes" onclick="showView('ajustes')">Configuración Empresa</button>
   </nav>
   <div class="user-badge"><strong id="sessionUsername">Invitado</strong><span class="role-tag" id="sessionRole">ROL</span><button class="btn small secondary" onclick="logout()">Salir</button></div>
@@ -675,7 +676,7 @@ min-height:44px;
     required
     inputmode="numeric"
     pattern="[0-9]+"
-    oninput="this.value=this.value.replace(/[^0-9]/g,'')"
+    oninput="this.value=this.value.replace(/[^0-9]/g,'');actualizarBloqueoClienteGenerico()"
   >
 </div>
 
@@ -835,7 +836,7 @@ min-height:44px;
   </div>
   <div class="section-title" style="margin-top:15px">Datos del Cliente</div>
   <div class="grid-3">
-    <div class="field cliente-nombre-wrap"><label>Identificación (NIT / Cédula) <span class="req">*</span></label><input type="text" id="cotNit" autocomplete="off" required aria-required="true" pattern="\S+" title="No uses espacios en el documento." oninput="this.value=this.value.replace(/\s/g,'')"><div id="cotClienteSugerenciasDoc" class="cliente-sugerencias hidden"></div></div>
+    <div class="field cliente-nombre-wrap"><label>Identificación (NIT / Cédula) <span class="req">*</span></label><input type="text" id="cotNit" autocomplete="off" required aria-required="true" pattern="\S+" title="No uses espacios en el documento." oninput="this.value=this.value.replace(/\s/g,'');actualizarBloqueoClienteGenerico()"><div id="cotClienteSugerenciasDoc" class="cliente-sugerencias hidden"></div></div>
     <div class="field"><label>Empresa <span class="req">*</span></label><input type="text" id="cotEmpresa" required aria-required="true"></div>
     <div class="field cliente-nombre-wrap"><label>Contacto (nombre del cliente) <span class="req">*</span></label><input type="text" id="cotClienteNombre" autocomplete="off" required aria-required="true"><div id="cotClienteSugerenciasNombre" class="cliente-sugerencias hidden"></div></div>
     <div class="field"><label>Celular <span class="req">*</span></label><input type="tel" id="cotCelular" required aria-required="true" pattern="\S+" title="No uses espacios en el teléfono." oninput="this.value=this.value.replace(/\s/g,'')"></div>
@@ -1105,7 +1106,7 @@ min-height:44px;
     <div class="grid-3" style="align-items:end">
       <div class="kpi-card"><div class="kpi-title">Fecha y asesor</div><div class="field" style="margin:8px 0 0"><label for="pagoRapidoFecha">Fecha</label><input type="date" id="pagoRapidoFecha" readonly></div><div class="field" style="margin:8px 0 0"><label for="pagoRapidoAsesor">Asesor</label><select id="pagoRapidoAsesor"><option value="">Selecciona un asesor</option></select></div></div>
       <div class="kpi-card"><div class="kpi-title">Valor</div><div class="field" style="margin:8px 0 0"><label for="pagoRapidoValor">Valor de la venta</label><div class="currency-input"><span>$</span><input type="text" id="pagoRapidoValor" inputmode="numeric" placeholder="0" onblur="formatearCampoCOP(this)" aria-label="Valor de venta en pesos colombianos"></div></div></div>
-      <div class="kpi-card"><div class="kpi-title">Método de pago</div><div class="field" style="margin:8px 0 0"><label for="pagoRapidoMetodo">Método</label><select id="pagoRapidoMetodo"><option value="">Selecciona método de pago</option><option>EFECTIVO</option><option>005 TRANSFERENCIA</option></select></div><button type="button" class="btn primary" id="btnPagoRapido" style="width:100%;margin-top:10px" onclick="registrarPagoRapido()">Pagar e imprimir</button></div>
+      <div class="kpi-card"><div class="kpi-title">Método de pago</div><div class="field" style="margin:8px 0 0"><label for="pagoRapidoMetodo">Método</label><select id="pagoRapidoMetodo"><option value="">Selecciona método de pago</option><option>EFECTIVO</option><option>005 TRANSFERENCIA</option><option>SAS TRANSFERENCIA</option><option>DATAFONO</option></select></div><button type="button" class="btn primary" id="btnPagoRapido" style="width:100%;margin-top:10px" onclick="registrarPagoRapido()">Pagar e imprimir</button><button type="button" class="btn secondary" id="btnProbarCajon" style="width:100%;margin-top:8px" onclick="probarAperturaCajon()">Probar apertura de cajón</button><small id="estadoPuenteCajon" role="status" style="display:block;margin-top:8px;color:var(--ink-soft)">El cajón se abre al confirmar un pago rápido, un pago de remisión o un abono de cotización.</small></div>
     </div>
   </div>
 </details>
@@ -1129,6 +1130,51 @@ min-height:44px;
 </form></div>
 <div class="card"><h2 style="margin-top:0">Usuarios Registrados</h2><div class="table-wrap"><table><thead><tr><th>Usuario</th><th>Clave</th><th>Rol / Área</th><th>Acción</th></tr></thead><tbody id="tablaUsuariosBody"></tbody></table></div></div>
 </div>
+</section>
+
+<section id="view-clientes" class="hidden">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+      <div><h2 style="margin:0">Gestión de clientes</h2><p style="margin:6px 0 0;color:var(--ink-soft)">Consulta y administra las fichas de clientes. Los documentos históricos se conservan al desactivar un cliente.</p></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button type="button" class="btn secondary" onclick="exportarClientesAdminExcel()">📊 Descargar Excel</button>
+        <button type="button" class="btn primary" onclick="mostrarFormularioClienteAdmin()">+ Agregar cliente</button>
+      </div>
+    </div>
+  </div>
+  <div class="grid-3" style="margin-bottom:12px">
+    <div class="kpi-card"><div class="kpi-title">Clientes registrados</div><div class="kpi-value" id="clientesAdminTotal">0</div></div>
+    <div class="kpi-card"><div class="kpi-title">Activos</div><div class="kpi-value" id="clientesAdminActivos">0</div></div>
+    <div class="kpi-card"><div class="kpi-title">Desactivados</div><div class="kpi-value" id="clientesAdminInactivos">0</div></div>
+  </div>
+  <div id="clienteAdminEditor" class="card hidden">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><h3 id="clienteAdminEditorTitulo" style="margin:0">Agregar cliente</h3><button type="button" class="btn secondary" onclick="cancelarFormularioClienteAdmin()">Cerrar</button></div>
+    <form id="clienteAdminForm" onsubmit="guardarClienteAdmin(event)" style="margin-top:14px">
+      <div class="grid-3">
+        <div class="field"><label>Identificación <span class="req">*</span></label><input type="text" id="clienteAdminDocumento" required pattern="\S+" title="No uses espacios en la identificación." oninput="this.value=this.value.replace(/\s/g,'')"></div>
+        <div class="field"><label>Nombre del cliente <span class="req">*</span></label><input type="text" id="clienteAdminNombre" required></div>
+        <div class="field"><label>Empresa</label><input type="text" id="clienteAdminEmpresa"></div>
+        <div class="field"><label>Celular / Teléfono</label><input type="tel" id="clienteAdminTelefono" pattern="\S*" title="No uses espacios en el teléfono." oninput="this.value=this.value.replace(/\s/g,'')"></div>
+        <div class="field"><label>Correo</label><input type="email" id="clienteAdminCorreo"></div>
+        <div class="field"><label>Ciudad</label><input type="text" id="clienteAdminCiudad"></div>
+        <div class="field"><label>Ciudad / País</label><input type="text" id="clienteAdminCiudadPais"></div>
+        <div class="field"><label>Tipo de persona</label><select id="clienteAdminTipoPersona"><option value="Natural">Natural</option><option value="Jurídica">Jurídica</option></select></div>
+        <div class="field"><label>Origen del cliente</label><select id="clienteAdminOrigen" onchange="actualizarOrigenClienteAdmin()"><option value="">Sin especificar</option><option>WHATSAPP</option><option>INSTAGRAM</option><option>PUBLICIDAD</option><option>REFERIDO PUNTO DE VENTA</option><option>REFERIDO POR CLIENTE</option><option>FACEBOOK</option><option>TIKTOK</option><option>GOOGLE / BUSCADOR</option><option>CLIENTE RECURRENTE</option><option>OTRO</option></select></div>
+        <div class="field hidden" id="clienteAdminOtroOrigenWrap"><label>Detalle del origen</label><input type="text" id="clienteAdminOtroOrigen"></div>
+      </div>
+      <div id="clienteAdminFormEstado" class="status hidden" role="status"></div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button type="button" class="btn secondary" onclick="cancelarFormularioClienteAdmin()">Cancelar</button><button type="submit" class="btn primary" id="btnGuardarClienteAdmin">Guardar cliente</button></div>
+    </form>
+  </div>
+  <div class="card">
+    <div class="grid-3" style="align-items:end">
+      <div class="field"><label>Buscar</label><input id="clientesAdminBuscar" type="search" placeholder="Nombre, identificación, empresa o teléfono" oninput="filtrarClientesAdmin()"></div>
+      <div class="field"><label>Estado</label><select id="clientesAdminFiltroEstado" onchange="filtrarClientesAdmin()"><option value="activos">Activos</option><option value="inactivos">Desactivados</option><option value="todos">Todos</option></select></div>
+      <div class="field"><label>Origen</label><select id="clientesAdminFiltroOrigen" onchange="filtrarClientesAdmin()"><option value="">Todos los orígenes</option><option>WHATSAPP</option><option>INSTAGRAM</option><option>PUBLICIDAD</option><option>REFERIDO PUNTO DE VENTA</option><option>REFERIDO POR CLIENTE</option><option>FACEBOOK</option><option>TIKTOK</option><option>GOOGLE / BUSCADOR</option><option>CLIENTE RECURRENTE</option><option>OTRO</option></select></div>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th>Identificación</th><th>Cliente / Empresa</th><th>Teléfono</th><th>Ciudad</th><th class="num">Compras</th><th class="num">Total comprado</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="tablaClientesAdmin"><tr><td colspan="8" style="text-align:center;color:var(--ink-soft)">Cargando clientes…</td></tr></tbody></table></div>
+    <div style="display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-top:12px"><span id="clientesAdminPaginacion" style="color:var(--ink-soft)">—</span><button type="button" class="btn small secondary" id="btnClientesAdminAnterior" onclick="cambiarPaginaClientesAdmin(-1)" disabled>Anterior</button><button type="button" class="btn small secondary" id="btnClientesAdminSiguiente" onclick="cambiarPaginaClientesAdmin(1)" disabled>Siguiente</button></div>
+  </div>
 </section>
 
 <section id="view-ajustes" class="hidden">
@@ -1167,6 +1213,7 @@ min-height:44px;
 <div id="detalleModal" class="modal hidden">
 <div class="modal-card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><h2 style="margin-top:0">Detalle del documento</h2><button class="btn secondary" onclick="cerrarDetalle()">Cerrar</button></div><div id="detalleContenido"></div></div>
 </div>
+<div id="clienteAdminDetalleModal" class="modal hidden"><div class="modal-card" style="max-width:760px"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center"><h2 id="clienteAdminDetalleTitulo" style="margin:0">Detalle del cliente</h2><button class="btn secondary" onclick="cerrarDetalleClienteAdmin()">Cerrar</button></div><div id="clienteAdminDetalleContenido" style="margin-top:20px"></div></div></div>
 
 <script>
 /* =========================================================
@@ -1200,6 +1247,10 @@ let cacheRemisiones=null;
 let cacheUsuarios=null;
 let cacheUsuariosAt=0;
 let cargaUsuariosPendiente=null;
+let clientesAdminCache=[];
+let clientesAdminPagina=0;
+const CLIENTES_ADMIN_POR_PAGINA=50;
+let clienteAdminEnEdicion=null;
 let documentosMetaReporte=[];
 let usuariosMetaReporte=[];
 let metaGeneralMensualEmpresa=0;
@@ -1272,14 +1323,14 @@ const TABLAS_SUPABASE={usuarios:"perfiles",remisiones:"remisiones",clientes:"cli
 const CAMPOS_DB={
   perfiles:{role:"rol",presupuestoMensual:"presupuesto_mensual",username:"usuario"},
   remisiones:{idDocumento:"id_documento",tipoDoc:"tipo_doc",fechaCreacion:"fecha_creacion",docCliente:"documento_cliente",formaPago:"forma_pago"},
-  clientes:{docCliente:"documento",nomCliente:"nombre",telCliente:"telefono",totalCompras:"total_compras",totalInvertido:"total_invertido",fechaRegistro:"fecha_registro",ultimaActualizacion:"ultima_actualizacion"},
+  clientes:{docCliente:"documento",nomCliente:"nombre",telCliente:"telefono",totalCompras:"total_compras",totalInvertido:"total_invertido",fechaRegistro:"fecha_registro",ultimaActualizacion:"ultima_actualizacion",activo:"activo"},
   abonos_cotizaciones:{idDocumento:"id_documento",tipoDoc:"tipo_doc",docCliente:"documento_cliente",nomCliente:"nombre_cliente",telCliente:"telefono_cliente",formaPago:"forma_pago",fechaHora:"fecha_hora",numeroAbono:"numero_abono",totalMeta:"total_meta",registradoPor:"registrado_por",estadoResultante:"estado_resultante"},
   configuracion_empresa:{codigoAnulacion:"codigo_anulacion"}
 };
 const CAMPOS_INDEXADOS={
   perfiles:new Set(["id","usuario","nombre","rol","area","activo","presupuesto_mensual","created_at","email","telefono"]),
   remisiones:new Set(["id_documento","consecutivo","tipo_doc","fecha","fecha_creacion","asesor","area","estado","forma_pago","documento_cliente","total","updated_at"]),
-  clientes:new Set(["documento","nombre","telefono","total_compras","total_invertido","fecha_registro","ultima_actualizacion"]),
+  clientes:new Set(["documento","nombre","telefono","total_compras","total_invertido","fecha_registro","ultima_actualizacion","activo"]),
   abonos_cotizaciones:new Set(["id","id_documento","fecha","asesor","area","forma_pago","valor","created_at"]),
   configuracion_empresa:new Set(["id","nombre","logo","codigo_anulacion","updated_at"])
 };
@@ -1326,6 +1377,7 @@ function filaDesdeDatos(tabla,id,doc){
     fila.documento=id||doc.docCliente||doc.documento; fila.nombre=doc.nomCliente||doc.nombre||"";
     fila.telefono=doc.telCliente||doc.telefono||""; fila.total_compras=Number(doc.totalCompras||doc.total_compras||0);
     fila.total_invertido=Number(doc.totalInvertido||doc.total_invertido||0);
+    fila.activo=doc.activo!==false;
   }else if(tabla==="abonos_cotizaciones"){
     fila.id=id||doc.id||crypto.randomUUID(); fila.id_documento=doc.idDocumento;
     fila.fecha=doc.fecha||fechaHoy(); fila.asesor=doc.asesor||""; fila.area=doc.area||"";
@@ -1473,15 +1525,55 @@ async function obtenerCliente(doc){
   return cliente;
 }
 
+function actualizarBloqueoClienteGenerico(){
+  const bloquear=(idDocumento)=>String(document.getElementById(idDocumento)?.value||"").trim()==="0";
+  const remisionGenerica=bloquear("remClienteDoc");
+  ["remClienteNombre","remClienteCiudad","remClienteTel","remClienteEmail"].forEach(id=>{
+    const campo=document.getElementById(id);
+    if(campo){
+      campo.readOnly=remisionGenerica;
+      campo.style.background=remisionGenerica?"var(--surface-alt)":"";
+      campo.title=remisionGenerica?"Ficha protegida del cliente genérico":"";
+    }
+  });
+  const tipoPersona=document.getElementById("remTipoPersona");
+  if(tipoPersona)tipoPersona.disabled=remisionGenerica;
+  if(remisionGenerica){
+    const badge=document.getElementById("infoClienteBadge");
+    badge.textContent="Cliente genérico: sus datos están protegidos y no se pueden editar.";
+    badge.className="status ok";
+  }
+
+  const cotizacionGenerica=bloquear("cotNit");
+  ["cotEmpresa","cotClienteNombre","cotCelular","cotCiudadPais"].forEach(id=>{
+    const campo=document.getElementById(id);
+    if(campo){
+      campo.readOnly=cotizacionGenerica;
+      campo.style.background=cotizacionGenerica?"var(--surface-alt)":"";
+      campo.title=cotizacionGenerica?"Ficha protegida del cliente genérico":"";
+    }
+  });
+  if(cotizacionGenerica){
+    const badge=document.getElementById("cotInfoClienteBadge");
+    badge.textContent="Cliente genérico: sus datos están protegidos y no se pueden editar.";
+    badge.className="status ok";
+  }
+}
+
 async function guardarCliente(doc,data){
   exigirSupabase();
+  const clave=String(doc||"").trim();
+  // El cliente Genérico (documento 0) es compartido por ventas rápidas y
+  // remisiones sin datos de cliente. No actualizar su ficha con los campos
+  // del formulario, porque una venta podría sobrescribirla accidentalmente.
+  if(clave==="0")return await obtenerCliente(clave);
   const clienteData={
     ...data,
     nomClienteNormalizado:normalizarTexto(data.nomCliente)
   };
-  await db.collection("clientes").doc(doc).set(clienteData,{merge:true});
-  const cliente={id:String(doc),...clienteData};
-  cacheClientesPorDocumento.set(String(doc),cliente);
+  await db.collection("clientes").doc(clave).set(clienteData,{merge:true});
+  const cliente={id:clave,...clienteData};
+  cacheClientesPorDocumento.set(clave,cliente);
   cacheResultadosClientesBusqueda.clear();
 }
 
@@ -1593,6 +1685,7 @@ async function logout(){
   cacheUsuarios=null;cacheRemisiones=null;cacheConfiguracionEmpresa=null;
   cacheConsultasReportes.clear();cacheAbonosReporte.clear();
   cacheClientesPorDocumento.clear();cacheResultadosClientesBusqueda.clear();
+  clientesAdminCache=[];clientesAdminPagina=0;clienteAdminEnEdicion=null;
   cotizacionEditandoId=null;
   if(supabaseClient)await supabaseClient.auth.signOut();
   currentUser=null;
@@ -1628,6 +1721,7 @@ async function aplicarSesion(){
   .classList.toggle("hidden",currentUser.role!=="admin");
   document.getElementById("tabReportes").classList.toggle("hidden",false);
   document.getElementById("tabUsuarios").classList.toggle("hidden",!admin);
+  document.getElementById("tabClientes").classList.toggle("hidden",!admin);
   document.getElementById("tabAjustes").classList.toggle("hidden",!admin);
   await cargarConfiguracion();
   if(!document.getElementById("repFechaInicio").value) document.getElementById("repFechaInicio").value=fechaHoy();
@@ -1888,7 +1982,7 @@ function showView(view){
   document.getElementById("fechaConsolidados").textContent =
   new Date().toLocaleDateString("es-CO");
 
-  const permisos={venta:["admin","asesor"],cotizacion:["admin","asesor"],reporte:["admin","caja","asesor"],usuarios:["admin"],ajustes:["admin"]};
+  const permisos={venta:["admin","asesor"],cotizacion:["admin","asesor"],reporte:["admin","caja","asesor"],usuarios:["admin"],clientes:["admin"],ajustes:["admin"]};
 
   const areaWhatsApp=String(currentUser.area||"").trim().toUpperCase()==="WHATSAPP";
   if(view==="venta"&&BLOQUEO_TEMPORAL_VENTA_WHATSAPP&&esAsesorWhatsApp()){
@@ -1906,7 +2000,7 @@ function showView(view){
 
   if(view!=="reporte") detenerListenerReporteCaja();
 
-  ["venta","cotizacion","reporte","usuarios","ajustes"].forEach(v=>
+  ["venta","cotizacion","reporte","usuarios","clientes","ajustes"].forEach(v=>
 
     document.getElementById("view-"+v).classList.toggle("hidden",v!==view)
 
@@ -1929,6 +2023,7 @@ function showView(view){
   }
 
   if(view==="usuarios") renderUsuarios();
+  if(view==="clientes") cargarClientesAdmin();
 
 }
 
@@ -2277,6 +2372,48 @@ async function operarCotizacion(id,accion,datos={}){
   return data;
 }
 
+async function solicitarAperturaCajon(){
+  const controlador=new AbortController();
+  const temporizador=setTimeout(()=>controlador.abort(),3500);
+  try{
+    const respuesta=await fetch("http://127.0.0.1:17840/open-drawer",{
+      method:"POST",mode:"cors",credentials:"omit",signal:controlador.signal,
+      headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"open"})
+    });
+    const resultado=await respuesta.json().catch(()=>({}));
+    if(!respuesta.ok||resultado.ok!==true)throw new Error(resultado.error||`El puente local respondió ${respuesta.status}.`);
+    return true;
+  }finally{clearTimeout(temporizador);}
+}
+
+async function probarAperturaCajon(){
+  if(!confirm("Se enviará una señal para abrir el cajón monedero. ¿Continuar?"))return;
+  const boton=document.getElementById("btnProbarCajon"),estado=document.getElementById("estadoPuenteCajon");
+  boton.disabled=true;estado.textContent="Enviando señal a la impresora…";
+  try{
+    await solicitarAperturaCajon();
+    estado.textContent="Señal enviada. Si el cajón no abrió, revisa el cable DK y la conexión del cajón.";
+    estado.style.color="var(--brand)";
+  }catch(error){
+    console.error("No se pudo abrir el cajón:",error);
+    estado.textContent="No responde el puente local. Inicia el puente en este PC y vuelve a probar.";
+    estado.style.color="var(--required)";
+    alert("No se pudo abrir el cajón: "+(error.name==="AbortError"?"se agotó el tiempo de espera.":(error.message||"el puente local no está disponible.")));
+  }finally{boton.disabled=false;}
+}
+
+function iniciarAperturaCajonTrasPago(){
+  return solicitarAperturaCajon().then(()=>null).catch(error=>{
+    console.error("El pago se guardó, pero no se pudo abrir el cajón:",error);
+    return error;
+  });
+}
+
+function avisarFalloAperturaCajon(error){
+  if(!error)return;
+  alert("El pago quedó registrado, pero no se pudo abrir el cajón. Comprueba que el puente local esté iniciado en este PC y prueba la apertura desde Reportes.");
+}
+
 async function registrarPagoRapido(){
   if(currentUser?.role!=="caja"){
     alert("El pago rápido está disponible únicamente para Caja.");
@@ -2309,8 +2446,10 @@ async function registrarPagoRapido(){
     document.getElementById("pagoRapidoValor").value="";
     document.getElementById("pagoRapidoMetodo").value="";
     pagoRapidoSolicitudId=null;
+    const aperturaCajon=iniciarAperturaCajonTrasPago();
     imprimirDocumento(doc.idDocumento,ventanaImpresion);
     await Promise.all([actualizarMetaReporte(true),procesarReportes(true)]);
+    avisarFalloAperturaCajon(await aperturaCajon);
   }catch(error){
     ventanaImpresion.close();
     console.error("No se pudo registrar el pago rápido:",error);
@@ -2581,6 +2720,7 @@ function seleccionarClienteCotizacion(cliente){
   document.getElementById("cotEmpresa").value=cliente.empresa||"";
   document.getElementById("cotCelular").value=String(cliente.telCliente||"").replace(/\s/g,"");
   document.getElementById("cotCiudadPais").value=cliente.ciudadPais||cliente.ciudadCliente||"";
+  actualizarBloqueoClienteGenerico();
   document.getElementById("cotOrigenCliente").value=cliente.origenCliente||"";
   document.getElementById("cotOtroOrigen").value=cliente.detalleOrigenCliente||"";
   actualizarOtroOrigenCotizacion();
@@ -2601,6 +2741,11 @@ function actualizarOtroOrigenCotizacion(){
 
 function mostrarEstadoClienteCotizacion(cliente){
   const badge=document.getElementById("cotInfoClienteBadge");
+  if(String(document.getElementById("cotNit").value||"").trim()==="0"){
+    badge.textContent="Cliente genérico: sus datos están protegidos y no se pueden editar.";
+    badge.className="status ok";
+    return;
+  }
   if(cliente){
     const compras=Number(cliente.totalCompras||0);
     badge.innerHTML=compras>0
@@ -2913,6 +3058,7 @@ async function editarCotizacion(id){
     const propiedad={cotPrediseno:"idDocumento",cotFechaSolicitud:"fechaSolicitud",cotFechaEntrega:"fechaEntrega",cotAsesor:"asesor",cotNit:"docCliente",cotEmpresa:"empresa",cotClienteNombre:"nomCliente",cotCelular:"telCliente",cotCiudadPais:"ciudadPais",cotVenta:"venta",cotDiseno:"diseno",cotColorBase:"colorBase",cotMedidaLogo:"medidaLogo",cotLineaCorte:"lineaCorte",cotColorFondo:"colorFondo",cotOrientacionLogo:"orientacionLogo",cotCantidadCortes:"cantidadCortes",cotColorLogo:"colorLogo",cotDistanciaLogos:"distanciaLogos",cotEspecificacionDiseno:"especificacionDiseno",cotNotas:"notas"}[idCampo];
     if(campo){const valor=doc[propiedad]??"";campo.value=["cotNit","cotCelular"].includes(idCampo)?String(valor).replace(/\s/g,""):valor;}
   });
+  actualizarBloqueoClienteGenerico();
   document.getElementById("cotOrigenCliente").value=doc.origenCliente||"";
   document.getElementById("cotOtroOrigen").value=doc.detalleOrigenCliente||"";
   actualizarOtroOrigenCotizacion();
@@ -2980,6 +3126,7 @@ function cancelarEdicionCotizacion(){
   document.querySelectorAll("#view-cotizacion input").forEach(campo=>{if(campo.type==="file")campo.value="";else if(campo.type==="checkbox")campo.checked=false;else campo.value="";});
   document.querySelectorAll("#view-cotizacion select").forEach(campo=>campo.value="");
   document.querySelectorAll("#view-cotizacion textarea").forEach(campo=>campo.value="");
+  actualizarBloqueoClienteGenerico();
   actualizarEspecificacionesPersonalizadasCotizacion();
   document.getElementById("cotItemCantidad").value="1";
   document.getElementById("cotFechaSolicitud").value=fechaHoy();
@@ -3076,6 +3223,8 @@ async function guardarCotizacion(){
   let cotizacionOriginal=null;
   try{
     exigirSupabase();
+    const clienteAnterior=await obtenerCliente(docCliente);
+    if(clienteAnterior?.activo===false&&!cotizacionEditandoId)throw new Error("El cliente está desactivado. Pídele a Administración que lo active antes de crear una cotización.");
     const archivosImagenes=[1,2,3,4]
       .map(numero=>document.getElementById(`cotFotoPrediseno${numero}`).files?.[0])
       .filter(Boolean);
@@ -3104,7 +3253,6 @@ async function guardarCotizacion(){
     }
     if(imagenesPreparadas.length)actualizarProgresoImagenCotizacion(`Subiendo ${imagenesPreparadas.length} imagen${imagenesPreparadas.length===1?"":"es"} a Supabase Storage…`);
     rutasImagenesSubidas=await subirImagenesCotizacion(idDocumento,imagenesPreparadas);
-    const clienteAnterior=await obtenerCliente(docCliente);
     const ahora=new Date().toISOString();
     await guardarCliente(docCliente,{
       ...(clienteAnterior||{}),
@@ -3118,7 +3266,8 @@ async function guardarCotizacion(){
       totalCompras:Number(clienteAnterior?.totalCompras||0),
       totalInvertido:Number(clienteAnterior?.totalInvertido||0),
       fechaRegistro:clienteAnterior?.fechaRegistro||ahora,
-      ultimaActualizacion:ahora
+      ultimaActualizacion:ahora,
+      activo:clienteAnterior?.activo!==false
     });
 
     const contactoAsesor=obtenerContactoAsesorPdf({...cotizacionOriginal,asesorId:cotizacionOriginal?.asesorId||(cotizacionOriginal?"":currentUser.id),asesor:cotizacionOriginal?.asesor||currentUser.nombre||currentUser.username});
@@ -3188,6 +3337,7 @@ async function guardarCotizacion(){
     document.getElementById("cotFechaSolicitud").value=fechaHoy();
     document.getElementById("cotAsesor").value=currentUser.nombre||currentUser.username||"";
     document.getElementById("cotInfoClienteBadge").className="status hidden";
+    actualizarBloqueoClienteGenerico();
     actualizarOtroOrigenCotizacion();
     calcularTotalesCotizacion();
     window.cargandoNumeroPrefactura=false;
@@ -4133,6 +4283,7 @@ function limpiarFormulario(){
   document.getElementById("remClienteCiudad").value="";
   document.getElementById("remClienteTel").value="";
   document.getElementById("remClienteEmail").value="";
+  actualizarBloqueoClienteGenerico();
   document.getElementById("remDescGlobal").value="0";
   document.getElementById("itemAplicarIva").checked=false;
   document.getElementById("remObs").value="";
@@ -4205,6 +4356,7 @@ async function editarDocumento(id){
 
   document.getElementById("remClienteDoc").value =
     String(doc.docCliente || "").replace(/\s/g,"");
+  actualizarBloqueoClienteGenerico();
 
   document.getElementById("remClienteNombre").value =
     doc.nomCliente || "";
@@ -4292,6 +4444,8 @@ async function buscarCliente(){
       badge.className="status warn";
     }
 
+    actualizarBloqueoClienteGenerico();
+
   }catch(e){
 
     console.error("Error buscando cliente",e);
@@ -4366,6 +4520,7 @@ async function cargarClientesParaBusqueda(texto){
       });
     });
     const datos=[...encontrados.values()]
+      .filter(cliente=>cliente.activo!==false)
       .sort((a,b)=>normalizarTexto(a.nomCliente)
         .localeCompare(normalizarTexto(b.nomCliente)))
       .slice(0,10);
@@ -4475,6 +4630,7 @@ function seleccionarClientePorNombre(cliente){
 
   badge.innerHTML=`⭐ <strong>Cliente recurrente:</strong> ${Number(cliente.totalCompras||1)} compras · ${money(cliente.totalInvertido||0)} acumulado`;
   badge.className="status ok";
+  actualizarBloqueoClienteGenerico();
 
   ocultarSugerenciasClientes();
 }
@@ -4564,6 +4720,11 @@ if(camposObligatorios.some(([id, valor]) => !valor)){
 
   try{
 
+    const clienteAnterior=await obtenerCliente(docCliente);
+    if(clienteAnterior?.activo===false&&!window.documentoEditandoId){
+      alert("El cliente está desactivado. Pídele a Administración que lo active antes de crear un documento nuevo.");
+      return;
+    }
    let consecutivo;
 let customId;
 let documentoOriginal=null;
@@ -4597,8 +4758,6 @@ if(window.documentoEditandoId){
 
 }
 
-    const clienteAnterior=await obtenerCliente(docCliente);
-
     const esClienteNuevo=!clienteAnterior;
 
     const cliente={
@@ -4613,7 +4772,8 @@ if(window.documentoEditandoId){
       primeraCompra:clienteAnterior?.primeraCompra||fecha,
       ultimaCompra:fecha,
       fechaRegistro:clienteAnterior?.fechaRegistro||new Date().toISOString(),
-      ultimaActualizacion:new Date().toISOString()
+      ultimaActualizacion:new Date().toISOString(),
+      activo:clienteAnterior?.activo!==false
     };
 
     await guardarCliente(docCliente,cliente);
@@ -5810,12 +5970,14 @@ async function registrarAbonoCotizacion(){
   boton.disabled=true;
   try{
     await operarCotizacion(cot.idDocumento,abonoCotizacionEnEdicion?"editar_abono":"registrar_abono",{idAbono:abonoCotizacionEnEdicion?.id,valor,formaPago,fecha});
+    const aperturaCajon=abonoCotizacionEnEdicion?Promise.resolve(null):iniciarAperturaCajonTrasPago();
     cacheRemisiones=null;
     cacheConsultasReportes.clear();
     cacheAbonosReporte.clear();
     cerrarModalAbono();
     await Promise.all([actualizarMetaReporte(true),procesarReportes(true)]);
     await verDetalleDoc(cot.idDocumento);
+    avisarFalloAperturaCajon(await aperturaCajon);
   }catch(error){alert("No se pudo guardar el abono: "+error.message);}
   finally{boton.disabled=false;}
 }
@@ -5909,11 +6071,13 @@ async function registrarPagoMixto(){
     const pagos=[{formaPago:metodo1,valor:valor1},{formaPago:metodo2,valor:valor2}];
     const {error}=await supabaseClient.rpc("registrar_pago_mixto",{p_id_documento:doc.idDocumento||doc.id,p_pagos:pagos});
     if(error)throw error;
+    const aperturaCajon=iniciarAperturaCajonTrasPago();
     doc.estado="Pagada";doc.pagos=pagos;
     const id=doc.idDocumento||doc.id;cerrarModalPagoMixto();cacheConsultasReportes.clear();
     if(Array.isArray(cacheRemisiones)){const cached=cacheRemisiones.find(r=>String(r.idDocumento||r.id)===String(id));if(cached){cached.estado="Pagada";cached.pagos=pagos;}}
     await verDetalleDoc(id);
     if(document.getElementById("view-reporte")&&!document.getElementById("view-reporte").classList.contains("hidden"))await Promise.all([actualizarMetaReporte(true),procesarReportes(true)]);
+    avisarFalloAperturaCajon(await aperturaCajon);
   }catch(error){console.error("No se pudo registrar el pago mixto",error);aviso.textContent=`No se pudo registrar el pago: ${error.message||error}`;}
   finally{boton.disabled=false;}
 }
@@ -5941,6 +6105,7 @@ async function marcarComoPagada(id){
 
     const {error}=await supabaseClient.rpc("marcar_remision_pagada",{p_id_documento:id});
     if(error)throw error;
+    const aperturaCajon=iniciarAperturaCajonTrasPago();
     cacheConsultasReportes.clear();
 
 
@@ -5979,6 +6144,7 @@ async function marcarComoPagada(id){
     ){
       await Promise.all([actualizarMetaReporte(true),procesarReportes(true)]);
     }
+    avisarFalloAperturaCajon(await aperturaCajon);
 
   }catch(e){
 
@@ -6966,6 +7132,246 @@ async function renderUsuarios(){
       </td>
     </tr>
   `).join("");
+}
+
+/* =========================================================
+   GESTIÓN DE CLIENTES · ADMIN
+   ========================================================= */
+async function cargarClientesAdmin(){
+  if(currentUser?.role!=="admin")return;
+  const tbody=document.getElementById("tablaClientesAdmin");
+  tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--ink-soft)">Cargando clientes…</td></tr>';
+  try{
+    const snapshot=await db.collection("clientes").get();
+    clientesAdminCache=snapshot.docs.map(fila=>{
+      const cliente=fila.data()||{};
+      return {...cliente,id:fila.id,docCliente:String(cliente.docCliente||fila.id),activo:cliente.activo!==false};
+    }).sort((a,b)=>normalizarTexto(a.nomCliente).localeCompare(normalizarTexto(b.nomCliente),"es")||String(a.docCliente).localeCompare(String(b.docCliente)));
+    clientesAdminPagina=0;
+    filtrarClientesAdmin();
+  }catch(error){
+    console.error("No se pudieron cargar los clientes:",error);
+    tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;color:var(--required)">No se pudieron cargar los clientes: ${escapeHtml(error.message||error)}</td></tr>`;
+  }
+}
+
+function obtenerClientesAdminFiltrados(){
+  const texto=normalizarTexto(document.getElementById("clientesAdminBuscar").value);
+  const estado=document.getElementById("clientesAdminFiltroEstado").value;
+  const origen=document.getElementById("clientesAdminFiltroOrigen").value;
+  return clientesAdminCache.filter(cliente=>{
+    const activo=cliente.activo!==false;
+    if(estado==="activos"&&!activo)return false;
+    if(estado==="inactivos"&&activo)return false;
+    if(origen&&normalizarTexto(cliente.origenCliente)!==normalizarTexto(origen))return false;
+    if(!texto)return true;
+    const indice=[cliente.docCliente,cliente.nomCliente,cliente.empresa,cliente.telCliente,cliente.ciudadCliente,cliente.ciudadPais,cliente.emailCliente]
+      .map(normalizarTexto).join(" ");
+    return indice.includes(texto);
+  });
+}
+
+function filtrarClientesAdmin(){
+  if(currentUser?.role!=="admin")return;
+  const filtrados=obtenerClientesAdminFiltrados();
+  document.getElementById("clientesAdminTotal").textContent=String(clientesAdminCache.length);
+  document.getElementById("clientesAdminActivos").textContent=String(clientesAdminCache.filter(cliente=>cliente.activo!==false).length);
+  document.getElementById("clientesAdminInactivos").textContent=String(clientesAdminCache.filter(cliente=>cliente.activo===false).length);
+  const paginas=Math.max(1,Math.ceil(filtrados.length/CLIENTES_ADMIN_POR_PAGINA));
+  clientesAdminPagina=Math.max(0,Math.min(clientesAdminPagina,paginas-1));
+  const inicio=clientesAdminPagina*CLIENTES_ADMIN_POR_PAGINA;
+  const pagina=filtrados.slice(inicio,inicio+CLIENTES_ADMIN_POR_PAGINA);
+  const tbody=document.getElementById("tablaClientesAdmin");
+  tbody.innerHTML=pagina.length?pagina.map(cliente=>{
+    const documento=String(cliente.docCliente||cliente.id||"");
+    const generico=documento==="0";
+    return `<tr>
+      <td><strong>${escapeHtml(documento)}</strong>${generico?'<br><small>FICHA PROTEGIDA</small>':""}</td>
+      <td><strong>${escapeHtml(cliente.nomCliente||"—")}</strong>${cliente.empresa?`<br><small>${escapeHtml(cliente.empresa)}</small>`:""}</td>
+      <td>${escapeHtml(cliente.telCliente||"—")}</td>
+      <td>${escapeHtml(cliente.ciudadCliente||cliente.ciudadPais||"—")}</td>
+      <td class="num">${formatNumber(cliente.totalCompras||0)}</td>
+      <td class="num">${money(cliente.totalInvertido||0)}</td>
+      <td>${generico?'<span class="badge info">PROTEGIDO</span>':cliente.activo===false?'<span class="badge danger">DESACTIVADO</span>':'<span class="badge success">ACTIVO</span>'}</td>
+      <td style="white-space:nowrap"><button type="button" class="btn small secondary" onclick="verClienteAdmin('${escapeAttr(documento)}')">Ver</button> ${generico?'<button type="button" class="btn small secondary" disabled title="El cliente genérico está protegido">Editar</button>':`<button type="button" class="btn small secondary" onclick="mostrarFormularioClienteAdmin('${escapeAttr(documento)}')">Editar</button> <button type="button" class="btn small ${cliente.activo===false?'primary':'danger'}" onclick="cambiarEstadoClienteAdmin('${escapeAttr(documento)}',${cliente.activo===false})">${cliente.activo===false?'Activar':'Desactivar'}</button>`}</td>
+    </tr>`;
+  }).join(""):'<tr><td colspan="8" style="text-align:center;color:var(--ink-soft)">No se encontraron clientes para estos filtros.</td></tr>';
+  document.getElementById("clientesAdminPaginacion").textContent=filtrados.length?`${inicio+1}–${Math.min(inicio+pagina.length,filtrados.length)} de ${filtrados.length}`:"0 clientes";
+  document.getElementById("btnClientesAdminAnterior").disabled=clientesAdminPagina<=0;
+  document.getElementById("btnClientesAdminSiguiente").disabled=clientesAdminPagina>=paginas-1;
+}
+
+function cambiarPaginaClientesAdmin(delta){
+  clientesAdminPagina+=Number(delta)||0;
+  filtrarClientesAdmin();
+}
+
+function exportarClientesAdminExcel(){
+  if(currentUser?.role!=="admin"){alert("Solo Administración puede exportar clientes.");return;}
+  if(typeof XLSX==="undefined"){alert("No se pudo cargar la herramienta de Excel. Verifica tu conexión a internet y vuelve a intentarlo.");return;}
+  const clientes=obtenerClientesAdminFiltrados();
+  if(!clientes.length){alert("No hay clientes para exportar con los filtros actuales.");return;}
+  try{
+    const filas=[[
+      "IDENTIFICACIÓN","CLIENTE","EMPRESA","TELÉFONO","CORREO","CIUDAD",
+      "CIUDAD / PAÍS","TIPO DE PERSONA","PROCEDENCIA","DETALLE DE PROCEDENCIA",
+      "ESTADO","COMPRAS","TOTAL COMPRADO","FECHA DE REGISTRO","ÚLTIMA COMPRA"
+    ]];
+    clientes.forEach(cliente=>filas.push([
+      cliente.docCliente||cliente.id||"",
+      cliente.nomCliente||"",
+      cliente.empresa||"",
+      cliente.telCliente||"",
+      cliente.emailCliente||"",
+      cliente.ciudadCliente||"",
+      cliente.ciudadPais||"",
+      cliente.tipoPersona||"",
+      cliente.origenCliente||"SIN ESPECIFICAR",
+      cliente.detalleOrigenCliente||"",
+      String(cliente.docCliente||cliente.id)==="0"?"PROTEGIDO":cliente.activo===false?"DESACTIVADO":"ACTIVO",
+      Number(cliente.totalCompras||0),
+      Number(cliente.totalInvertido||0),
+      cliente.fechaRegistro||"",
+      cliente.ultimaCompra||""
+    ]));
+    const hoja=XLSX.utils.aoa_to_sheet(filas);
+    hoja["!cols"]=[{wch:18},{wch:30},{wch:28},{wch:18},{wch:32},{wch:20},{wch:24},{wch:18},{wch:28},{wch:32},{wch:16},{wch:12},{wch:18},{wch:20},{wch:20}];
+    hoja["!autofilter"]={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:filas.length-1,c:filas[0].length-1}})};
+    hoja["!freeze"]={xSplit:0,ySplit:1};
+    const libro=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(libro,hoja,"Clientes");
+    XLSX.writeFile(libro,`Clientes_${fechaHoy()}.xlsx`);
+  }catch(error){
+    console.error("No se pudo exportar el Excel de clientes:",error);
+    alert("No se pudo generar el Excel de clientes: "+(error.message||error));
+  }
+}
+
+function mostrarFormularioClienteAdmin(documento=null){
+  if(currentUser?.role!=="admin"){alert("Solo Administración puede gestionar clientes.");return;}
+  clienteAdminEnEdicion=documento?clientesAdminCache.find(cliente=>String(cliente.docCliente)===String(documento)):null;
+  if(documento&&!clienteAdminEnEdicion){alert("No se encontró el cliente.");return;}
+  if(String(documento||"")==="0"){alert("El cliente genérico está protegido y no se puede editar.");return;}
+  const form=document.getElementById("clienteAdminForm");
+  form.reset();
+  const cliente=clienteAdminEnEdicion||{};
+  document.getElementById("clienteAdminDocumento").value=cliente.docCliente||"";
+  document.getElementById("clienteAdminDocumento").readOnly=!!clienteAdminEnEdicion;
+  document.getElementById("clienteAdminNombre").value=cliente.nomCliente||"";
+  document.getElementById("clienteAdminEmpresa").value=cliente.empresa||"";
+  document.getElementById("clienteAdminTelefono").value=String(cliente.telCliente||"").replace(/\s/g,"");
+  document.getElementById("clienteAdminCorreo").value=cliente.emailCliente||"";
+  document.getElementById("clienteAdminCiudad").value=cliente.ciudadCliente||"";
+  document.getElementById("clienteAdminCiudadPais").value=cliente.ciudadPais||"";
+  document.getElementById("clienteAdminTipoPersona").value=cliente.tipoPersona||"Natural";
+  document.getElementById("clienteAdminOrigen").value=cliente.origenCliente||"";
+  document.getElementById("clienteAdminOtroOrigen").value=cliente.detalleOrigenCliente||"";
+  document.getElementById("clienteAdminOtroOrigenWrap").classList.toggle("hidden",normalizarTexto(cliente.origenCliente)!=="otro");
+  document.getElementById("clienteAdminEditorTitulo").textContent=clienteAdminEnEdicion?`Editar cliente · ${cliente.docCliente}`:"Agregar cliente";
+  document.getElementById("btnGuardarClienteAdmin").textContent=clienteAdminEnEdicion?"Guardar cambios":"Guardar cliente";
+  const estado=document.getElementById("clienteAdminFormEstado");estado.textContent="";estado.className="status hidden";
+  document.getElementById("clienteAdminEditor").classList.remove("hidden");
+  document.getElementById("clienteAdminEditor").scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+function cancelarFormularioClienteAdmin(){
+  clienteAdminEnEdicion=null;
+  document.getElementById("clienteAdminForm").reset();
+  document.getElementById("clienteAdminDocumento").readOnly=false;
+  document.getElementById("clienteAdminEditor").classList.add("hidden");
+}
+
+async function guardarClienteAdmin(event){
+  event.preventDefault();
+  if(currentUser?.role!=="admin"){alert("Solo Administración puede guardar clientes.");return;}
+  const documento=document.getElementById("clienteAdminDocumento").value.trim().replace(/\s/g,"");
+  const estado=document.getElementById("clienteAdminFormEstado");
+  const boton=document.getElementById("btnGuardarClienteAdmin");
+  if(!documento||documento==="0"){alert("La identificación debe ser válida. El documento 0 está reservado al cliente genérico.");return;}
+  if(!document.getElementById("clienteAdminForm").reportValidity())return;
+  if(!clienteAdminEnEdicion&&clientesAdminCache.some(cliente=>String(cliente.docCliente)===documento)){
+    alert("Ya existe un cliente con esa identificación. Búscalo y edítalo desde la lista.");return;
+  }
+  const anterior=clienteAdminEnEdicion||{};
+  const origen=document.getElementById("clienteAdminOrigen").value;
+  const ahora=new Date().toISOString();
+  const datos={
+    docCliente:documento,
+    nomCliente:document.getElementById("clienteAdminNombre").value.trim(),
+    empresa:document.getElementById("clienteAdminEmpresa").value.trim(),
+    telCliente:document.getElementById("clienteAdminTelefono").value.trim(),
+    emailCliente:document.getElementById("clienteAdminCorreo").value.trim(),
+    ciudadCliente:document.getElementById("clienteAdminCiudad").value.trim(),
+    ciudadPais:document.getElementById("clienteAdminCiudadPais").value.trim(),
+    tipoPersona:document.getElementById("clienteAdminTipoPersona").value,
+    origenCliente:origen,
+    detalleOrigenCliente:normalizarTexto(origen)==="otro"?document.getElementById("clienteAdminOtroOrigen").value.trim():"",
+    totalCompras:Number(anterior.totalCompras||0),totalInvertido:Number(anterior.totalInvertido||0),
+    fechaRegistro:anterior.fechaRegistro||ahora,ultimaActualizacion:ahora,activo:anterior.activo!==false
+  };
+  boton.disabled=true;boton.textContent="Guardando…";
+  try{
+    await guardarCliente(documento,datos);
+    cacheClientesPorDocumento.set(documento,{id:documento,...datos});
+    cacheResultadosClientesBusqueda.clear();
+    estado.textContent=clienteAdminEnEdicion?"Los cambios quedaron guardados.":"El cliente quedó agregado.";
+    estado.className="status ok";
+    const editado=!!clienteAdminEnEdicion;
+    await cargarClientesAdmin();
+    if(editado)cancelarFormularioClienteAdmin();
+    else{
+      clienteAdminEnEdicion=null;
+      document.getElementById("clienteAdminForm").reset();
+    }
+  }catch(error){
+    console.error("No se pudo guardar el cliente:",error);
+    estado.textContent="No se pudo guardar: "+(error.message||error);
+    estado.className="status error";
+  }finally{
+    boton.disabled=false;boton.textContent=clienteAdminEnEdicion?"Guardar cambios":"Guardar cliente";
+  }
+}
+
+async function cambiarEstadoClienteAdmin(documento,activar){
+  if(currentUser?.role!=="admin"){alert("Solo Administración puede activar o desactivar clientes.");return;}
+  if(String(documento)==="0"){alert("El cliente genérico está protegido.");return;}
+  const cliente=clientesAdminCache.find(item=>String(item.docCliente)===String(documento));
+  if(!cliente)return;
+  const accion=activar?"activar":"desactivar";
+  if(!confirm(`¿Deseas ${accion} a ${cliente.nomCliente||documento}? ${activar?"Volverá a aparecer en las búsquedas de clientes.":"Se conservarán sus documentos e historial."}`))return;
+  try{
+    const {error}=await supabaseClient.rpc("admin_cambiar_estado_cliente",{p_documento:String(documento),p_activo:!!activar});
+    if(error)throw error;
+    cacheClientesPorDocumento.delete(String(documento));
+    cacheResultadosClientesBusqueda.clear();
+    await cargarClientesAdmin();
+  }catch(error){
+    console.error("No se pudo cambiar el estado del cliente:",error);
+    alert("No se pudo "+accion+" el cliente: "+(error.message||error));
+  }
+}
+
+function verClienteAdmin(documento){
+  if(currentUser?.role!=="admin"){alert("Solo Administración puede consultar clientes aquí.");return;}
+  const cliente=clientesAdminCache.find(item=>String(item.docCliente)===String(documento));
+  if(!cliente)return;
+  const generico=String(documento)==="0";
+  const campos=[
+    ["Identificación",cliente.docCliente], ["Nombre",cliente.nomCliente], ["Empresa",cliente.empresa],
+    ["Teléfono",cliente.telCliente], ["Correo",cliente.emailCliente], ["Ciudad",cliente.ciudadCliente],
+    ["Ciudad / País",cliente.ciudadPais], ["Tipo de persona",cliente.tipoPersona], ["Origen",cliente.origenCliente],
+    ["Detalle del origen",cliente.detalleOrigenCliente], ["Fecha de registro",cliente.fechaRegistro], ["Última compra",cliente.ultimaCompra]
+  ];
+  document.getElementById("clienteAdminDetalleTitulo").textContent=generico?"Cliente genérico · protegido":cliente.nomCliente||"Detalle del cliente";
+  document.getElementById("clienteAdminDetalleContenido").innerHTML=`<div class="grid-2">${campos.map(([etiqueta,valor])=>`<div><strong>${escapeHtml(etiqueta)}:</strong> ${escapeHtml(valor||"—")}</div>`).join("")}<div><strong>Compras registradas:</strong> ${formatNumber(cliente.totalCompras||0)}</div><div><strong>Total comprado:</strong> ${money(cliente.totalInvertido||0)}</div><div><strong>Estado:</strong> ${generico?"Protegido":cliente.activo===false?"Desactivado":"Activo"}</div></div>${generico?'<p class="status ok">Esta ficha se conserva como registro compartido y no se puede editar, desactivar ni eliminar.</p>':""}`;
+  document.getElementById("clienteAdminDetalleModal").classList.remove("hidden");
+}
+
+function cerrarDetalleClienteAdmin(){document.getElementById("clienteAdminDetalleModal").classList.add("hidden");}
+
+function actualizarOrigenClienteAdmin(){
+  const otro=normalizarTexto(document.getElementById("clienteAdminOrigen").value)==="otro";
+  document.getElementById("clienteAdminOtroOrigenWrap").classList.toggle("hidden",!otro);
 }
 
 async function guardarUsuario(event){
