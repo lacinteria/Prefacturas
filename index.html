@@ -648,6 +648,51 @@ min-height:44px;
 }
 @media (max-width:600px){.topbar .tabs{width:100%}}
 
+/* Navegación superior en todos los tamaños: deja el ancho completo al contenido. */
+.topbar{position:sticky!important;inset:auto!important;top:0!important;z-index:1000;width:100%!important;height:auto!important;min-height:0!important;margin:0!important;padding:8px 14px!important;display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;grid-template-areas:"brand user" "tabs tabs"!important;align-items:center!important;justify-content:initial!important;flex-wrap:nowrap!important;gap:7px 12px!important;background:#151e2d!important;color:#f7f9fc!important;border:0!important}
+.topbar .brand{grid-area:brand!important;width:auto!important;min-height:36px!important;margin:0!important;padding:0!important;display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;gap:8px!important;border:0!important}
+.topbar .brand>div:last-child{display:block!important;min-width:0!important}
+.topbar .brand-mark#boxLogo{display:none!important}
+.topbar .platform-logo{display:flex!important;width:32px!important;height:32px!important;flex:0 0 32px!important;border-radius:8px!important;overflow:hidden!important}
+.topbar #platformName{display:block!important;max-width:140px!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;color:#fff!important;font-size:12px!important;font-weight:800!important}
+.topbar #appBrandName{display:none!important}
+.topbar #txtAreaUsuario{display:block!important;color:#b7c2d3!important;font-size:9px!important;text-transform:uppercase!important}
+.topbar .tabs{grid-area:tabs!important;width:100%!important;min-width:0!important;margin:0!important;padding:0!important;display:flex!important;flex:0 1 auto!important;flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;flex-wrap:nowrap!important;gap:4px!important;overflow-x:auto!important;overflow-y:hidden!important;background:transparent!important;border-radius:0!important;scrollbar-width:thin}
+.topbar .tab-btn{width:auto!important;min-width:0!important;min-height:34px!important;flex:0 0 auto!important;padding:7px 10px!important;display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:6px!important;overflow:visible!important;border-radius:6px!important;color:#d5dce8!important;font-size:10px!important;font-weight:650!important;text-align:left!important;white-space:nowrap!important;box-shadow:none!important}
+.topbar .tab-btn::before{width:13px!important;flex:0 0 13px!important;text-align:center!important;font-size:13px!important;line-height:1!important;opacity:.9}
+.topbar .tab-btn[data-view="venta"]::before{content:"▤"}
+.topbar .tab-btn[data-view="cotizacion"]::before{content:"▧"}
+.topbar .tab-btn[data-view="reporte"]::before{content:"▥"}
+.topbar .tab-btn[data-view="clientes"]::before{content:"♧"}
+.topbar .tab-btn[data-view="usuarios"]::before{content:"♙"}
+.topbar .tab-btn[data-view="ajustes"]::before{content:"⚙"}
+.topbar .tab-btn.active{background:#3478e5!important;color:#fff!important;box-shadow:0 2px 6px rgba(0,0,0,.2)!important}
+.topbar .user-badge{grid-area:user!important;width:auto!important;margin:0!important;padding:0!important;display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:flex-end!important;gap:6px!important;border:0!important;font-size:10px!important}
+.topbar .user-badge strong,.topbar .user-badge .role-tag{display:inline-block!important;grid-column:auto!important;grid-row:auto!important}
+.topbar .user-badge strong{max-width:100px!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;text-transform:uppercase!important}
+.topbar .user-badge .role-tag{justify-self:auto!important;padding:1px 7px!important;background:#3478e5!important;font-size:9px!important}
+.topbar .user-badge .btn{width:auto!important;min-height:30px!important;margin:0!important;padding:5px 8px!important;background:#303b4d!important;color:#fff!important;font-size:10px!important}
+.topbar .user-badge .btn::before{content:none!important}
+.page-title-bar{position:relative!important;inset:auto!important;width:100%!important;height:34px!important;margin:0!important;padding:8px 18px!important;display:block!important;background:#fff!important;border-bottom:1px solid #e0e3e8!important;color:#202a39!important;font-size:11px!important;font-weight:800!important;letter-spacing:.35px!important;text-transform:uppercase!important}
+main{position:relative!important;width:100%!important;max-width:none!important;min-height:calc(100vh - 70px)!important;margin:0!important;padding:14px 18px 48px!important;background:#f1f2f4!important}
+.footer-digito{left:0!important;width:100%!important;padding:5px!important;font-size:9px!important}
+@media(max-width:600px){
+  .topbar{padding:6px 8px!important;gap:5px 8px!important}
+  .topbar .brand{gap:6px!important}
+  .topbar .platform-logo{width:30px!important;height:30px!important;flex-basis:30px!important}
+  .topbar #platformName{font-size:11px!important}
+  .topbar #txtAreaUsuario{display:none!important}
+  .topbar .user-badge{gap:4px!important;font-size:9px!important}
+  .topbar .user-badge strong{max-width:58px!important}
+  .topbar .user-badge .role-tag{font-size:8px!important}
+  .topbar .user-badge .btn{min-height:28px!important;padding:4px 6px!important;font-size:9px!important}
+  .topbar .tabs{gap:3px!important}
+  .topbar .tab-btn{min-height:32px!important;padding:6px 7px!important;gap:4px!important;font-size:9px!important}
+  .topbar .tab-btn::before{width:11px!important;flex-basis:11px!important;font-size:12px!important}
+  .page-title-bar{height:32px!important;padding:7px 10px!important;font-size:10px!important}
+  main{padding:10px 8px 48px!important}
+}
+
 </style>
 </head>
 <body>
