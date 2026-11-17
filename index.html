@@ -26,6 +26,8 @@ body{margin:0;background:var(--bg);color:var(--ink);line-height:1.4}
 .topbar{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;background:var(--surface);border-bottom:1px solid var(--line);flex-wrap:wrap;gap:10px}
 .brand{display:flex;align-items:center;gap:12px}.brand-mark{width:42px;height:42px;border-radius:8px;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;overflow:hidden}
 .brand-mark img{width:100%;height:100%;object-fit:contain;padding:2px}
+.platform-logo{width:42px;height:42px;flex:0 0 42px;border-radius:8px;overflow:hidden;background:#0b1826}
+.platform-logo img{display:block;width:100%;height:100%;object-fit:cover}
 .tabs{display:flex;gap:4px;background:var(--surface-alt);padding:4px;border-radius:8px;flex-wrap:wrap}
 .tab-btn{border:none;background:transparent;padding:8px 14px;border-radius:6px;font-size:13.5px;font-weight:600;color:var(--ink-soft);cursor:pointer}
 .tab-btn.active{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
@@ -55,7 +57,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid rgba(14,107,82,.15);bo
 .btn.primary{background:var(--brand);color:#fff}.btn.secondary{background:var(--surface-alt);color:var(--ink)}.btn.danger{background:#C53030;color:#fff}.btn.small{padding:5px 10px;font-size:12px}
 .btn:disabled{opacity:.55;cursor:not-allowed}
 .table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:13.5px}th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th.num,td.num{text-align:right}
-#cierreCajaTablaMetodos .cierre-caja-ventas-dia{font-weight:700}
+#cierreCajaTablaMetodos .cierre-caja-ventas-dia{font-weight:700;color:var(--required)}
 .meta-progress-track{height:10px;background:var(--surface-alt);border-radius:999px;overflow:hidden;margin-top:10px}
 .meta-progress-fill{height:100%;width:0;background:var(--brand);border-radius:inherit;transition:width .25s ease}
 .total-box{text-align:right;font-size:18px;font-weight:700;margin-top:15px;color:var(--brand-dark)}
@@ -573,6 +575,79 @@ min-height:44px;
 .ticket-datos{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px}.ticket-datos span,.ticket-totales span{display:block;color:var(--ink-soft);font-size:11px}.ticket-datos b{display:block;overflow-wrap:anywhere}
 .ticket-cierre hr{border:0;border-top:1px dashed var(--line);margin:12px 0}.ticket-cierre h4{margin:10px 0 6px}.ticket-tabla{width:100%;border-collapse:collapse;table-layout:fixed;font-size:11px}.ticket-tabla th,.ticket-tabla td{text-align:left;vertical-align:top;padding:6px 4px;border-bottom:1px solid var(--line);overflow-wrap:anywhere}.ticket-tabla th:first-child,.ticket-tabla td:first-child{width:25%}.ticket-tabla th:nth-child(2),.ticket-tabla td:nth-child(2),.ticket-tabla th:nth-child(3),.ticket-tabla td:nth-child(3){width:37.5%}.ticket-celda-etiqueta{display:block;color:var(--ink-soft);font-size:9px;margin-top:2px}.ticket-tabla tfoot{font-weight:700}.ticket-observaciones div{margin-top:3px;overflow-wrap:anywhere}.ticket-acciones{text-align:right;margin-top:12px}
 
+/* Navegación vertical de escritorio */
+@media (min-width:601px){
+  body{background:#f1f2f4}
+  .topbar{position:fixed;z-index:1000;inset:0 auto 0 0;width:185px;height:100vh;padding:8px;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;flex-wrap:nowrap;gap:0;background:#151e2d;color:#f7f9fc;border:0}
+  .topbar .brand{width:100%;min-height:52px;padding:0 6px 10px;border-bottom:1px solid rgba(255,255,255,.12);gap:9px}
+  .topbar .brand-mark{width:32px;height:32px;flex:0 0 32px;border-radius:8px;background:#3478e5;font-size:10px}
+  .topbar .brand-mark#boxLogo{display:none!important}
+  .topbar .platform-logo{width:32px;height:32px;flex:0 0 32px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:#3478e5;color:#fff;font-weight:900;font-size:12px;letter-spacing:-.6px;overflow:hidden}
+  .topbar .platform-logo img{display:block;width:100%;height:100%;object-fit:cover;border-radius:inherit}
+  .topbar .brand>div:last-child{min-width:0}
+  .topbar #platformName{display:block;max-width:112px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#fff;font-size:12px;font-weight:800;letter-spacing:.35px}
+  .topbar #appBrandName{display:none}
+  .topbar #txtAreaUsuario{display:block;color:#b7c2d3!important;font-size:9px!important;text-transform:uppercase}
+  .topbar .tabs{width:100%;margin-top:8px;padding:0;display:flex;flex-direction:column;align-items:stretch;gap:3px;background:transparent;border-radius:0}
+  .topbar .tab-btn{width:100%;min-height:34px;padding:8px 9px;display:flex;align-items:center;gap:9px;text-align:left;border-radius:6px;color:#d5dce8;font-size:10px;font-weight:650;box-shadow:none}
+  .topbar .tab-btn::before{width:14px;flex:0 0 14px;text-align:center;font-size:13px;line-height:1;opacity:.9}
+  .topbar .tab-btn[data-view="venta"]::before{content:"▤"}
+  .topbar .tab-btn[data-view="cotizacion"]::before{content:"▧"}
+  .topbar .tab-btn[data-view="reporte"]::before{content:"▥"}
+  .topbar .tab-btn[data-view="clientes"]::before{content:"♧"}
+  .topbar .tab-btn[data-view="usuarios"]::before{content:"♙"}
+  .topbar .tab-btn[data-view="ajustes"]::before{content:"⚙"}
+  .topbar .tab-btn.active{background:#3478e5;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+  .topbar .user-badge{width:100%;margin-top:auto;padding:10px 4px 2px;display:grid;grid-template-columns:1fr auto;gap:2px 5px;align-items:center;font-size:10px}
+  .topbar .user-badge strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-transform:uppercase}
+  .topbar .user-badge .role-tag{grid-column:1;grid-row:2;justify-self:start;padding:1px 7px;background:#3478e5;font-size:9px}
+  .topbar .user-badge .btn{grid-column:2;grid-row:1/3;min-height:28px;padding:4px 8px;background:#303b4d;color:#fff;font-size:10px}
+  .page-title-bar{position:fixed;z-index:900;top:0;right:0;left:185px;height:40px;padding:10px 20px;background:#fff;border-bottom:1px solid #e0e3e8;color:#202a39;font-size:12px;font-weight:800;letter-spacing:.35px;text-transform:uppercase}
+  main{width:auto;max-width:none;min-height:calc(100vh - 34px);margin:40px 0 0 185px;padding:15px 20px 44px;background:#f1f2f4}
+  main>.card,main>section>.card,main>section>details.card{box-shadow:0 2px 9px rgba(20,32,48,.06)}
+  .footer-digito{left:185px;width:calc(100% - 185px);padding:5px;background:#fff;font-size:9px}
+}
+@media (min-width:601px) and (max-width:900px){
+  .topbar{width:158px;padding:8px}
+  .topbar .brand{gap:7px;padding-left:3px;padding-right:3px}
+  .topbar .platform-logo{width:28px;height:28px;flex-basis:28px}
+  .topbar #platformName{font-size:11px}
+  .topbar .tab-btn{padding:8px 6px;gap:6px;font-size:9px}
+  .topbar .tab-btn::before{width:12px;flex-basis:12px}
+  .topbar .user-badge{font-size:9px}
+  .page-title-bar{left:158px;padding-left:14px}
+  main{margin-left:158px;padding:12px 14px 44px}
+  .footer-digito{left:158px;width:calc(100% - 158px)}
+}
+@media (min-width:601px) and (max-width:1200px){
+  .topbar .tabs{flex:0 0 auto;justify-content:flex-start;flex-wrap:nowrap;overflow:visible}
+}
+@media (max-width:600px){
+  body{background:#f1f2f4}
+  .topbar{position:fixed;z-index:1000;inset:0 auto 0 0;width:58px;height:100vh;padding:8px 6px;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;flex-wrap:nowrap;gap:0;background:#151e2d;color:#f7f9fc;border:0}
+  .topbar .brand{width:100%;min-height:48px;padding:0 0 8px;display:flex;align-items:center;justify-content:center;border-bottom:1px solid rgba(255,255,255,.12)}
+  .topbar .platform-logo{width:40px;height:40px;flex:0 0 40px;border-radius:9px}
+  .topbar .brand-mark#boxLogo,.topbar .brand>div:last-child{display:none!important}
+  .topbar .tabs{width:100%;margin-top:8px;padding:0;display:flex;flex:1 1 auto;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:4px;overflow:visible;background:transparent;border-radius:0}
+  .topbar .tab-btn{width:100%;min-height:42px;padding:7px 2px;display:flex;align-items:center;justify-content:center;border-radius:7px;color:#d5dce8;font-size:0;box-shadow:none}
+  .topbar .tab-btn::before{width:auto;flex:0 0 auto;font-size:18px;line-height:1;opacity:1}
+  .topbar .tab-btn[data-view="venta"]::before{content:"▤"}
+  .topbar .tab-btn[data-view="cotizacion"]::before{content:"▧"}
+  .topbar .tab-btn[data-view="reporte"]::before{content:"▥"}
+  .topbar .tab-btn[data-view="clientes"]::before{content:"♧"}
+  .topbar .tab-btn[data-view="usuarios"]::before{content:"♙"}
+  .topbar .tab-btn[data-view="ajustes"]::before{content:"⚙"}
+  .topbar .tab-btn.active{background:#3478e5;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+  .topbar .user-badge{width:100%;margin-top:auto;padding:8px 0 0;display:flex;flex-direction:column;align-items:center;gap:5px;border-top:1px solid rgba(255,255,255,.12)}
+  .topbar .user-badge strong,.topbar .user-badge .role-tag{display:none}
+  .topbar .user-badge .btn{width:40px;min-height:36px;padding:4px 0;background:#303b4d;color:#fff;font-size:0}
+  .topbar .user-badge .btn::before{content:"↪";font-size:18px;line-height:1}
+  .page-title-bar{position:fixed;z-index:900;top:0;right:0;left:58px;height:40px;padding:10px 12px;display:block;background:#fff;border-bottom:1px solid #e0e3e8;color:#202a39;font-size:11px;font-weight:800;letter-spacing:.35px;text-transform:uppercase}
+  main{width:auto;max-width:none;min-height:calc(100vh - 30px);margin:40px 0 0 58px;padding:10px 8px 48px;background:#f1f2f4}
+  .footer-digito{left:58px;width:calc(100% - 58px);padding:5px;font-size:9px}
+}
+@media (max-width:600px){.topbar .tabs{width:100%}}
+
 </style>
 </head>
 <body>
@@ -613,8 +688,9 @@ min-height:44px;
 
 <header class="topbar">
   <div class="brand">
+    <div class="platform-logo"><img src="assets/onice-avatar.png" alt="Logo de Ónice"></div>
     <div class="brand-mark" id="boxLogo">POS</div>
-    <div><h1 style="font-size:16px;margin:0" id="appBrandName">PREFACTURA</h1><span id="txtAreaUsuario" style="font-size:12px;color:var(--ink-soft)">Área: -</span></div>
+    <div><h1 id="platformName" style="font-size:12px;margin:0">ÓNICE</h1><span id="appBrandName" class="hidden">PREFACTURA</span><span id="txtAreaUsuario" style="font-size:12px;color:var(--ink-soft)">Área: -</span></div>
   </div>
   <nav class="tabs">
     <button type="button" class="tab-btn active" data-view="venta" onclick="showView('venta')">Nueva Remisión</button>
@@ -626,6 +702,8 @@ min-height:44px;
   </nav>
   <div class="user-badge"><strong id="sessionUsername">Invitado</strong><span class="role-tag" id="sessionRole">ROL</span><button class="btn small secondary" onclick="logout()">Salir</button></div>
 </header>
+
+<div class="page-title-bar" id="pageTitleBar">Nueva Remisión</div>
 
 <main>
 <section id="view-venta">
@@ -701,7 +779,7 @@ min-height:44px;
   </div>
 </div>
 
-<div class="field"><label>Ciudad / Municipio <span class="req">*</span></label><input type="text" id="remClienteCiudad" placeholder="ej. Medellín, Bogotá, Bello..." required></div>
+<div class="field"><label>Ciudad / Municipio <span class="req">*</span></label><input type="text" id="remClienteCiudad" list="listaCiudadesMunicipios" autocomplete="off" placeholder="Escribe las primeras letras, ej. Mede..." required></div>
 <div class="field"><label>Teléfono / WhatsApp <span class="req">*</span></label><input type="tel" id="remClienteTel" placeholder="ej. 3001234567" required pattern="\S+" title="No uses espacios en el teléfono." oninput="this.value=this.value.replace(/\s/g,'')"></div>
 <div class="field"><label>Correo Electrónico <span id="reqEmail" class="req" style="display:none">*</span></label><input type="email" id="remClienteEmail" placeholder="correo@ejemplo.com"></div>
 </div>
@@ -842,7 +920,7 @@ min-height:44px;
     <div class="field"><label>Celular <span class="req">*</span></label><input type="tel" id="cotCelular" required aria-required="true" pattern="\S+" title="No uses espacios en el teléfono." oninput="this.value=this.value.replace(/\s/g,'')"></div>
     <div class="field"><label>¿De dónde viene el cliente? <span class="req">*</span></label><select id="cotOrigenCliente" required aria-required="true" onchange="actualizarOtroOrigenCotizacion()"><option value="">-- SELECCIONE--</option><option>WHATSAPP</option><option>INSTAGRAM</option><option>PUBLICIDAD</option><option>REFERIDO PUNTO DE VENTA</option><option>REFERIDO POR CLIENTE</option><option>FACEBOOK</option><option>TIKTOK</option><option>GOOGLE / BUSCADOR</option><option>CLIENTE RECURRENTE</option><option>OTRO</option></select></div>
     <div class="field hidden" id="cotOtroOrigenWrap"><label>Especifica el origen <span class="req">*</span></label><input type="text" id="cotOtroOrigen" aria-required="true" disabled></div>
-    <div class="field"><label>Ciudad / País del cliente <span class="req">*</span></label><input type="text" id="cotCiudadPais" placeholder="ej. Medellín, Colombia" required aria-required="true"></div>
+    <div class="field"><label>Ciudad / País del cliente <span class="req">*</span></label><input type="text" id="cotCiudadPais" list="listaCiudadesPaises" autocomplete="off" placeholder="Escribe las primeras letras, ej. Mede..." required aria-required="true"></div>
   </div>
   <div id="cotInfoClienteBadge" class="status hidden"></div>
   <div class="section-title" style="margin-top:15px">Tipo de Pedido</div>
@@ -948,6 +1026,7 @@ min-height:44px;
       <select id="repFiltroEstado">
         <option value="TODOS">-- Todos los estados --</option>
         <option value="Pendiente">Pendiente</option>
+        <option value="Duplicada">Duplicada</option>
         <option value="Abonada">Abonada</option>
         <option value="Pagada">Pagada</option>
         <option value="No vendida">No vendida</option>
@@ -989,7 +1068,6 @@ min-height:44px;
 </div>
 <div class="card hidden" id="panelCierreCaja" style="margin-top:16px">
   <details class="report-inner-disclosure"><summary>Cierre del día · Caja</summary><div class="report-inner-content">
-  <p style="margin:0 0 12px;color:var(--ink-soft);font-size:13px">Compara los pagos registrados hoy con el dinero y los soportes que tienes físicamente. Las cotizaciones se cuentan por sus abonos recibidos; se excluyen documentos anulados y pendientes.</p>
   <div class="grid-5" style="margin-bottom:12px">
     <div class="kpi-card"><div class="kpi-title">Fecha del cierre</div><div class="kpi-value" id="cierreCajaFecha">—</div></div>
     <div class="kpi-card"><div class="kpi-title">Área de Caja</div><div class="kpi-value" id="cierreCajaArea">—</div></div>
@@ -1006,15 +1084,15 @@ min-height:44px;
     </div>
   </div>
   <div id="cierreCajaFormulario" class="hidden">
-    <div class="grid-3" style="align-items:end">
-      <div class="kpi-card"><div class="kpi-title">Base inicial registrada</div><div class="kpi-value" id="cierreCajaBaseInicial">$0</div><small>Registrada durante la apertura. Se suma al efectivo esperado.</small></div>
-      <div class="kpi-card"><div class="kpi-title">Total esperado</div><div class="kpi-value" id="cierreCajaTotalEsperado">$0</div></div>
-      <div class="kpi-card"><div class="kpi-title">Total contado</div><div class="kpi-value" id="cierreCajaTotalContado">$0</div></div>
+    <div class="grid-2" style="align-items:end">
+      <div class="kpi-card"><div class="kpi-title">Base inicial registrada</div><div class="kpi-value" id="cierreCajaBaseInicial">$0</div></div>
+      <div class="kpi-card"><div class="kpi-title">Total de ventas</div><div class="kpi-value" id="cierreCajaTotalEsperado" style="color:var(--required)">$0</div></div>
     </div>
     <div class="table-wrap" style="margin:12px 0"><table><thead><tr><th>Método de pago</th><th class="num">Ventas del día</th><th class="num">Totales incluido base</th><th class="num">Conteo real</th><th class="num">Diferencia</th></tr></thead><tbody id="cierreCajaTablaMetodos"><tr><td colspan="5" style="text-align:center">Cargando pagos del día…</td></tr></tbody></table></div>
+    <div id="cierreCajaAvisoFaltante" class="status error hidden" role="status" aria-live="polite"></div>
     <div class="grid-2" style="align-items:end">
       <div class="field"><label>Observaciones</label><textarea id="cierreCajaObservaciones" rows="2" placeholder="Obligatorias si hay diferencias"></textarea></div>
-      <div class="kpi-card"><div class="kpi-title">Diferencia total</div><div class="kpi-value" id="cierreCajaDiferencia">$0</div></div>
+      <div class="kpi-card"><div class="kpi-title">Efectivo a entregar</div><div class="kpi-value" id="cierreCajaEfectivoEntregar" style="color:var(--required)">$0</div></div>
     </div>
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;flex-wrap:wrap">
       <button type="button" class="btn secondary" onclick="cargarCierreCaja(true)">Actualizar valores del día</button>
@@ -1056,7 +1134,7 @@ min-height:44px;
   <div class="table-wrap"><table><thead><tr><th>Asesor</th><th>Área</th><th class="num">Presupuesto mensual</th><th class="num">Vendido</th><th class="num">Faltante</th><th class="num">Cumplimiento</th></tr></thead><tbody id="tablaMetasAsesoresReporte"><tr><td colspan="6" style="text-align:center;color:var(--ink-soft)">Cargando presupuestos...</td></tr></tbody></table></div>
   </div></details>
 </div>
-<details class="report-disclosure card" style="margin-bottom:16px"><summary class="report-disclosure-title">Indicadores del período</summary><div class="report-disclosure-content">
+<details class="report-disclosure card" style="margin-bottom:16px"><summary class="report-disclosure-title">Indicadores del día</summary><div class="report-disclosure-content">
 <div class="grid-3" style="margin-bottom:0">
 <div class="kpi-card"><div class="kpi-title">Total Facturado</div><div class="kpi-value" id="kpiTotalVentas">$0</div></div>
 <div class="kpi-card"><div class="kpi-title">Remisiones / Docs Realizados</div><div class="kpi-value" id="kpiCantRemisiones">0</div></div>
@@ -1064,12 +1142,6 @@ min-height:44px;
 </div></div></details>
 <details class="report-disclosure card" style="margin-bottom:16px"><summary class="report-disclosure-title">Consolidados del período</summary><div class="report-disclosure-content">
 <div style="margin-bottom:16px">
-
-  <div style="text-align:left;margin-bottom:8px;font-size:13px;color:var(--ink-soft)">
-    <strong>Fecha:</strong>
-    <span id="fechaConsolidados"></span>
-  </div>
-
   <div class="grid-3">
 <div class="card" style="margin:0"><div class="section-title">Consolidado por Asesor</div><div class="table-wrap"><table><thead><tr><th>Asesor</th><th>Área</th><th class="num">Remisiones</th><th class="num">Total ($)</th></tr></thead><tbody id="tblConsolidadoAsesoresBody"><tr><td colspan="4" style="text-align:center;color:var(--ink-soft)">No hay datos.</td></tr></tbody></table></div></div>
 <div class="card" style="margin:0">
@@ -1120,15 +1192,15 @@ min-height:44px;
 <input type="hidden" id="usrId">
 <div class="field"><label>Nombre Completo <span class="req">*</span></label><input type="text" id="usrNombre" required placeholder="ej. Duvan"></div>
 <div class="field"><label>Usuario (Login) <span class="req">*</span></label><input type="text" id="usrUsername" required placeholder="ej. duvan"></div>
-<div class="field"><label>Contraseña <span class="req">*</span></label><input type="text" id="usrPass" placeholder="••••••••"></div>
+<div class="field"><label for="usrPass">Contraseña <span class="req">*</span></label><div class="password-wrapper"><input type="password" id="usrPass" autocomplete="new-password" placeholder="••••••••"><button type="button" class="password-eye" id="toggleUserPassword" aria-label="Mostrar contraseña" aria-pressed="false"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
 <div class="field"><label>Rol <span class="req">*</span></label><select id="usrRole"><option value="asesor">Asesor</option><option value="caja">Caja</option><option value="admin">Administrador</option></select></div>
 <div class="field"><label>Área asignada <span class="req">*</span></label><input type="text" id="usrArea" placeholder="ej. General, Bordados, Ventas..." required></div>
 <div class="field"><label>Teléfono de contacto para PDF</label><input type="tel" id="usrTelefono" autocomplete="tel" pattern="\S+" title="No uses espacios en el teléfono." oninput="this.value=this.value.replace(/\s/g,'')"></div>
-<div class="field"><label>Correo de contacto para PDF</label><input type="email" id="usrEmail" autocomplete="email"><small>Opcional. Si se deja vacío, la cuenta usará un correo interno y no podrá recibir recuperación automática de contraseña hasta asignarle un correo real.</small></div>
+<div class="field"><label>Correo de contacto para PDF</label><input type="email" id="usrEmail" autocomplete="email"><small>Es un dato de contacto para los documentos y puede compartirse entre varios usuarios. No modifica el correo interno de acceso.</small></div>
 <div class="field"><label>Presupuesto Mensual</label><input type="number" id="usrPresupuestoMensual" min="0" step="1000" placeholder="ej. 20000000"></div>
 <button type="submit" class="btn primary">Guardar Usuario</button><button type="button" class="btn secondary hidden" id="btnCancelarEdicion" onclick="cancelarEdicionUsuario()">Cancelar edición</button>
 </form></div>
-<div class="card"><h2 style="margin-top:0">Usuarios Registrados</h2><div class="table-wrap"><table><thead><tr><th>Usuario</th><th>Clave</th><th>Rol / Área</th><th>Acción</th></tr></thead><tbody id="tablaUsuariosBody"></tbody></table></div></div>
+<div class="card"><h2 style="margin-top:0">Usuarios Registrados</h2><div id="estadoCredencialesUsuarios" class="status hidden" role="status" style="margin-bottom:10px"></div><div class="table-wrap"><table><thead><tr><th>Usuario</th><th>Contraseña</th><th>Rol / Área</th><th>Acción</th></tr></thead><tbody id="tablaUsuariosBody"></tbody></table></div><small>Las claves guardadas se cifran en la bóveda y solo Administración puede consultarlas. Las cuentas existentes se van registrando al ingresar o al guardar su clave aquí.</small></div>
 </div>
 </section>
 
@@ -1207,6 +1279,13 @@ min-height:44px;
 </section>
 </main>
 
+<datalist id="listaCiudadesMunicipios">
+  <option value="Extranjero"><option value="Medellín"><option value="Bogotá"><option value="Bello"><option value="Itagüí"><option value="Envigado"><option value="Sabaneta"><option value="La Estrella"><option value="Caldas"><option value="Copacabana"><option value="Girardota"><option value="Barbosa"><option value="Rionegro"><option value="Marinilla"><option value="Apartadó"><option value="Turbo"><option value="Cali"><option value="Barranquilla"><option value="Cartagena"><option value="Bucaramanga"><option value="Pereira"><option value="Manizales"><option value="Armenia"><option value="Cúcuta"><option value="Santa Marta"><option value="Villavicencio"><option value="Ibagué"><option value="Neiva"><option value="Pasto"><option value="Montería"><option value="Sincelejo"><option value="Valledupar"><option value="Tunja"><option value="Popayán"><option value="Riohacha"><option value="Quibdó"><option value="Yopal"><option value="Florencia"><option value="Leticia">
+</datalist>
+<datalist id="listaCiudadesPaises">
+  <option value="Extranjero"><option value="Medellín, Colombia"><option value="Bogotá, Colombia"><option value="Bello, Colombia"><option value="Itagüí, Colombia"><option value="Envigado, Colombia"><option value="Sabaneta, Colombia"><option value="Rionegro, Colombia"><option value="Cali, Colombia"><option value="Barranquilla, Colombia"><option value="Cartagena, Colombia"><option value="Bucaramanga, Colombia"><option value="Pereira, Colombia"><option value="Manizales, Colombia"><option value="Armenia, Colombia"><option value="Cúcuta, Colombia"><option value="Santa Marta, Colombia"><option value="Villavicencio, Colombia"><option value="Ibagué, Colombia"><option value="Neiva, Colombia"><option value="Pasto, Colombia"><option value="Montería, Colombia"><option value="Sincelejo, Colombia"><option value="Valledupar, Colombia"><option value="Tunja, Colombia"><option value="Popayán, Colombia"><option value="Ciudad de Panamá, Panamá"><option value="Quito, Ecuador"><option value="Lima, Perú"><option value="Miami, Estados Unidos"><option value="Madrid, España">
+</datalist>
+
 <div id="abonoCotizacionModal" class="modal hidden"><div class="modal-card" style="max-width:520px"><div style="display:flex;justify-content:space-between;align-items:center"><h2 id="abonoCotizacionTitulo">Registrar abono</h2><button class="btn secondary" onclick="cerrarModalAbono()">Cerrar</button></div><div id="abonoCotizacionResumen" class="status"></div><div class="field"><label>Valor del abono</label><div class="currency-input"><span>$</span><input type="text" id="abonoCotizacionValor" inputmode="numeric" onblur="formatearCampoCOP(this)" aria-label="Valor del abono en pesos colombianos"></div></div><div class="field"><label>Método de pago</label><select id="abonoCotizacionMetodo"><option value="">-- Seleccione --</option><option>EFECTIVO</option><option>005 TRANSFERENCIA</option><option>SAS TRANSFERENCIA</option><option>DATAFONO</option></select></div><div class="field"><label>Fecha del abono</label><input type="date" id="abonoCotizacionFecha"></div><div style="text-align:right"><button class="btn secondary" onclick="cerrarModalAbono()">Cancelar</button><button class="btn primary" id="btnGuardarAbonoCotizacion" onclick="registrarAbonoCotizacion()">Registrar abono</button></div></div></div>
 <div id="pagoMixtoModal" class="modal hidden"><div class="modal-card" style="max-width:620px"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><h2 style="margin:0">Registrar pago mixto</h2><button class="btn secondary" onclick="cerrarModalPagoMixto()">Cerrar</button></div><p id="pagoMixtoResumen" class="status"></p><p>Registra los dos componentes en sus métodos correspondientes. La suma debe ser igual al total del documento.</p><div class="grid-2"><div class="field"><label>Primer método</label><select id="pagoMixtoMetodo1"><option>EFECTIVO</option><option>005 TRANSFERENCIA</option><option>SAS TRANSFERENCIA</option><option>DATAFONO</option></select></div><div class="field"><label>Valor</label><div class="currency-input"><span>$</span><input id="pagoMixtoValor1" type="text" inputmode="numeric" onblur="formatearCampoCOP(this)"></div></div><div class="field"><label>Segundo método</label><select id="pagoMixtoMetodo2"><option>005 TRANSFERENCIA</option><option>EFECTIVO</option><option>SAS TRANSFERENCIA</option><option>DATAFONO</option></select></div><div class="field"><label>Valor</label><div class="currency-input"><span>$</span><input id="pagoMixtoValor2" type="text" inputmode="numeric" onblur="formatearCampoCOP(this)"></div></div></div><div id="pagoMixtoValidacion" class="status"></div><div style="text-align:right;margin-top:14px"><button class="btn secondary" onclick="cerrarModalPagoMixto()">Cancelar</button><button class="btn primary" id="btnGuardarPagoMixto" onclick="registrarPagoMixto()">Registrar pago</button></div></div></div>
 <div id="noPagadaCotizacionModal" class="modal hidden"><div class="modal-card" style="max-width:520px"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><h2 style="margin:0">Marcar cotización como no vendida</h2><button class="btn secondary" onclick="cerrarModalNoPagada()">Cerrar</button></div><p id="noPagadaCotizacionResumen" class="status"></p><div class="field"><label for="noPagadaCotizacionComentario">Motivo o comentario <span style="color:#c53030">*</span></label><textarea id="noPagadaCotizacionComentario" rows="4" minlength="3" maxlength="500" required placeholder="Ej.: Precios muy costosos"></textarea><small>Obligatorio, máximo 500 caracteres.</small></div><div style="text-align:right;margin-top:14px"><button class="btn secondary" onclick="cerrarModalNoPagada()">Cancelar</button><button class="btn danger" id="btnConfirmarNoPagada" onclick="confirmarCotizacionNoPagada()">Guardar como no vendida</button></div></div></div>
@@ -1247,6 +1326,9 @@ let cacheRemisiones=null;
 let cacheUsuarios=null;
 let cacheUsuariosAt=0;
 let cargaUsuariosPendiente=null;
+let credencialesUsuariosAdminCache={};
+let credencialesUsuariosAdminAt=0;
+let credencialesUsuariosAdminConfigurada=false;
 let clientesAdminCache=[];
 let clientesAdminPagina=0;
 const CLIENTES_ADMIN_POR_PAGINA=50;
@@ -1321,14 +1403,14 @@ function exigirSupabase(){
 
 const TABLAS_SUPABASE={usuarios:"perfiles",remisiones:"remisiones",clientes:"clientes",abonosCotizaciones:"abonos_cotizaciones",configuracion:"configuracion_empresa",configuracionEmpresa:"configuracion_empresa"};
 const CAMPOS_DB={
-  perfiles:{role:"rol",presupuestoMensual:"presupuesto_mensual",username:"usuario"},
+  perfiles:{role:"rol",presupuestoMensual:"presupuesto_mensual",username:"usuario",emailContacto:"correo_contacto"},
   remisiones:{idDocumento:"id_documento",tipoDoc:"tipo_doc",fechaCreacion:"fecha_creacion",docCliente:"documento_cliente",formaPago:"forma_pago"},
   clientes:{docCliente:"documento",nomCliente:"nombre",telCliente:"telefono",totalCompras:"total_compras",totalInvertido:"total_invertido",fechaRegistro:"fecha_registro",ultimaActualizacion:"ultima_actualizacion",activo:"activo"},
   abonos_cotizaciones:{idDocumento:"id_documento",tipoDoc:"tipo_doc",docCliente:"documento_cliente",nomCliente:"nombre_cliente",telCliente:"telefono_cliente",formaPago:"forma_pago",fechaHora:"fecha_hora",numeroAbono:"numero_abono",totalMeta:"total_meta",registradoPor:"registrado_por",estadoResultante:"estado_resultante"},
   configuracion_empresa:{codigoAnulacion:"codigo_anulacion"}
 };
 const CAMPOS_INDEXADOS={
-  perfiles:new Set(["id","usuario","nombre","rol","area","activo","presupuesto_mensual","created_at","email","telefono"]),
+  perfiles:new Set(["id","usuario","nombre","rol","area","activo","presupuesto_mensual","created_at","email","email_contacto","telefono"]),
   remisiones:new Set(["id_documento","consecutivo","tipo_doc","fecha","fecha_creacion","asesor","area","estado","forma_pago","documento_cliente","total","updated_at"]),
   clientes:new Set(["documento","nombre","telefono","total_compras","total_invertido","fecha_registro","ultima_actualizacion","activo"]),
   abonos_cotizaciones:new Set(["id","id_documento","fecha","asesor","area","forma_pago","valor","created_at"]),
@@ -1358,7 +1440,7 @@ function filaDesdeDatos(tabla,id,doc){
   delete datos.id;
   if(tabla==="perfiles"){
     delete datos.pass; delete datos.password;
-    return {id:id||doc.id,usuario:doc.username||doc.usuario||doc.email,nombre:doc.nombre||"",rol:doc.role||doc.rol||"asesor",area:doc.area||"",activo:doc.activo!==false,presupuesto_mensual:Number(doc.presupuestoMensual||doc.presupuesto_mensual||0),email:doc.email||null,datos};
+    return {id:id||doc.id,usuario:doc.username||doc.usuario||doc.email,nombre:doc.nombre||"",rol:doc.role||doc.rol||"asesor",area:doc.area||"",activo:doc.activo!==false,presupuesto_mensual:Number(doc.presupuestoMensual||doc.presupuesto_mensual||0),email:doc.email||null,correo_contacto:doc.emailContacto||doc.correoContacto||"",telefono:doc.telefono||"",datos};
   }
   const fila={datos};
   Object.entries(doc).forEach(([k,v])=>{
@@ -1432,10 +1514,64 @@ function crearAdaptadorSupabase(){
       },
       onSnapshot(next,errorFn){
         let activo=true;
-        const cargar=()=>api.get().then(s=>{if(activo)next(s);}).catch(e=>{if(activo)errorFn?.(e);});
-        cargar();
-        const canal=supabaseClient.channel(`app-${TABLAS_SUPABASE[tabla]}-${crypto.randomUUID()}`).on("postgres_changes",{event:"*",schema:"public",table:TABLAS_SUPABASE[tabla]},cargar).subscribe();
-        return ()=>{activo=false;supabaseClient.removeChannel(canal);};
+        let cargando=false;
+        let recargar=false;
+        let conectado=false;
+        let temporizadorEvento=null;
+        let temporizadorRespaldo=null;
+        let temporizadorSuscripcion=null;
+        const cargar=()=>{
+          if(!activo)return;
+          if(cargando){recargar=true;return;}
+          cargando=true;
+          api.get().then(s=>{
+            if(!activo)return;
+            if(conectado)quitarRespaldo();
+            next(s);
+          }).catch(e=>{
+            if(activo){usarRespaldo();errorFn?.(e);}
+          }).finally(()=>{
+            cargando=false;
+            if(recargar&&activo){recargar=false;cargar();}
+          });
+        };
+        const programarCarga=()=>{
+          clearTimeout(temporizadorEvento);
+          temporizadorEvento=setTimeout(cargar,120);
+        };
+        const usarRespaldo=()=>{
+          if(!temporizadorRespaldo)temporizadorRespaldo=setInterval(cargar,10000);
+        };
+        const quitarRespaldo=()=>{
+          clearInterval(temporizadorRespaldo);
+          temporizadorRespaldo=null;
+        };
+        const canal=supabaseClient.channel(`app-${TABLAS_SUPABASE[tabla]}-${crypto.randomUUID()}`)
+          .on("postgres_changes",{event:"*",schema:"public",table:TABLAS_SUPABASE[tabla]},programarCarga)
+          .subscribe(estado=>{
+            if(!activo)return;
+            if(estado==="SUBSCRIBED"){
+              conectado=true;
+              clearTimeout(temporizadorSuscripcion);
+              quitarRespaldo();
+              // Suscribir antes de leer evita perder inserciones durante la carga inicial.
+              cargar();
+            }else if(estado==="CHANNEL_ERROR"||estado==="TIMED_OUT"||estado==="CLOSED"){
+              conectado=false;
+              usarRespaldo();
+              errorFn?.(new Error(`Realtime de ${TABLAS_SUPABASE[tabla]}: ${estado}`));
+            }
+          });
+        temporizadorSuscripcion=setTimeout(()=>{
+          if(activo)usarRespaldo();
+        },5000);
+        return ()=>{
+          activo=false;
+          clearTimeout(temporizadorEvento);
+          clearTimeout(temporizadorSuscripcion);
+          quitarRespaldo();
+          supabaseClient.removeChannel(canal);
+        };
       }
     };
     return api;
@@ -1486,7 +1622,8 @@ async function guardarUsuarioDB(user){
   if(data?.error)throw new Error(data.error);
   const {password,pass,id,...perfil}=user;
   cacheUsuarios=null;
-  return {id:data.id,...perfil};
+  credencialesUsuariosAdminAt=0;
+  return {id:data.id,...perfil,warning:data?.warning||""};
 }
 
 
@@ -1655,7 +1792,7 @@ async function cargarPerfil(id){
   if(error)throw error;
   if(!data||data.activo===false)return null;
   const {data:{user}}=await supabaseClient.auth.getUser();
-  return {...datosDesdeFila("perfiles",data),id:data.id,email:user?.email||"",username:data.usuario||user?.email||"",role:data.rol,presupuestoMensual:Number(data.presupuesto_mensual||0)};
+  return {...datosDesdeFila("perfiles",data),id:data.id,email:user?.email||"",emailContacto:data.correo_contacto||"",username:data.usuario||user?.email||"",role:data.rol,presupuestoMensual:Number(data.presupuesto_mensual||0)};
 }
 
 
@@ -1683,6 +1820,7 @@ async function logout(){
   document.getElementById("aperturaCajaBaseInicial").value="";
   document.getElementById("cierreCajaObservaciones").value="";
   cacheUsuarios=null;cacheRemisiones=null;cacheConfiguracionEmpresa=null;
+  credencialesUsuariosAdminCache={};credencialesUsuariosAdminAt=0;credencialesUsuariosAdminConfigurada=false;
   cacheConsultasReportes.clear();cacheAbonosReporte.clear();
   cacheClientesPorDocumento.clear();cacheResultadosClientesBusqueda.clear();
   clientesAdminCache=[];clientesAdminPagina=0;clienteAdminEnEdicion=null;
@@ -1781,17 +1919,24 @@ async function cargarCierreCaja(confirmarReemplazo=false){
     document.getElementById("cierreCajaComprobante").classList.add("hidden");
     document.getElementById("cierreCajaBaseInicial").textContent=money(apertura.base_inicial||0);
     const metodos=cierreCajaResumenActual.metodosSistema||{};
-    document.getElementById("cierreCajaTablaMetodos").innerHTML=Object.entries(metodos).map(([metodo,sistema])=>`
-      <tr data-cierre-metodo="${escapeAttr(metodo)}" data-cierre-sistema="${Number(sistema)||0}">
+    document.getElementById("cierreCajaTablaMetodos").innerHTML=Object.entries(metodos).map(([metodo,sistema])=>{
+      const esEfectivo=String(metodo).trim().toUpperCase()==="EFECTIVO";
+      const conteo=Number(sistema)||0;
+      const controlConteo=esEfectivo
+        ? `<div class="currency-input"><span>$</span><input type="text" class="cierre-caja-contado" data-metodo="${escapeAttr(metodo)}" inputmode="numeric" placeholder="0" oninput="actualizarVistaPreviaCierreCaja()" onblur="formatearCampoCOP(this);actualizarVistaPreviaCierreCaja()" aria-label="Conteo real de efectivo, incluida la base"></div>`
+        : `<strong>${money(conteo)}</strong><small style="display:block;color:var(--ink-soft)">Automático</small>`;
+      return `
+      <tr data-cierre-metodo="${escapeAttr(metodo)}" data-cierre-sistema="${conteo}">
         <td>${escapeHtml(metodo||"SIN MÉTODO")}</td>
         <td class="num cierre-caja-ventas-dia">${money(sistema)}</td>
-        <td class="num cierre-caja-esperado">${money((Number(sistema)||0)+(metodo==="EFECTIVO"?Number(apertura.base_inicial||0):0))}</td>
-        <td class="num" style="min-width:150px"><div class="currency-input"><span>$</span><input type="text" class="cierre-caja-contado" data-metodo="${escapeAttr(metodo)}" inputmode="numeric" placeholder="0" oninput="actualizarVistaPreviaCierreCaja()" onblur="formatearCampoCOP(this);actualizarVistaPreviaCierreCaja()" aria-label="Conteo real de ${escapeAttr(metodo)}"></div></td>
+        <td class="num cierre-caja-esperado">${money(conteo+(esEfectivo?Number(apertura.base_inicial||0):0))}</td>
+        <td class="num" style="min-width:150px">${controlConteo}</td>
         <td class="num cierre-caja-diferencia">${money(0)}</td>
-      </tr>`).join("")||'<tr><td colspan="5">No hay métodos de pago configurados.</td></tr>';
+      </tr>`;
+    }).join("")||'<tr><td colspan="5">No hay métodos de pago configurados.</td></tr>';
     document.getElementById("cierreCajaObservaciones").value="";
-    actualizarVistaPreviaCierreCaja();
     document.getElementById("btnCrearCierreCaja").disabled=false;
+    actualizarVistaPreviaCierreCaja();
   }catch(error){
     console.error("No se pudo cargar el cierre de caja:",error);
     cierreCajaResumenActual=null;
@@ -1864,7 +2009,7 @@ function renderizarCierresCajaAdmin(){
   const codigo=normalizarTexto(document.getElementById("adminCierresCodigo")?.value||"");
   const cierres=cierresCajaAdmin.filter(c=>(!area||c.area===area)&&(!codigo||normalizarTexto(c.numero_comprobante).includes(codigo)));
   if(!cierres.length){cuerpo.innerHTML='<tr><td colspan="8" style="text-align:center">No hay cierres con esos filtros.</td></tr>';return;}
-  cuerpo.innerHTML=cierres.map(c=>`<tr><td>${escapeHtml(formatearFechaCierre(c.fecha))}</td><td>${escapeHtml(c.area||"—")}</td><td><strong>${escapeHtml(c.numero_comprobante||"—")}</strong></td><td>${escapeHtml(c.nombre_cajero||"—")}</td><td class="num">${money(c.total_esperado)}</td><td class="num">${money(c.total_contado)}</td><td class="num" style="color:${Number(c.diferencia||0)===0?"var(--success)":"var(--required)"}">${money(c.diferencia)}</td><td><button type="button" class="btn small secondary" onclick="verCierreCajaAdmin('${escapeAttr(c.id)}')">Ver comprobante</button></td></tr>`).join("");
+  cuerpo.innerHTML=cierres.map(c=>`<tr><td>${escapeHtml(formatearFechaCierre(c.fecha))}</td><td>${escapeHtml(c.area||"—")}</td><td><strong>${escapeHtml(c.numero_comprobante||"—")}</strong></td><td>${escapeHtml(c.nombre_cajero||"—")}</td><td class="num">${money(c.total_esperado)}</td><td class="num">${money(c.total_contado)}</td><td class="num" style="color:${Number(c.diferencia||0)<0?"var(--required)":"#1C6B45"}">${formatearDiferenciaCierre(c.diferencia)}</td><td><button type="button" class="btn small secondary" onclick="verCierreCajaAdmin('${escapeAttr(c.id)}')">Ver comprobante</button></td></tr>`).join("");
 }
 
 function verCierreCajaAdmin(id){
@@ -1876,27 +2021,45 @@ function verCierreCajaAdmin(id){
   detalle.scrollIntoView({behavior:"smooth",block:"nearest"});
 }
 
+function formatearDiferenciaCierre(valor){
+  const diferencia=Number(valor)||0;
+  return diferencia<0?`-${money(Math.abs(diferencia))}`:money(diferencia);
+}
+
 function actualizarVistaPreviaCierreCaja(){
   if(!cierreCajaResumenActual||cierreCajaResumenActual.cierre)return;
   const base=Number(cierreCajaResumenActual.apertura?.base_inicial||0);
-  let totalEsperado=0,totalContado=0;
+  let totalVentas=0,efectivoAEntregar=0,diferenciaEfectivo=null;
   document.querySelectorAll("#cierreCajaTablaMetodos tr[data-cierre-metodo]").forEach(fila=>{
     const metodo=fila.dataset.cierreMetodo;
     const sistema=Number(fila.dataset.cierreSistema)||0;
     const input=fila.querySelector(".cierre-caja-contado");
-    const contado=parseValorCOP(input?.value||0);
-    const esperado=sistema+(metodo==="EFECTIVO"?base:0);
+    const esEfectivo=String(metodo).trim().toUpperCase()==="EFECTIVO";
+    const contado=input?parseValorCOP(input.value||0):sistema;
+    const esperado=sistema+(esEfectivo?base:0);
     const diferencia=contado-esperado;
-    totalEsperado+=esperado;totalContado+=contado;
+    totalVentas+=sistema;
+    if(esEfectivo){
+      diferenciaEfectivo=diferencia;
+      efectivoAEntregar=sistema+Math.max(0,diferencia);
+    }
     fila.querySelector(".cierre-caja-esperado").textContent=money(esperado);
-    fila.querySelector(".cierre-caja-diferencia").textContent=money(diferencia);
-    fila.querySelector(".cierre-caja-diferencia").style.color=diferencia===0?"var(--success)":"var(--required)";
+    fila.querySelector(".cierre-caja-diferencia").textContent=formatearDiferenciaCierre(diferencia);
+    fila.querySelector(".cierre-caja-diferencia").style.color=diferencia<0?"var(--required)":"#1C6B45";
   });
-  const diferencia=totalContado-totalEsperado;
-  document.getElementById("cierreCajaTotalEsperado").textContent=money(totalEsperado);
-  document.getElementById("cierreCajaTotalContado").textContent=money(totalContado);
-  document.getElementById("cierreCajaDiferencia").textContent=money(diferencia);
-  document.getElementById("cierreCajaDiferencia").style.color=diferencia===0?"var(--success)":"var(--required)";
+  document.getElementById("cierreCajaTotalEsperado").textContent=money(totalVentas);
+  document.getElementById("cierreCajaEfectivoEntregar").textContent=money(efectivoAEntregar);
+  const aviso=document.getElementById("cierreCajaAvisoFaltante");
+  const boton=document.getElementById("btnCrearCierreCaja");
+  if(diferenciaEfectivo!==null&&diferenciaEfectivo<0){
+    aviso.textContent=`Faltan ${money(Math.abs(diferenciaEfectivo))} para cubrir las ventas en efectivo más la base. El cierre y el comprobante están bloqueados.`;
+    aviso.classList.remove("hidden");
+    boton.disabled=true;
+  }else{
+    aviso.textContent="";
+    aviso.classList.add("hidden");
+    boton.disabled=false;
+  }
 }
 
 async function crearCierreCaja(){
@@ -1904,13 +2067,29 @@ async function crearCierreCaja(){
   const base=Number(cierreCajaResumenActual.apertura?.base_inicial||0);
   if(!cierreCajaResumenActual.apertura){alert("Registra la apertura de caja antes de realizar el cierre.");return;}
   const conteos={};
-  for(const input of document.querySelectorAll(".cierre-caja-contado")){
-    if(!input.value.trim()){alert(`Ingresa el conteo real de ${input.dataset.metodo}. Si no hubo movimiento, escribe 0.`);input.focus();return;}
-    conteos[input.dataset.metodo]=parseValorCOP(input.value);
+  for(const [metodo,valorSistema] of Object.entries(cierreCajaResumenActual.metodosSistema||{})){
+    if(String(metodo).trim().toUpperCase()!=="EFECTIVO"){
+      conteos[metodo]=Number(valorSistema)||0;
+      continue;
+    }
+    const input=[...document.querySelectorAll(".cierre-caja-contado")].find(campo=>campo.dataset.metodo===metodo);
+    if(!input||!input.value.trim()){alert("Ingresa el efectivo contado, incluida la base inicial. Si no hay efectivo, escribe 0.");input?.focus();return;}
+    conteos[metodo]=parseValorCOP(input.value);
+  }
+  const entradaEfectivo=Object.entries(cierreCajaResumenActual.metodosSistema||{}).find(([metodo])=>String(metodo).trim().toUpperCase()==="EFECTIVO");
+  if(entradaEfectivo){
+    const [metodo,ventasEfectivo]=entradaEfectivo;
+    const esperadoEfectivo=Number(ventasEfectivo||0)+base;
+    if(Number(conteos[metodo]||0)<esperadoEfectivo){
+      const input=[...document.querySelectorAll(".cierre-caja-contado")].find(campo=>campo.dataset.metodo===metodo);
+      alert(`No se puede cerrar la caja: faltan ${money(esperadoEfectivo-Number(conteos[metodo]||0))} frente a las ventas en efectivo más la base inicial. No se generó el comprobante.`);
+      input?.focus();
+      return;
+    }
   }
   const observaciones=document.getElementById("cierreCajaObservaciones").value.trim();
   const hayDiferencias=Object.entries(cierreCajaResumenActual.metodosSistema||{}).some(([metodo,valor])=>{
-    const esperado=Number(valor||0)+(metodo==="EFECTIVO"?base:0);
+    const esperado=Number(valor||0)+(String(metodo).trim().toUpperCase()==="EFECTIVO"?base:0);
     return Number(conteos[metodo]||0)!==esperado;
   });
   if(hayDiferencias&&!observaciones){alert("Explica las diferencias por método de pago en Observaciones antes de cerrar.");document.getElementById("cierreCajaObservaciones").focus();return;}
@@ -1918,14 +2097,14 @@ async function crearCierreCaja(){
   const boton=document.getElementById("btnCrearCierreCaja");
   boton.disabled=true;boton.textContent="Guardando cierre…";
   try{
-    const {data,error}=await supabaseClient.rpc("crear_cierre_caja",{p_conteos:conteos,p_observaciones:observaciones});
+    const {data,error}=await supabaseClient.rpc("crear_cierre_caja",{p_base_inicial:base,p_conteos:conteos,p_observaciones:observaciones});
     if(error)throw error;
     if(data?.error)throw new Error(data.error);
     await cargarCierreCaja();
   }catch(error){
     console.error("No se pudo crear el cierre de caja:",error);
     alert("No se pudo cerrar la caja: "+(error.message||"Error de conexión"));
-  }finally{boton.disabled=false;boton.textContent="Cerrar caja y generar comprobante";}
+  }finally{boton.textContent="Cerrar caja y generar comprobante";actualizarVistaPreviaCierreCaja();}
 }
 
 function renderizarComprobanteCierreCaja(cierre,contenedorId="cierreCajaComprobante"){
@@ -1933,9 +2112,11 @@ function renderizarComprobanteCierreCaja(cierre,contenedorId="cierreCajaComproba
   const metodos=datos.metodos||{};
   const movimientos=Array.isArray(datos.movimientos)?datos.movimientos:[];
   const documentosIncluidos=new Set(movimientos.map(m=>String(m.documento||"").trim()).filter(Boolean)).size;
+  const areaCierre=normalizarTexto(cierre.area||"");
+  const esCierreWhatsApp=areaCierre.includes("whatsapp");
   const documentosPorAsesor=new Map();
   movimientos.forEach(m=>{
-    if(!m.documento||String(m.tipo||"").toLowerCase()==="abono de cotización")return;
+    if(!m.documento)return;
     const asesor=String(m.asesor||"Sin asesor").trim()||"Sin asesor";
     if(!documentosPorAsesor.has(asesor))documentosPorAsesor.set(asesor,new Map());
     const documentos=documentosPorAsesor.get(asesor);
@@ -1953,13 +2134,13 @@ function renderizarComprobanteCierreCaja(cierre,contenedorId="cierreCajaComproba
     const indiceB=ordenMetodos.indexOf(String(metodoB).trim().toUpperCase());
     return (indiceA<0?ordenMetodos.length:indiceA)-(indiceB<0?ordenMetodos.length:indiceB)||metodoA.localeCompare(metodoB,"es");
   });
-  const filasMetodos=entradasMetodos.map(([metodo,m])=>`<tr><td><strong>${escapeHtml(metodo)}</strong></td><td><b>${money(m.sistema)}</b></td><td><b>${money(m.diferencia)}</b></td></tr>`).join("");
+  const filasMetodos=entradasMetodos.map(([metodo,m])=>`<tr><td><strong>${escapeHtml(metodo)}</strong></td><td><b>${money(m.sistema)}</b></td><td style="color:${Number(m.diferencia||0)<0?"#C53030":"#1C6B45"}"><b>${formatearDiferenciaCierre(m.diferencia)}</b></td></tr>`).join("");
   document.getElementById(contenedorId).innerHTML=`<article id="${idImprimible}" class="ticket-cierre">
     <header class="ticket-encabezado"><div class="ticket-titulo">Comprobante de cierre de caja</div><div class="ticket-codigo">${escapeHtml(cierre.numero_comprobante||"")}</div></header>
     <div class="ticket-datos"><div><span>Fecha</span><b>${escapeHtml(formatearFechaCierre(cierre.fecha))}</b></div><div><span>Área</span><b>${escapeHtml(cierre.area||"—")}</b></div><div><span>Cajero</span><b>${escapeHtml(cierre.nombre_cajero||"—")}</b></div><div><span>Hora de apertura</span><b>${escapeHtml(formatearHoraCierre(datos.horaApertura))}</b></div><div><span>Hora de cierre</span><b>${escapeHtml(formatearHoraCierre(datos.horaCierre||cierre.created_at))}</b></div><div><span>Documentos incluidos</span><b>${documentosIncluidos}</b></div><div><span>Base inicial</span><b>${money(cierre.base_inicial)}</b></div></div>
-    <hr><h4>RESUMEN POR MÉTODO DE PAGO</h4><table class="ticket-tabla"><thead><tr><th>Método</th><th>Total</th><th>Diferencia</th></tr></thead><tbody>${filasMetodos}</tbody><tfoot><tr><th>TOTAL VENTAS</th><td><b>${money(cierre.total_sistema)}</b></td><td><b>${money(cierre.diferencia)}</b></td></tr></tfoot></table>
+    <hr><h4>RESUMEN POR MÉTODO DE PAGO</h4><table class="ticket-tabla"><thead><tr><th>Método</th><th>Total</th><th>Diferencia</th></tr></thead><tbody>${filasMetodos}</tbody><tfoot><tr><th>TOTAL VENTAS</th><td><b>${money(cierre.total_sistema)}</b></td><td style="color:${Number(cierre.diferencia||0)<0?"#C53030":"#1C6B45"}"><b>${formatearDiferenciaCierre(cierre.diferencia)}</b></td></tr></tfoot></table>
     <hr><div class="ticket-observaciones"><b>Observaciones</b><div>${escapeHtml(datos.observaciones||"Sin observaciones")}</div></div>
-    <hr><h4>CONSOLIDADO POR ASESOR</h4><table class="ticket-tabla ticket-tabla-asesores"><thead><tr><th>Asesor</th><th>Remisiones</th><th>Total</th></tr></thead><tbody>${filasAsesores||'<tr><td colspan="3">Sin remisiones registradas.</td></tr>'}</tbody></table>
+    <hr><h4>CONSOLIDADO POR ASESOR</h4><table class="ticket-tabla ticket-tabla-asesores"><thead><tr><th>Asesor</th><th>${esCierreWhatsApp?"Cotizaciones":"Remisiones"}</th><th>Total</th></tr></thead><tbody>${filasAsesores||`<tr><td colspan="3">Sin ${esCierreWhatsApp?"cotizaciones":"remisiones"} registradas.</td></tr>`}</tbody></table>
   </article><div class="ticket-acciones"><button type="button" class="btn secondary" onclick="imprimirComprobanteCierreCaja('${contenedorId}')">Imprimir comprobante</button></div>`;
 }
 
@@ -1979,9 +2160,6 @@ function showView(view){
 
   if(!currentUser) return;
 
-  document.getElementById("fechaConsolidados").textContent =
-  new Date().toLocaleDateString("es-CO");
-
   const permisos={venta:["admin","asesor"],cotizacion:["admin","asesor"],reporte:["admin","caja","asesor"],usuarios:["admin"],clientes:["admin"],ajustes:["admin"]};
 
   const areaWhatsApp=String(currentUser.area||"").trim().toUpperCase()==="WHATSAPP";
@@ -1997,6 +2175,10 @@ function showView(view){
 
   }
   if(view==="cotizacion"&&currentUser.role!=="admin"&&!areaWhatsApp){alert("Nueva Cotización está disponible para el área de WhatsApp.");return;}
+
+  const titulosVista={venta:"Nueva Remisión",cotizacion:"Nueva Cotización",reporte:"Reportes",usuarios:"Gestión de Usuarios",clientes:"Gestión de Clientes",ajustes:"Configuración"};
+  const tituloVista=document.getElementById("pageTitleBar");
+  if(tituloVista)tituloVista.textContent=titulosVista[view]||"La Cintería";
 
   if(view!=="reporte") detenerListenerReporteCaja();
 
@@ -2409,9 +2591,12 @@ function iniciarAperturaCajonTrasPago(){
   });
 }
 
-function avisarFalloAperturaCajon(error){
+function avisarFalloAperturaCajon(error,mostrarPopup=true){
   if(!error)return;
-  alert("El pago quedó registrado, pero no se pudo abrir el cajón. Comprueba que el puente local esté iniciado en este PC y prueba la apertura desde Reportes.");
+  const mensaje="El pago quedó registrado, pero no se pudo abrir el cajón. Comprueba que el puente local esté iniciado en este PC y prueba la apertura desde Reportes.";
+  const estado=document.getElementById("estadoPuenteCajon");
+  if(estado){estado.textContent=mensaje;estado.style.color="var(--required)";}
+  if(mostrarPopup)alert(mensaje);
 }
 
 async function registrarPagoRapido(){
@@ -2449,7 +2634,7 @@ async function registrarPagoRapido(){
     const aperturaCajon=iniciarAperturaCajonTrasPago();
     imprimirDocumento(doc.idDocumento,ventanaImpresion);
     await Promise.all([actualizarMetaReporte(true),procesarReportes(true)]);
-    avisarFalloAperturaCajon(await aperturaCajon);
+    avisarFalloAperturaCajon(await aperturaCajon,false);
   }catch(error){
     ventanaImpresion.close();
     console.error("No se pudo registrar el pago rápido:",error);
@@ -3012,7 +3197,6 @@ function puedeGestionarCotizacion(doc){
 }
 
 function puedeAbonarCotizacion(doc){
-  if(puedeGestionarCotizacion(doc))return true;
   return currentUser?.role==="caja"&&
     String(currentUser.area||"").trim().toUpperCase()==="WHATSAPP"&&
     String(doc?.area||"").trim().toUpperCase()==="WHATSAPP";
@@ -3143,8 +3327,11 @@ function cancelarEdicionCotizacion(){
   showView("reporte");
 }
 
+let documentoDuplicadoConfirmado=false;
+
 async function confirmarDocumentoDuplicado({docCliente,fecha,total,excluirId=null}){
-  if(!docCliente||!fecha||!(Number(total)>0))return true;
+  documentoDuplicadoConfirmado=false;
+  if(!docCliente||String(docCliente).replace(/\s/g,"")==="0"||!fecha||!(Number(total)>0))return true;
   try{
     exigirSupabase();
     const {data,error}=await supabaseClient.rpc("verificar_documento_duplicado",{
@@ -3155,11 +3342,27 @@ async function confirmarDocumentoDuplicado({docCliente,fecha,total,excluirId=nul
     });
     if(error)throw error;
     if(!data?.duplicado)return true;
-    return confirm("Ya existe otro documento para este cliente con el mismo valor y fecha. ¿Deseas continuar de todos modos?");
+    documentoDuplicadoConfirmado=confirm("Ya existe otro documento para este cliente con el mismo valor y fecha. Si continúas, ambos quedarán con estado Duplicada hasta que se anule uno. ¿Deseas continuar?");
+    return documentoDuplicadoConfirmado;
   }catch(error){
     console.error("No se pudo verificar si el documento está duplicado:",error);
     alert("No se pudo comprobar si ya existe un documento con esos datos. No se guardó; vuelve a intentarlo.");
     return false;
+  }
+}
+
+async function actualizarDuplicadosTrasGuardado(idDocumento){
+  if(!documentoDuplicadoConfirmado)return {marcados:false};
+  documentoDuplicadoConfirmado=false;
+  try{
+    const {data,error}=await supabaseClient.rpc("marcar_documentos_duplicados",{p_id_documento:idDocumento});
+    if(error)throw error;
+    cacheRemisiones=null;
+    cacheConsultasReportes.clear();
+    return data||{marcados:false};
+  }catch(error){
+    console.error("El documento se guardó, pero no se pudieron marcar los duplicados:",error);
+    return {error};
   }
 }
 
@@ -3304,10 +3507,16 @@ async function guardarCotizacion(){
     cacheRemisiones=null;
     cacheConsultasReportes.clear();
     cotizacionGuardada=true;
+    const resultadoDuplicados=await actualizarDuplicadosTrasGuardado(idDocumento);
     imagenesCotizacionEliminadas=[];
     await eliminarImagenesCotizacion(imagenesParaEliminar.map(imagen=>imagen.path));
     const estabaEditando=!!cotizacionEditandoId;
-    alert(estabaEditando?`Cotización ${idDocumento} actualizada.`:`Cotización ${idDocumento} guardada en estado Pendiente.`);
+    const mensajeGuardado=estabaEditando?`Cotización ${idDocumento} actualizada.`:`Cotización ${idDocumento} guardada en estado Pendiente.`;
+    alert(resultadoDuplicados.error
+      ?`${mensajeGuardado}\n\nNo se pudo actualizar el estado de los documentos duplicados. Contacta a Administración antes de procesarlos.`
+      :resultadoDuplicados.marcados
+        ?`${mensajeGuardado}\n\nLa cotización y el documento coincidente quedaron en estado Duplicada.`
+        :mensajeGuardado);
     cotizacionEditandoId=null;
     imagenesCotizacionExistentes=[];
     imagenesCotizacionEliminadas=[];
@@ -3374,6 +3583,15 @@ function toggleLoginPassword(){
   if(!campo) return;
   campo.type = campo.type === "password" ? "text" : "password";
   const boton=document.getElementById("toggleLoginPassword");
+  const visible=campo.type==="text";
+  if(boton){boton.setAttribute("aria-pressed",String(visible));boton.setAttribute("aria-label",visible?"Ocultar contraseña":"Mostrar contraseña");}
+}
+
+function toggleUserPassword(){
+  const campo=document.getElementById("usrPass");
+  if(!campo)return;
+  campo.type=campo.type==="password"?"text":"password";
+  const boton=document.getElementById("toggleUserPassword");
   const visible=campo.type==="text";
   if(boton){boton.setAttribute("aria-pressed",String(visible));boton.setAttribute("aria-label",visible?"Ocultar contraseña":"Mostrar contraseña");}
 }
@@ -4837,12 +5055,18 @@ const documento={
 
     await guardarRemisionDB(documento);
 
+    const resultadoDuplicados=await actualizarDuplicadosTrasGuardado(customId);
+
     cacheRemisiones=null;
     cacheConsultasReportes.clear();
 
     window.documentoEditandoId=null;
 
-    alert(`¡Documento registrado con éxito!\nCódigo asignado: ${customId}`);
+    alert(resultadoDuplicados.error
+      ?`¡Documento registrado con éxito!\nCódigo asignado: ${customId}\n\nNo se pudo actualizar el estado de los documentos duplicados. Contacta a Administración antes de procesarlos.`
+      :resultadoDuplicados.marcados
+        ?`¡Documento registrado con éxito!\nCódigo asignado: ${customId}\n\nAmbas remisiones quedaron en estado Duplicada.`
+        :`¡Documento registrado con éxito!\nCódigo asignado: ${customId}`);
 
     limpiarFormulario();
 
@@ -5729,7 +5953,7 @@ function renderTablaDetalleRemisiones(datos){
     <span class="badge ${
       r.estado==="Pagada"
         ? "success"
-        : ["Anulada","No pagada","No vendida"].includes(r.estado)
+        : ["Anulada","No pagada","No vendida","Duplicada"].includes(r.estado)
           ? "danger"
           : "warning"
     }">
@@ -5849,7 +6073,7 @@ async function abrirModalAbono(id){
   let cot;
   try{cot=await obtenerCotizacionParaAccion(id);}
   catch(error){console.error("No se pudo cargar la cotización para registrar un abono:",error);alert("No se pudo consultar la cotización: "+error.message);return;}
-  if(!cot||!puedeAbonarCotizacion(cot)){alert("Caja solo puede registrar abonos de cotizaciones de su misma área.");return;}
+  if(!cot||!puedeAbonarCotizacion(cot)){alert("Solo Caja WhatsApp puede registrar abonos de cotizaciones.");return;}
   if(["anulada","pagada","no pagada","no vendida"].includes(String(cot.estado||"").trim().toLowerCase())||cot.estadoPago==="Pagada"||Number(cot.totalAbonado||0)>=Number(cot.total||0)){alert("Esta cotización ya no tiene saldo pendiente.");return;}
   cotizacionSeleccionadaAbono=cot;abonoCotizacionEnEdicion=null;
   document.getElementById("abonoCotizacionTitulo").textContent="Registrar abono";
@@ -5964,7 +6188,8 @@ async function registrarAbonoCotizacion(){
   const valor=parseValorCOP(document.getElementById("abonoCotizacionValor").value);
   const formaPago=document.getElementById("abonoCotizacionMetodo").value;
   const fecha=document.getElementById("abonoCotizacionFecha").value||fechaHoy();
-  if(!cot||!puedeAbonarCotizacion(cot)||["anulada","pagada","no pagada","no vendida"].includes(String(cot.estado||"").trim().toLowerCase())||abonoCotizacionEnEdicion&&!puedeGestionarCotizacion(cot)){alert("No tienes permiso para registrar este abono de cotización.");return;}
+  const autorizado=abonoCotizacionEnEdicion?puedeGestionarCotizacion(cot):puedeAbonarCotizacion(cot);
+  if(!cot||!autorizado||["anulada","pagada","no pagada","no vendida"].includes(String(cot.estado||"").trim().toLowerCase())){alert(abonoCotizacionEnEdicion?"No tienes permiso para editar este abono de cotización.":"Solo Caja WhatsApp puede registrar abonos de cotizaciones.");return;}
   if(!(valor>0)||!formaPago){alert("Ingresa un valor y elige la forma de pago.");return;}
   const boton=document.getElementById("btnGuardarAbonoCotizacion");
   boton.disabled=true;
@@ -6424,6 +6649,16 @@ async function anularDocumento(id){
           new Date().toISOString(),
 
       });
+    let resultadoReconciliacionDuplicados=null;
+    let errorReconciliacionDuplicados=null;
+    try{
+      const {data,error}=await supabaseClient.rpc("reconciliar_documentos_duplicados",{p_id_documento:id});
+      if(error)throw error;
+      resultadoReconciliacionDuplicados=data;
+    }catch(error){
+      console.error("Se anuló el documento, pero no se pudo restaurar el estado de su duplicado:",error);
+      errorReconciliacionDuplicados=error;
+    }
     const fechaAnulacion=new Date().toISOString();
     for(const lista of [cacheRemisiones,datosRemisiones]){
       const registro=lista?.find(r=>(r.idDocumento||r.id)===id);
@@ -6436,9 +6671,11 @@ async function anularDocumento(id){
        CONFIRMACIÓN
        ========================================= */
 
-    alert(
-      "Documento anulado correctamente."
-    );
+    alert(errorReconciliacionDuplicados
+      ?"Documento anulado correctamente, pero no se pudo restaurar el estado del documento coincidente. Contacta a Administración."
+      :resultadoReconciliacionDuplicados?.reconciliado
+        ?"Documento anulado correctamente. El documento coincidente volvió a su estado anterior."
+        :"Documento anulado correctamente.");
     await verDetalleDoc(id);
     if(!document.getElementById("view-reporte").classList.contains("hidden"))
       await Promise.all([actualizarMetaReporte(true),procesarReportes(true)]);
@@ -6471,7 +6708,7 @@ function obtenerContactoAsesorPdf(doc){
   const usuario=usuarios.find(u=>asesorId&&u.id===asesorId)
     ||usuarios.find(u=>asesorNombre&&(normalizarTexto(u.nombre)===asesorNombre||normalizarTexto(u.username)===asesorNombre))
     ||(currentUser&&(currentUser.id===asesorId||normalizarTexto(currentUser.nombre)===asesorNombre||normalizarTexto(currentUser.username)===asesorNombre)?currentUser:null);
-  const email=doc?.asesorEmail||usuario?.email||usuario?.correo||"";
+  const email=doc?.asesorEmail||usuario?.emailContacto||usuario?.correoContacto||usuario?.email||usuario?.correo||"";
   return {telefono:doc?.asesorTelefono||usuario?.telefono||usuario?.tel||"",email:/@remisionario\.app$/i.test(email)?"":email};
 }
 function obtenerMaterialesCotizacion(doc){
@@ -7094,11 +7331,41 @@ async function generarPDFDocumento(id){
 /* =========================================================
    USUARIOS
    ========================================================= */
+async function obtenerCredencialesUsuariosAdmin(forzar=false){
+  if(currentUser?.role!=="admin")return {};
+  if(!forzar&&Date.now()-credencialesUsuariosAdminAt<30000)return credencialesUsuariosAdminCache;
+  const {data,error}=await supabaseClient.functions.invoke("admin-users",{body:{action:"list-passwords"}});
+  if(error){
+    let detalle=error.message;
+    try{const body=await error.context?.clone?.().json();detalle=body?.error||detalle;}catch{}
+    if(/completa nombre.*usuario/i.test(detalle))detalle="La función admin-users publicada está desactualizada. Hay que desplegar la versión actualizada; no se corrige completando campos del formulario.";
+    throw new Error(detalle);
+  }
+  if(data?.error)throw new Error(data.error);
+  credencialesUsuariosAdminCache=data?.passwords||{};
+  credencialesUsuariosAdminConfigurada=data?.configured===true;
+  credencialesUsuariosAdminAt=Date.now();
+  return credencialesUsuariosAdminCache;
+}
+
 async function renderUsuarios(){
 
   if(currentUser?.role!=="admin")return;
 
   const users=await obtenerUsuarios();
+  const estado=document.getElementById("estadoCredencialesUsuarios");
+  let passwords={};
+  try{
+    passwords=await obtenerCredencialesUsuariosAdmin(true);
+    estado.textContent=credencialesUsuariosAdminConfigurada
+      ?"Bóveda activa. Las contraseñas registradas se muestran aquí."
+      :"Falta configurar la bóveda cifrada en Supabase. Los usuarios podrán ingresar; las claves aparecerán al configurarla y registrarlas.";
+    estado.className=credencialesUsuariosAdminConfigurada?"status ok":"status warn";
+  }catch(error){
+    console.error("No se pudo consultar la bóveda de contraseñas:",error);
+    estado.textContent="No se pudo consultar la bóveda: "+(error.message||error);
+    estado.className="status error";
+  }
 
   const tbody=document.getElementById("tablaUsuariosBody");
 
@@ -7110,7 +7377,7 @@ async function renderUsuarios(){
         <small>${escapeHtml(u.nombre||"")}</small>
       </td>
 
-      <td>${escapeHtml(u.pass||"")}</td>
+      <td><code style="overflow-wrap:anywhere">${escapeHtml(passwords[u.id]||"NO REGISTRADA")}</code></td>
 
       <td>
         ${escapeHtml(u.role||"")}
@@ -7387,7 +7654,7 @@ async function guardarUsuario(event){
   const role=document.getElementById("usrRole").value;
   const area=document.getElementById("usrArea").value.trim();
   const telefono=document.getElementById("usrTelefono").value.replace(/\s/g,"");
-  const email=document.getElementById("usrEmail").value.trim();
+  const emailContacto=document.getElementById("usrEmail").value.trim();
   const presupuestoMensual=Number(
   document.getElementById("usrPresupuestoMensual").value||0
 );
@@ -7415,14 +7682,14 @@ async function guardarUsuario(event){
 
   const anterior=users.find(u=>u.id===id);
 
-  const user={id:id||undefined,nombre,username,role,area,telefono,email,presupuestoMensual};
+  const user={id:id||undefined,nombre,username,role,area,telefono,emailContacto,presupuestoMensual};
   if((!id||pass)&&pass.length<8){alert("La contraseña debe tener al menos 8 caracteres.");return;}
   user.password=pass;
 
   try{
     const saved=await guardarUsuarioDB(user);
     if(currentUser.id===saved.id)currentUser={...currentUser,...saved};
-    alert("Usuario guardado correctamente.");
+    alert(saved.warning||"Usuario guardado correctamente.");
     cancelarEdicionUsuario();
     await renderUsuarios();
     await aplicarSesion();
@@ -7435,16 +7702,23 @@ async function editarUsuario(id){
 
   if(!u)return;
 
+  let passwords={};
+  try{passwords=await obtenerCredencialesUsuariosAdmin();}
+  catch(error){console.warn("No se pudo cargar la contraseña cifrada del usuario:",error);}
+
   document.getElementById("usrId").value=u.id;
   document.getElementById("usrNombre").value=u.nombre||"";
   document.getElementById("usrUsername").value=u.username||"";
-  document.getElementById("usrPass").value="";
-  document.getElementById("usrPass").placeholder="Dejar vacío para conservar";
+  document.getElementById("usrPass").value=passwords[u.id]||"";
+  document.getElementById("usrPass").type="password";
+  document.getElementById("toggleUserPassword").setAttribute("aria-pressed","false");
+  document.getElementById("toggleUserPassword").setAttribute("aria-label","Mostrar contraseña");
+  document.getElementById("usrPass").placeholder=passwords[u.id]?"Contraseña guardada":"Contraseña aún no registrada";
   document.getElementById("usrRole").value=u.role||"asesor";
   document.getElementById("usrArea").value=u.area||"";
   document.getElementById("usrTelefono").value=String(u.telefono||u.tel||"").replace(/\s/g,"");
-  const correoUsuario=u.email||u.correo||"";
-  document.getElementById("usrEmail").value=/@remisionario\.app$/i.test(correoUsuario)?"":correoUsuario;
+  const correoContacto=u.emailContacto||u.correoContacto||"";
+  document.getElementById("usrEmail").value=correoContacto;
   document.getElementById("usrPresupuestoMensual").value=u.presupuestoMensual??"";
   document.getElementById("formUserTitle").textContent="Editar Usuario";
   document.getElementById("btnCancelarEdicion").classList.remove("hidden");
@@ -7476,6 +7750,9 @@ function cancelarEdicionUsuario(){
   document.getElementById("userForm").reset();
   document.getElementById("usrId").value="";
   document.getElementById("usrPass").placeholder="••••••••";
+  document.getElementById("usrPass").type="password";
+  document.getElementById("toggleUserPassword").setAttribute("aria-pressed","false");
+  document.getElementById("toggleUserPassword").setAttribute("aria-label","Mostrar contraseña");
   document.getElementById("formUserTitle").textContent="Crear / Editar Usuario";
   document.getElementById("btnCancelarEdicion").classList.add("hidden");
 }
@@ -7832,6 +8109,8 @@ window.addEventListener("DOMContentLoaded",async()=>{
   initSupabase();
   document.getElementById("toggleLoginPassword")
     .addEventListener("click",toggleLoginPassword);
+  document.getElementById("toggleUserPassword")
+    .addEventListener("click",toggleUserPassword);
   document.getElementById("btnMostrarRecuperacion")
     .addEventListener("click",mostrarPanelRecuperacion);
   document.getElementById("btnCancelarRecuperacion")
@@ -7930,7 +8209,7 @@ window.addEventListener("DOMContentLoaded",async()=>{
 
 <div class="footer-digito">
   Desarrollada por
-  <a href="https://TU-PAGINA.com" target="_blank">Dígito360</a>
+  <a href="https://trabajosdhr1.wixsite.com/digito360?utm_source=chatgpt.com" target="_blank">Dígito360</a>
 </div>
 
 </body>
