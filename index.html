@@ -134,6 +134,16 @@ input:focus,select:focus,textarea:focus{outline:2px solid rgba(14,107,82,.15);bo
   color:var(--brand-dark);
 }
 
+.ciudad-select{position:relative;width:100%}
+.ciudad-select input{padding-right:44px}
+.ciudad-select-toggle{position:absolute;top:4px;right:4px;width:36px;height:calc(100% - 8px);min-height:34px;padding:0;border:0;border-radius:5px;background:transparent;color:var(--ink-soft);font-size:17px;cursor:pointer;touch-action:manipulation}
+.ciudad-select-toggle:hover,.ciudad-select-toggle:focus-visible{background:var(--surface-alt);outline:2px solid rgba(14,107,82,.18)}
+.ciudad-opciones{position:absolute;top:calc(100% + 3px);left:0;right:0;z-index:5000;max-height:240px;overflow-y:auto;border:1px solid var(--line);border-radius:7px;background:#fff;box-shadow:0 6px 16px rgba(0,0,0,.16);overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.ciudad-opcion{display:block;width:100%;min-height:40px;padding:9px 12px;border:0;border-bottom:1px solid #eef0ec;border-radius:0;background:#fff;color:var(--ink);font-size:14px;text-align:left;cursor:pointer;touch-action:manipulation}
+.ciudad-opcion:last-child{border-bottom:0}
+.ciudad-opcion:hover,.ciudad-opcion:focus-visible{background:#edf3ff;color:#174c9b;outline:none}
+.ciudad-sin-resultados{padding:11px 12px;color:var(--ink-soft);font-size:13px}
+
 .cliente-sugerencia small{
   display:block;
   color:var(--ink-soft);
@@ -825,7 +835,7 @@ main{position:relative!important;width:100%!important;max-width:none!important;m
   </div>
 </div>
 
-<div class="field"><label>Ciudad / Municipio <span class="req">*</span></label><input type="text" id="remClienteCiudad" list="listaCiudadesMunicipios" autocomplete="off" placeholder="Escribe las primeras letras, ej. Mede..." required></div>
+<div class="field ciudad-field"><label for="remClienteCiudad">Ciudad / Municipio <span class="req">*</span></label><div class="ciudad-select"><input type="text" id="remClienteCiudad" autocomplete="off" placeholder="Escribe las primeras letras, ej. Mede..." required aria-controls="remClienteCiudadOpciones" aria-autocomplete="list"><button type="button" class="ciudad-select-toggle" aria-label="Mostrar ciudades" aria-expanded="false" aria-controls="remClienteCiudadOpciones" onclick="alternarDesplegableCiudad('remClienteCiudad')">▾</button><div id="remClienteCiudadOpciones" class="ciudad-opciones hidden" role="listbox"></div></div></div>
 <div class="field"><label>Teléfono / WhatsApp <span class="req">*</span></label><input type="tel" id="remClienteTel" placeholder="ej. 3001234567" required pattern="\S+" title="No uses espacios en el teléfono." oninput="this.value=this.value.replace(/\s/g,'')"></div>
 <div class="field"><label>Correo Electrónico <span id="reqEmail" class="req" style="display:none">*</span></label><input type="email" id="remClienteEmail" placeholder="correo@ejemplo.com"></div>
 </div>
@@ -966,13 +976,13 @@ main{position:relative!important;width:100%!important;max-width:none!important;m
     <div class="field"><label>Celular <span class="req">*</span></label><input type="tel" id="cotCelular" required aria-required="true" pattern="\S+" title="No uses espacios en el teléfono." oninput="this.value=this.value.replace(/\s/g,'')"></div>
     <div class="field"><label>¿De dónde viene el cliente? <span class="req">*</span></label><select id="cotOrigenCliente" required aria-required="true" onchange="actualizarOtroOrigenCotizacion()"><option value="">-- SELECCIONE--</option><option>WHATSAPP</option><option>INSTAGRAM</option><option>PUBLICIDAD</option><option>REFERIDO PUNTO DE VENTA</option><option>REFERIDO POR CLIENTE</option><option>FACEBOOK</option><option>TIKTOK</option><option>GOOGLE / BUSCADOR</option><option>CLIENTE RECURRENTE</option><option>OTRO</option></select></div>
     <div class="field hidden" id="cotOtroOrigenWrap"><label>Especifica el origen <span class="req">*</span></label><input type="text" id="cotOtroOrigen" aria-required="true" disabled></div>
-    <div class="field"><label>Ciudad / País del cliente <span class="req">*</span></label><input type="text" id="cotCiudadPais" list="listaCiudadesPaises" autocomplete="off" placeholder="Escribe las primeras letras, ej. Mede..." required aria-required="true"></div>
+    <div class="field ciudad-field"><label for="cotCiudadPais">Ciudad / País del cliente <span class="req">*</span></label><div class="ciudad-select"><input type="text" id="cotCiudadPais" autocomplete="off" placeholder="Escribe las primeras letras, ej. Mede..." required aria-required="true" aria-controls="cotCiudadPaisOpciones" aria-autocomplete="list"><button type="button" class="ciudad-select-toggle" aria-label="Mostrar ciudades y países" aria-expanded="false" aria-controls="cotCiudadPaisOpciones" onclick="alternarDesplegableCiudad('cotCiudadPais')">▾</button><div id="cotCiudadPaisOpciones" class="ciudad-opciones hidden" role="listbox"></div></div></div>
   </div>
   <div id="cotInfoClienteBadge" class="status hidden"></div>
   <div class="section-title" style="margin-top:15px">Tipo de Pedido</div>
   <div class="grid-3">
     <div class="field"><label>Venta <span class="req">*</span></label><select id="cotVenta" required aria-required="true" onchange="actualizarModoVentaCotizacion()"><option value="">-- SELECCIONE --</option><option value="Cotización">COTIZACIÓN</option><option>MUESTRA</option><option>PRODUCCIÓN</option></select></div>
-    <div class="field"><label>Diseño <span class="req">*</span></label><select id="cotDiseno" required aria-required="true"><option value="">-- Seleccione --</option><option>Sí</option><option>No</option></select></div>
+    <div class="field"><label>Tipo de documento <span class="req">*</span></label><select id="cotTipoDocumento" required aria-required="true"><option value="Cotización">COTIZACIÓN</option><option value="Factura Electrónica">FACTURA ELECTRÓNICA</option></select></div>
     <div class="field"><label>Total del pedido (COP) <span class="req">*</span></label><div class="currency-input"><span>$</span><input type="text" id="cotTotalPedido" placeholder="0" readonly aria-required="true" inputmode="decimal"></div></div>
   </div>
   <div id="cotProductosCotizacion" class="hidden">
@@ -1150,7 +1160,6 @@ main{position:relative!important;width:100%!important;max-width:none!important;m
 </div>
 <div class="card hidden" id="panelCierresCajaAdmin" style="margin-top:16px">
   <details class="report-inner-disclosure"><summary>Historial de cierres de caja</summary><div class="report-inner-content">
-  <p style="margin:0 0 12px;color:var(--ink-soft);font-size:13px">Consulta los comprobantes generados por las cajas, filtrados por mes, área o código.</p>
   <div style="display:flex;align-items:end;gap:10px;flex-wrap:wrap">
     <div class="field" style="margin:0;max-width:220px"><label for="adminCierresMes">Mes</label><input type="month" id="adminCierresMes" onchange="cargarCierresCajaAdmin()"></div>
     <div class="field" style="margin:0;max-width:220px"><label for="adminCierresArea">Área</label><select id="adminCierresArea" onchange="renderizarCierresCajaAdmin()"><option value="">Todas las áreas</option></select></div>
@@ -1222,9 +1231,9 @@ main{position:relative!important;width:100%!important;max-width:none!important;m
   <summary class="report-disclosure-title">Pago rápido · Caja</summary>
   <div class="report-disclosure-content">
     <div class="grid-3" style="align-items:end">
-      <div class="kpi-card"><div class="kpi-title">Fecha y asesor</div><div class="field" style="margin:8px 0 0"><label for="pagoRapidoFecha">Fecha</label><input type="date" id="pagoRapidoFecha" readonly></div><div class="field" style="margin:8px 0 0"><label for="pagoRapidoAsesor">Asesor</label><select id="pagoRapidoAsesor"><option value="">Selecciona un asesor</option></select></div></div>
-      <div class="kpi-card"><div class="kpi-title">Valor</div><div class="field" style="margin:8px 0 0"><label for="pagoRapidoValor">Valor de la venta</label><div class="currency-input"><span>$</span><input type="text" id="pagoRapidoValor" inputmode="numeric" placeholder="0" onblur="formatearCampoCOP(this)" aria-label="Valor de venta en pesos colombianos"></div></div></div>
-      <div class="kpi-card"><div class="kpi-title">Método de pago</div><div class="field" style="margin:8px 0 0"><label for="pagoRapidoMetodo">Método</label><select id="pagoRapidoMetodo"><option value="">Selecciona método de pago</option><option>EFECTIVO</option><option>005 TRANSFERENCIA</option></select></div><button type="button" class="btn primary" id="btnPagoRapido" style="width:100%;margin-top:10px" onclick="registrarPagoRapido()">Pagar e imprimir</button><button type="button" class="btn secondary" id="btnProbarCajon" style="width:100%;margin-top:8px" onclick="probarAperturaCajon()">Probar apertura de cajón</button><small id="estadoPuenteCajon" role="status" style="display:block;margin-top:8px;color:var(--ink-soft)">El cajón se abre al confirmar un pago rápido, un pago de remisión o un abono de cotización.</small></div>
+      <div class="kpi-card"><div class="field" style="margin:8px 0 0"><label for="pagoRapidoFecha">Fecha</label><input type="date" id="pagoRapidoFecha" readonly></div><div class="field" style="margin:8px 0 0"><label for="pagoRapidoAsesor">Asesor</label><select id="pagoRapidoAsesor"><option value="">Selecciona un asesor</option></select></div></div>
+      <div class="kpi-card"><div class="field" style="margin:8px 0 0"><label for="pagoRapidoValor">Valor de la venta</label><div class="currency-input"><span>$</span><input type="text" id="pagoRapidoValor" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="0" onblur="formatearCampoCOP(this)" aria-label="Valor de venta en pesos colombianos"></div></div></div>
+      <div class="kpi-card"><div class="field" style="margin:8px 0 0"><label for="pagoRapidoMetodo">Método</label><select id="pagoRapidoMetodo"><option value="">Selecciona método de pago</option><option>EFECTIVO</option><option>005 TRANSFERENCIA</option></select></div><button type="button" class="btn primary" id="btnPagoRapido" style="width:100%;margin-top:10px" onclick="registrarPagoRapido()">Pagar e imprimir</button><button type="button" class="btn secondary" id="btnProbarCajon" style="width:100%;margin-top:8px" onclick="probarAperturaCajon()">APERTURA DE CAJÓN MANUAL</button></div>
     </div>
   </div>
 </details>
@@ -1334,6 +1343,7 @@ main{position:relative!important;width:100%!important;max-width:none!important;m
 
 <div id="abonoCotizacionModal" class="modal hidden"><div class="modal-card" style="max-width:520px"><div style="display:flex;justify-content:space-between;align-items:center"><h2 id="abonoCotizacionTitulo">Registrar abono</h2><button class="btn secondary" onclick="cerrarModalAbono()">Cerrar</button></div><div id="abonoCotizacionResumen" class="status"></div><div class="field"><label>Valor del abono</label><div class="currency-input"><span>$</span><input type="text" id="abonoCotizacionValor" inputmode="numeric" onblur="formatearCampoCOP(this)" aria-label="Valor del abono en pesos colombianos"></div></div><div class="field"><label>Método de pago</label><select id="abonoCotizacionMetodo"><option value="">-- Seleccione --</option><option>EFECTIVO</option><option>005 TRANSFERENCIA</option><option>SAS TRANSFERENCIA</option><option>DATAFONO</option></select></div><div class="field"><label>Fecha del abono</label><input type="date" id="abonoCotizacionFecha"></div><div style="text-align:right"><button class="btn secondary" onclick="cerrarModalAbono()">Cancelar</button><button class="btn primary" id="btnGuardarAbonoCotizacion" onclick="registrarAbonoCotizacion()">Registrar abono</button></div></div></div>
 <div id="pagoMixtoModal" class="modal hidden"><div class="modal-card" style="max-width:620px"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><h2 style="margin:0">Registrar pago mixto</h2><button class="btn secondary" onclick="cerrarModalPagoMixto()">Cerrar</button></div><p id="pagoMixtoResumen" class="status"></p><p>Registra los dos componentes en sus métodos correspondientes. La suma debe ser igual al total del documento.</p><div class="grid-2"><div class="field"><label>Primer método</label><select id="pagoMixtoMetodo1"><option>EFECTIVO</option><option>005 TRANSFERENCIA</option><option>SAS TRANSFERENCIA</option><option>DATAFONO</option></select></div><div class="field"><label>Valor</label><div class="currency-input"><span>$</span><input id="pagoMixtoValor1" type="text" inputmode="numeric" onblur="formatearCampoCOP(this)"></div></div><div class="field"><label>Segundo método</label><select id="pagoMixtoMetodo2"><option>005 TRANSFERENCIA</option><option>EFECTIVO</option><option>SAS TRANSFERENCIA</option><option>DATAFONO</option></select></div><div class="field"><label>Valor</label><div class="currency-input"><span>$</span><input id="pagoMixtoValor2" type="text" inputmode="numeric" onblur="formatearCampoCOP(this)"></div></div></div><div id="pagoMixtoValidacion" class="status"></div><div style="text-align:right;margin-top:14px"><button class="btn secondary" onclick="cerrarModalPagoMixto()">Cancelar</button><button class="btn primary" id="btnGuardarPagoMixto" onclick="registrarPagoMixto()">Registrar pago</button></div></div></div>
+<div id="cobroEfectivoModal" class="modal hidden"><div class="modal-card" style="max-width:440px"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><h2 style="margin:0">Cobro en efectivo</h2><button class="btn secondary" onclick="cancelarCobroEfectivo()">Cerrar</button></div><p class="status">Total en efectivo: <strong id="cobroEfectivoTotal">$0</strong></p><div class="field"><label for="cobroEfectivoRecibido">¿Cuánto recibiste?</label><div class="currency-input"><span>$</span><input id="cobroEfectivoRecibido" type="number" inputmode="numeric" min="0" step="1" autocomplete="off" placeholder="0" aria-label="Dinero recibido en efectivo" oninput="actualizarCambioEfectivo()"></div></div><div class="total-box" style="font-size:20px">Cambio a entregar: <strong id="cobroEfectivoCambio">$0</strong></div><p id="cobroEfectivoAviso" class="status" aria-live="polite"></p><div style="display:flex;justify-content:flex-end;gap:10px"><button class="btn secondary" onclick="cancelarCobroEfectivo()">Cancelar</button><button class="btn primary" id="btnConfirmarCobroEfectivo" onclick="confirmarCobroEfectivo()">Confirmar cobro</button></div></div></div>
 <div id="noPagadaCotizacionModal" class="modal hidden"><div class="modal-card" style="max-width:520px"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><h2 style="margin:0">Marcar cotización como no vendida</h2><button class="btn secondary" onclick="cerrarModalNoPagada()">Cerrar</button></div><p id="noPagadaCotizacionResumen" class="status"></p><div class="field"><label for="noPagadaCotizacionComentario">Motivo o comentario <span style="color:#c53030">*</span></label><textarea id="noPagadaCotizacionComentario" rows="4" minlength="3" maxlength="500" required placeholder="Ej.: Precios muy costosos"></textarea><small>Obligatorio, máximo 500 caracteres.</small></div><div style="text-align:right;margin-top:14px"><button class="btn secondary" onclick="cerrarModalNoPagada()">Cancelar</button><button class="btn danger" id="btnConfirmarNoPagada" onclick="confirmarCotizacionNoPagada()">Guardar como no vendida</button></div></div></div>
 <div id="detalleModal" class="modal hidden">
 <div class="modal-card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><h2 style="margin-top:0">Detalle del documento</h2><button class="btn secondary" onclick="cerrarDetalle()">Cerrar</button></div><div id="detalleContenido"></div></div>
@@ -1368,6 +1378,8 @@ let imagenesCotizacionExistentes=[];
 let imagenesCotizacionEliminadas=[];
 let datosRemisiones = [];
 let pagoRapidoSolicitudId=null;
+let resolverCobroEfectivo=null;
+let totalCobroEfectivo=0;
 let cacheRemisiones=null;
 let cacheUsuarios=null;
 let cacheUsuariosAt=0;
@@ -2240,7 +2252,7 @@ function showView(view){
 
   );
 
-  if(view==="cotizacion"){document.getElementById("cotFechaSolicitud").value=fechaHoy();document.getElementById("cotAsesor").value=currentUser.nombre||currentUser.username||"";cargarSiguienteNumeroPrefactura();}
+  if(view==="cotizacion"){document.getElementById("cotFechaSolicitud").value=fechaHoy();document.getElementById("cotAsesor").value=currentUser.nombre||currentUser.username||"";if(!document.getElementById("cotTipoDocumento").value)document.getElementById("cotTipoDocumento").value="Cotización";cargarSiguienteNumeroPrefactura();}
 
   if(view==="reporte"){
     document.getElementById("pagoRapidoFecha").value=fechaHoy();
@@ -2575,15 +2587,21 @@ function renderizarMetaReporte(documentos,periodo=obtenerPeriodoMetaActual()){
     tabla.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--ink-soft)">No hay asesores asignados a tu área.</td></tr>';
     return;
   }
-  tabla.innerHTML=asesores.map(asesor=>{
+  const filasAsesores=asesores.map(asesor=>{
     const nombre=asesor.nombre||asesor.username||"Asesor";
     const presupuesto=Math.max(0,Number(asesor.presupuestoMensual||0));
     const vendido=vendidas.filter(doc=>String(doc.asesor||"").trim().toLowerCase()===String(nombre).trim().toLowerCase())
       .reduce((s,doc)=>s+Number(doc.total||0),0);
     const faltante=Math.max(presupuesto-vendido,0);
     const porcentaje=presupuesto>0?vendido/presupuesto*100:0;
-    return `<tr><td>${escapeHtml(nombre)}</td><td>${escapeHtml(asesor.area||"-")}</td><td class="num">${money(presupuesto)}</td><td class="num">${money(vendido)}</td><td class="num">${money(faltante)}</td><td class="num">${presupuesto>0?porcentaje.toFixed(1)+"%":"Sin meta"}</td></tr>`;
-  }).join("");
+    return {asesor,nombre,presupuesto,vendido,faltante,porcentaje};
+  });
+  if(currentUser.role==="admin"){
+    filasAsesores.sort((a,b)=>b.vendido-a.vendido||a.nombre.localeCompare(b.nombre,"es"));
+  }
+  tabla.innerHTML=filasAsesores.map(({asesor,nombre,presupuesto,vendido,faltante,porcentaje})=>
+    `<tr><td>${escapeHtml(nombre)}</td><td>${escapeHtml(asesor.area||"-")}</td><td class="num">${money(presupuesto)}</td><td class="num">${money(vendido)}</td><td class="num">${money(faltante)}</td><td class="num">${presupuesto>0?porcentaje.toFixed(1)+"%":"Sin meta"}</td></tr>`
+  ).join("");
 }
 
 async function reservarConsecutivo(tipoDoc){
@@ -2658,6 +2676,7 @@ async function registrarPagoRapido(){
   if(!metodo){alert("Selecciona el método de pago.");return;}
   const ventanaImpresion=window.open("","_blank","width=420,height=700");
   if(!ventanaImpresion){alert("Permite las ventanas emergentes para poder imprimir la remisión y vuelve a intentarlo.");return;}
+  if(String(metodo).trim().toUpperCase()==="EFECTIVO"&&!await solicitarConfirmacionCobroEfectivo(valor)){ventanaImpresion.close();return;}
   const boton=document.getElementById("btnPagoRapido");
   boton.disabled=true;boton.textContent="Registrando…";
   if(!pagoRapidoSolicitudId)pagoRapidoSolicitudId=crypto.randomUUID();
@@ -3014,6 +3033,60 @@ function formatearCampoCOP(campo){
   if(campo)campo.value=formatearValorCOP(parseValorCOP(campo.value));
 }
 
+function solicitarConfirmacionCobroEfectivo(valor){
+  const total=Math.max(0,Number(valor)||0);
+  if(!(total>0))return Promise.resolve(true);
+  totalCobroEfectivo=total;
+  document.getElementById("cobroEfectivoTotal").textContent=money(total);
+  document.getElementById("cobroEfectivoRecibido").value="";
+  document.getElementById("cobroEfectivoCambio").textContent=money(0);
+  document.getElementById("cobroEfectivoAviso").textContent="Ingresa el efectivo recibido para calcular el cambio.";
+  document.getElementById("cobroEfectivoAviso").style.color="";
+  document.getElementById("cobroEfectivoModal").classList.remove("hidden");
+  actualizarCambioEfectivo();
+  setTimeout(()=>document.getElementById("cobroEfectivoRecibido").focus(),50);
+  return new Promise(resolve=>{resolverCobroEfectivo=resolve;});
+}
+
+function actualizarCambioEfectivo(){
+  const recibido=parseValorCOP(document.getElementById("cobroEfectivoRecibido").value);
+  const cambio=recibido-totalCobroEfectivo;
+  const cambioEl=document.getElementById("cobroEfectivoCambio");
+  const aviso=document.getElementById("cobroEfectivoAviso");
+  const boton=document.getElementById("btnConfirmarCobroEfectivo");
+  if(recibido<=0){
+    cambioEl.textContent=money(0);
+    aviso.textContent="Ingresa el efectivo recibido para calcular el cambio.";
+    aviso.style.color="";
+    boton.disabled=true;
+  }else if(cambio<0){
+    cambioEl.textContent=money(0);
+    aviso.textContent=`Faltan ${money(Math.abs(cambio))} para completar el pago.`;
+    aviso.style.color="var(--required)";
+    boton.disabled=true;
+  }else{
+    cambioEl.textContent=money(cambio);
+    aviso.textContent="Cambio calculado. Confirma para registrar el pago.";
+    aviso.style.color="var(--brand)";
+    boton.disabled=false;
+  }
+}
+
+function cerrarCobroEfectivo(resultado){
+  document.getElementById("cobroEfectivoModal").classList.add("hidden");
+  const resolver=resolverCobroEfectivo;
+  resolverCobroEfectivo=null;
+  totalCobroEfectivo=0;
+  if(resolver)resolver(resultado);
+}
+
+function cancelarCobroEfectivo(){cerrarCobroEfectivo(false);}
+function confirmarCobroEfectivo(){
+  const recibido=parseValorCOP(document.getElementById("cobroEfectivoRecibido").value);
+  if(recibido<totalCobroEfectivo){actualizarCambioEfectivo();return;}
+  cerrarCobroEfectivo(true);
+}
+
 function actualizarModoVentaCotizacion(){
   aplicarBloqueoTemporalVentaWhatsApp();
   const venta=normalizarTexto(document.getElementById("cotVenta").value);
@@ -3174,7 +3247,7 @@ function validarCamposCotizacion(){
   };
   const vacio=id=>!String(document.getElementById(id)?.value||"").trim();
 
-  [["cotFechaEntrega"],["cotNit"],["cotEmpresa"],["cotClienteNombre"],["cotCelular"],["cotOrigenCliente"],["cotCiudadPais"],["cotVenta"],["cotDiseno"]].forEach(([id])=>{
+  [["cotFechaEntrega"],["cotNit"],["cotEmpresa"],["cotClienteNombre"],["cotCelular"],["cotOrigenCliente"],["cotCiudadPais"],["cotVenta"],["cotTipoDocumento"]].forEach(([id])=>{
     if(vacio(id))marcar(id);
   });
   if(normalizarTexto(document.getElementById("cotOrigenCliente").value)==="otro"&&vacio("cotOtroOrigen"))marcar("cotOtroOrigen");
@@ -3283,9 +3356,9 @@ async function editarCotizacion(id){
   cotItemEditandoIndex=null;
   document.querySelectorAll("#cotMaterialesBody tr[data-material-row]").forEach(fila=>{if(Number(fila.dataset.materialRow)>1)fila.remove();});
   siguienteFilaMaterialCotizacion=2;
-  ["cotPrediseno","cotFechaSolicitud","cotFechaEntrega","cotAsesor","cotNit","cotEmpresa","cotClienteNombre","cotCelular","cotCiudadPais","cotVenta","cotDiseno","cotColorBase","cotMedidaLogo","cotLineaCorte","cotColorFondo","cotOrientacionLogo","cotCantidadCortes","cotColorLogo","cotDistanciaLogos","cotEspecificacionDiseno","cotNotas"].forEach(idCampo=>{
+  ["cotPrediseno","cotFechaSolicitud","cotFechaEntrega","cotAsesor","cotNit","cotEmpresa","cotClienteNombre","cotCelular","cotCiudadPais","cotVenta","cotTipoDocumento","cotColorBase","cotMedidaLogo","cotLineaCorte","cotColorFondo","cotOrientacionLogo","cotCantidadCortes","cotColorLogo","cotDistanciaLogos","cotEspecificacionDiseno","cotNotas"].forEach(idCampo=>{
     const campo=document.getElementById(idCampo);
-    const propiedad={cotPrediseno:"idDocumento",cotFechaSolicitud:"fechaSolicitud",cotFechaEntrega:"fechaEntrega",cotAsesor:"asesor",cotNit:"docCliente",cotEmpresa:"empresa",cotClienteNombre:"nomCliente",cotCelular:"telCliente",cotCiudadPais:"ciudadPais",cotVenta:"venta",cotDiseno:"diseno",cotColorBase:"colorBase",cotMedidaLogo:"medidaLogo",cotLineaCorte:"lineaCorte",cotColorFondo:"colorFondo",cotOrientacionLogo:"orientacionLogo",cotCantidadCortes:"cantidadCortes",cotColorLogo:"colorLogo",cotDistanciaLogos:"distanciaLogos",cotEspecificacionDiseno:"especificacionDiseno",cotNotas:"notas"}[idCampo];
+    const propiedad={cotPrediseno:"idDocumento",cotFechaSolicitud:"fechaSolicitud",cotFechaEntrega:"fechaEntrega",cotAsesor:"asesor",cotNit:"docCliente",cotEmpresa:"empresa",cotClienteNombre:"nomCliente",cotCelular:"telCliente",cotCiudadPais:"ciudadPais",cotVenta:"venta",cotTipoDocumento:"tipoDocumentoVenta",cotColorBase:"colorBase",cotMedidaLogo:"medidaLogo",cotLineaCorte:"lineaCorte",cotColorFondo:"colorFondo",cotOrientacionLogo:"orientacionLogo",cotCantidadCortes:"cantidadCortes",cotColorLogo:"colorLogo",cotDistanciaLogos:"distanciaLogos",cotEspecificacionDiseno:"especificacionDiseno",cotNotas:"notas"}[idCampo];
     if(campo){const valor=doc[propiedad]??"";campo.value=["cotNit","cotCelular"].includes(idCampo)?String(valor).replace(/\s/g,""):valor;}
   });
   actualizarBloqueoClienteGenerico();
@@ -3342,6 +3415,7 @@ async function editarCotizacion(id){
   document.getElementById("cotFechaSolicitud").value=doc.fechaSolicitud||doc.fecha||fechaHoy();
   document.getElementById("cotFechaEntrega").value=doc.fechaEntrega||"";
   document.getElementById("cotAsesor").value=doc.asesor||"";
+  document.getElementById("cotTipoDocumento").value=doc.tipoDocumentoVenta||(doc.requiereFacturaElectronica?"Factura Electrónica":"Cotización");
 }
 
 function cancelarEdicionCotizacion(){
@@ -3355,6 +3429,7 @@ function cancelarEdicionCotizacion(){
   actualizarEspecificacionesPersonalizadasCotizacion();
   document.querySelectorAll("#view-cotizacion input").forEach(campo=>{if(campo.type==="file")campo.value="";else if(campo.type==="checkbox")campo.checked=false;else campo.value="";});
   document.querySelectorAll("#view-cotizacion select").forEach(campo=>campo.value="");
+  document.getElementById("cotTipoDocumento").value="Cotización";
   document.querySelectorAll("#view-cotizacion textarea").forEach(campo=>campo.value="");
   actualizarBloqueoClienteGenerico();
   actualizarEspecificacionesPersonalizadasCotizacion();
@@ -3428,13 +3503,13 @@ async function guardarCotizacion(){
   const detalleOrigenCliente=document.getElementById("cotOtroOrigen").value.trim();
   const ciudadPais=document.getElementById("cotCiudadPais").value.trim();
   const venta=document.getElementById("cotVenta").value;
+  const tipoDocumentoVenta=document.getElementById("cotTipoDocumento").value||"Cotización";
   if(BLOQUEO_TEMPORAL_VENTA_WHATSAPP&&esAsesorWhatsApp()&&!cotizacionEditandoId&&venta!=="Cotización"){
     alert("Temporalmente, el área de WhatsApp solo puede crear cotizaciones.");
     aplicarBloqueoTemporalVentaWhatsApp();
     return;
   }
   const ventaEsCotizacion=venta==="Cotización";
-  const diseno=document.getElementById("cotDiseno").value;
   const total=parseValorCOP(document.getElementById("cotTotalPedido").value);
   const materiales=[];
 
@@ -3524,12 +3599,12 @@ async function guardarCotizacion(){
     const estadoPago=totalAbonado>=total?"Pagada":totalAbonado>0?"Abonada":"Pendiente";
     const resumenFiscal=calcularResumenFiscalCotizacion({venta,items:ventaEsCotizacion?cotItemsActuales:[],materiales});
     const cotizacion={
-      idDocumento,consecutivo,tipoDoc:"Cotización",estado:estadoPago,estadoPago,
+      idDocumento,consecutivo,tipoDoc:"Cotización",tipoDocumentoVenta,requiereFacturaElectronica:tipoDocumentoVenta==="Factura Electrónica",diseno:null,estado:estadoPago,estadoPago,
       fecha:fechaSolicitud,fechaSolicitud,fechaEntrega,fechaCreacion:cotizacionOriginal?.fechaCreacion||ahora,
       docCliente,empresa,nomCliente,telCliente,ciudadPais,origenCliente,detalleOrigenCliente:origenCliente==="Otro"?detalleOrigenCliente:"",
       asesor:cotizacionOriginal?.asesor||currentUser.nombre||currentUser.username||"",area:cotizacionOriginal?.area||currentUser.area||"",
       asesorId:cotizacionOriginal?.asesorId||(cotizacionOriginal?"":currentUser.id||""),asesorTelefono:contactoAsesor.telefono,asesorEmail:contactoAsesor.email,
-      venta,diseno,materiales,items:ventaEsCotizacion?cotItemsActuales:[],imagenesReferencia:[...imagenesCotizacionExistentes,...rutasImagenesSubidas],
+      venta,materiales,items:ventaEsCotizacion?cotItemsActuales:[],imagenesReferencia:[...imagenesCotizacionExistentes,...rutasImagenesSubidas],
       subtotalMaterialesBase:resumenFiscal.subtotal,
       totalIva:resumenFiscal.iva,
       totalMateriales:total,
@@ -3584,6 +3659,7 @@ async function guardarCotizacion(){
     actualizarEspecificacionesPersonalizadasCotizacion();
     siguienteFilaMaterialCotizacion=2;
     document.querySelectorAll("#view-cotizacion select").forEach(select=>select.value="");
+    document.getElementById("cotTipoDocumento").value="Cotización";
     actualizarEspecificacionesPersonalizadasCotizacion();
     actualizarModoVentaCotizacion();
     document.querySelectorAll("#view-cotizacion textarea").forEach(textarea=>textarea.value="");
@@ -5280,13 +5356,27 @@ const datos=currentUser.role==="caja"
   ? await cargarReporteCajaEnVivo(consulta,claveConsulta)
   : await cargarDatosConsultaReporte(consulta,claveConsulta,forzarRecarga);
 const abonos=await obtenerEventosAbonoReporte(inicio,fin,forzarRecarga);
-const datosConAbonos=[...datos,...abonos.filter(a=>{
+const abonosVisibles=abonos.filter(a=>{
   if(currentUser.role==="asesor"&&String(a.asesor||"").trim()!==String(currentUser.nombre||currentUser.username||"").trim())return false;
   if(currentUser.role==="caja"&&String(a.area||"").trim()!==String(currentUser.area||"").trim())return false;
   if(asesor!=="TODOS"&&a.asesor!==asesor)return false;
   if(area!=="TODAS"&&currentUser.role==="admin"&&a.area!==area)return false;
   return true;
-}).map(convertirAbonoEnRegistroReporte)];
+});
+const datosCotizacionesPorId=new Map(datos.filter(d=>d.tipoDoc==="Cotización").map(d=>[String(d.idDocumento||d.id),d]));
+const idsCotizacionesAbonos=[...new Set(abonosVisibles.map(a=>String(a.idDocumento||"")).filter(id=>id&&!datosCotizacionesPorId.has(id)))];
+if(idsCotizacionesAbonos.length){
+  try{
+    const {data:filasCotizaciones,error}=await supabaseClient.from("remisiones").select("id_documento,datos").in("id_documento",idsCotizacionesAbonos);
+    if(error)throw error;
+    (filasCotizaciones||[]).forEach(fila=>datosCotizacionesPorId.set(String(fila.id_documento),{...(fila.datos||{}),idDocumento:fila.id_documento}));
+  }catch(error){console.warn("No se pudo consultar el tipo de documento de algunas cotizaciones abonadas:",error);}
+}
+const abonosConvertidos=abonosVisibles.map(abono=>{
+  const cotizacion=datosCotizacionesPorId.get(String(abono.idDocumento||""));
+  return {...convertirAbonoEnRegistroReporte(abono),requiereFacturaElectronica:!!(abono.requiereFacturaElectronica||cotizacion?.requiereFacturaElectronica||cotizacion?.tipoDocumentoVenta==="Factura Electrónica")};
+});
+const datosConAbonos=[...datos,...abonosConvertidos];
 
 if(currentUser.role==="asesor"&&inicio===obtenerPeriodoMetaActual().inicio&&fin===fechaHoy()){
   documentosMetaReporte=datos;
@@ -5473,6 +5563,7 @@ async function exportarReporteExcel(){
     const detalle=[
       [
         "Documento",
+        "Número Factura DIAN",
         "Fecha",
         "Tipo",
         "Estado",
@@ -5499,6 +5590,8 @@ async function exportarReporteExcel(){
       detalle.push([
 
   r.idDocumento||"",
+
+  r.tipoDoc==="Factura Electrónica"?(r.consecutivoFacturaElectronicaExterno||""):"",
 
   r.fecha||"",
 
@@ -5973,7 +6066,7 @@ function renderTablaDetalleRemisiones(datos){
   tbody.innerHTML=datos.map(r=>`<tr>
   <td>
     <strong>${escapeHtml(r.idDocumento||"Sin ID")}</strong><br>
-    <small>${escapeHtml(r.fecha||"")} · ${escapeHtml(r.tipoDoc||"Remisión")}</small>
+    <small>${escapeHtml(r.fecha||"")} · ${escapeHtml(r.tipoDoc==="Cotización"&&r.requiereFacturaElectronica?"COTIZACIÓN · FACTURA ELECTRÓNICA":r.tipoDoc||"Remisión")}</small>
   </td>
 
   <td>
@@ -6058,7 +6151,7 @@ function renderTablaDetalleRemisiones(datos){
         ${r.tipoDoc==="Cotización"&&puedeGestionarCotizacion(r)&&r.estado!=="Anulada"?`<button class="btn small primary" onclick="editarCotizacion('${escapeAttr(r.idDocumento||r.id||"")}')">Editar cotización</button>`:""}
 
         ${currentUser.role==="caja"&&r.tipoDoc==="Factura Electrónica"&&r.estado==="Pagada"&&!r.consecutivoFacturaElectronicaExterno?`<button class="btn small danger" onclick="registrarFacturaElectronicaExterna('${escapeAttr(r.idDocumento||r.id||"")}')">Registrar FEV DIAN</button>`:""}
-        ${currentUser.role==="caja"&&r.esAbonoCotizacion&&normalizarTexto(r.formaPago)==="sas transferencia"&&r.estado!=="Anulada"&&!r.consecutivoFacturaElectronicaExterno?`<button class="btn small danger" onclick="registrarFveDianAbono('${escapeAttr(r.idAbono||"")}')">Registrar FEV DIAN</button>`:""}
+        ${currentUser.role==="caja"&&r.esAbonoCotizacion&&r.requiereFacturaElectronica&&r.estado!=="Anulada"&&!r.consecutivoFacturaElectronicaExterno?`<button class="btn small danger" onclick="registrarFveDianAbono('${escapeAttr(r.idAbono||"")}')">Registrar FEV DIAN</button>`:""}
         ${(r.tipoDoc==="Factura Electrónica"||r.esAbonoCotizacion)&&r.consecutivoFacturaElectronicaExterno?`<small>FVE DIAN: ${escapeHtml(r.consecutivoFacturaElectronicaExterno)}</small>`:""}
 
         ${
@@ -6237,6 +6330,7 @@ async function registrarAbonoCotizacion(){
   const autorizado=abonoCotizacionEnEdicion?puedeGestionarCotizacion(cot):puedeAbonarCotizacion(cot);
   if(!cot||!autorizado||["anulada","pagada","no pagada","no vendida"].includes(String(cot.estado||"").trim().toLowerCase())){alert(abonoCotizacionEnEdicion?"No tienes permiso para editar este abono de cotización.":"Solo Caja WhatsApp puede registrar abonos de cotizaciones.");return;}
   if(!(valor>0)||!formaPago){alert("Ingresa un valor y elige la forma de pago.");return;}
+  if(!abonoCotizacionEnEdicion&&String(formaPago).trim().toUpperCase()==="EFECTIVO"&&!await solicitarConfirmacionCobroEfectivo(valor))return;
   const boton=document.getElementById("btnGuardarAbonoCotizacion");
   boton.disabled=true;
   try{
@@ -6336,6 +6430,8 @@ async function registrarPagoMixto(){
   if(metodo1===metodo2){aviso.textContent="Selecciona dos métodos de pago diferentes.";return;}
   if(valor1<=0||valor2<=0){aviso.textContent="Los dos valores deben ser mayores que cero.";return;}
   if(Math.round((valor1+valor2)*100)!==Math.round(total*100)){aviso.textContent=`La suma debe ser exactamente ${money(total)}.`;return;}
+  const totalEfectivo=metodo1==="EFECTIVO"?valor1:metodo2==="EFECTIVO"?valor2:0;
+  if(totalEfectivo>0&&!await solicitarConfirmacionCobroEfectivo(totalEfectivo))return;
   const boton=document.getElementById("btnGuardarPagoMixto");boton.disabled=true;
   try{
     exigirSupabase();
@@ -6364,10 +6460,12 @@ async function marcarComoPagada(id){
     return;
   }
 
-  const confirmar=confirm(
-    "¿Confirmas que este documento fue pagado?"
-  );
-
+  const documento=datosRemisiones.find(r=>String(r.idDocumento||r.id)===String(id));
+  if(!documento){alert("No se encontró el documento para registrar el pago.");return;}
+  const esEfectivo=String(documento.formaPago||"").trim().toUpperCase()==="EFECTIVO";
+  const confirmar=esEfectivo
+    ? await solicitarConfirmacionCobroEfectivo(Number(documento.total||0))
+    : confirm("¿Confirmas que este documento fue pagado?");
   if(!confirmar)return;
 
   try{
@@ -6484,8 +6582,8 @@ async function registrarFveDianAbono(idAbono){
     return;
   }
   const abono=datosRemisiones.find(r=>r.esAbonoCotizacion&&String(r.idAbono)===String(idAbono));
-  if(!abono||normalizarTexto(abono.formaPago)!=="sas transferencia"||abono.estado==="Anulada"){
-    alert("Solo puedes registrar el FVE DIAN de un abono vigente realizado por SAS TRANSFERENCIA.");
+  if(!abono||abono.estado==="Anulada"||!abono.requiereFacturaElectronica){
+    alert("Solo puedes registrar el FVE DIAN de un abono vigente de una cotización marcada como Factura Electrónica.");
     return;
   }
   if(abono.consecutivoFacturaElectronicaExterno){
@@ -6798,7 +6896,7 @@ async function generarPDFCotizacion(id,tipoPdf="cotizacion",ventanaPreabierta=nu
     ?(usaListaProductos?"<th>Producto</th><th>Detalle</th><th>Cantidad</th>":"<th>Material</th><th>Medida</th><th>Metros</th><th>Rollos</th>")
     :(usaListaProductos?"<th>Producto</th><th>Detalle</th><th>Cantidad</th><th>Precio unitario</th><th>IVA (19%)</th><th>Total</th>":"<th>Material</th><th>Medida</th><th>Metros</th><th>Rollos</th><th>Valor unitario</th><th>IVA (19%)</th><th>Total</th>");
   const colspan=esOrdenProduccion?(usaListaProductos?3:4):(usaListaProductos?6:7);
-  const tituloPdf=esOrdenProduccion?"ORDEN DE PRODUCCIÓN":"COTIZACIÓN";
+  const tituloPdf=esOrdenProduccion?"ORDEN DE PRODUCCIÓN":doc.requiereFacturaElectronica?"COTIZACIÓN · FACTURA ELECTRÓNICA":"COTIZACIÓN";
   const numeroPdf=esOrdenProduccion?(doc.ordenProduccion.idOrden||`OP-${doc.idDocumento}`):doc.idDocumento;
   const htmlImgs=ims.imagenes.map((im,i)=>`<figure><img src="${escapeAttr(im.url)}"><figcaption>${escapeHtml(im.nombre||`Imagen ${i+1}`)}</figcaption></figure>`).join("");
   const specs=[
@@ -6831,6 +6929,12 @@ async function imprimirDocumento(id,ventanaExistente=null){
 const doc=datosRemisiones.find(r=>r.idDocumento===id);
 
 if(!doc)return;
+
+const fechaHoraFuente=doc.fechaCreacion||doc.fecha_creacion||doc.created_at||doc.fechaPagoHora||doc.fecha_pago_hora;
+const fechaHoraDocumento=fechaHoraFuente?.toDate?fechaHoraFuente.toDate():fechaHoraFuente?new Date(fechaHoraFuente):new Date();
+const horaDocumento=Number.isNaN(fechaHoraDocumento.getTime())
+  ?new Date().toLocaleTimeString("es-CO",{timeZone:"America/Bogota",hour:"numeric",minute:"2-digit"})
+  :fechaHoraDocumento.toLocaleTimeString("es-CO",{timeZone:"America/Bogota",hour:"numeric",minute:"2-digit"});
 
 const w=ventanaExistente||window.open("","_blank","width=400,height=700");
 if(!w)return;
@@ -6988,7 +7092,7 @@ w.document.write(`
 
     <div>
       <strong>Fecha:</strong>
-      ${escapeHtml(doc.fecha||"")}
+      ${escapeHtml(doc.fecha||"")} &nbsp; <strong>Hora:</strong> ${escapeHtml(horaDocumento)}
     </div>
 
     <div>
@@ -8147,11 +8251,73 @@ function escapeAttr(value){
 
 }
 
+function normalizarTextoCiudad(valor){
+  return String(valor||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("es").trim();
+}
+
+function configurarDesplegableCiudad(inputId,datalistId){
+  const input=document.getElementById(inputId);
+  const opciones=document.getElementById(`${inputId}Opciones`);
+  const datalist=document.getElementById(datalistId);
+  if(!input||!opciones||!datalist)return;
+  const boton=input.parentElement.querySelector(".ciudad-select-toggle");
+  const valores=[...datalist.querySelectorAll("option")].map(opcion=>opcion.value.trim()).filter(Boolean);
+  const cerrar=()=>{opciones.classList.add("hidden");boton?.setAttribute("aria-expanded","false");};
+  const abrir=(texto=input.value)=>{
+    const consulta=normalizarTextoCiudad(texto);
+    const filtradas=consulta?valores.filter(valor=>normalizarTextoCiudad(valor).startsWith(consulta)):valores;
+    opciones.innerHTML=filtradas.length
+      ?filtradas.map(valor=>`<button type="button" class="ciudad-opcion" role="option" data-valor="${escapeAttr(valor)}">${escapeHtml(valor)}</button>`).join("")
+      :'<div class="ciudad-sin-resultados">No hay coincidencias. Puedes dejar el texto escrito.</div>';
+    opciones.classList.remove("hidden");
+    boton?.setAttribute("aria-expanded","true");
+    opciones.querySelectorAll(".ciudad-opcion").forEach(opcion=>{
+      opcion.addEventListener("pointerdown",evento=>evento.preventDefault());
+      opcion.addEventListener("click",()=>{
+        input.value=opcion.dataset.valor||"";
+        input.dispatchEvent(new Event("change",{bubbles:true}));
+        cerrar();
+      });
+    });
+  };
+  input.addEventListener("focus",()=>abrir(input.value));
+  input.addEventListener("input",()=>abrir(input.value));
+  input.addEventListener("blur",()=>setTimeout(cerrar,180));
+  input.addEventListener("keydown",evento=>{
+    if(evento.key==="ArrowDown"){
+      if(opciones.classList.contains("hidden"))abrir(input.value);
+      opciones.querySelector(".ciudad-opcion")?.focus();
+      evento.preventDefault();
+    }else if(evento.key==="Enter"&&!opciones.classList.contains("hidden")){
+      const primera=opciones.querySelector(".ciudad-opcion");
+      if(primera){evento.preventDefault();primera.click();}
+    }else if(evento.key==="Escape")cerrar();
+  });
+  document.addEventListener("click",evento=>{
+    if(!input.parentElement.contains(evento.target))cerrar();
+  });
+}
+
+function alternarDesplegableCiudad(inputId){
+  const input=document.getElementById(inputId);
+  const opciones=document.getElementById(`${inputId}Opciones`);
+  if(!input||!opciones)return;
+  if(opciones.classList.contains("hidden")){
+    input.focus();
+    if(opciones.classList.contains("hidden")){
+      const evento=new Event("input",{bubbles:true});
+      input.dispatchEvent(evento);
+    }
+  }else opciones.classList.add("hidden");
+}
+
 /* =========================================================
    ARRANQUE
    ========================================================= */
 window.addEventListener("DOMContentLoaded",async()=>{
 
+  configurarDesplegableCiudad("remClienteCiudad","listaCiudadesMunicipios");
+  configurarDesplegableCiudad("cotCiudadPais","listaCiudadesPaises");
   initSupabase();
   document.getElementById("toggleLoginPassword")
     .addEventListener("click",toggleLoginPassword);
