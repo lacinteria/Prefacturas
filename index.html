@@ -1409,13 +1409,7 @@ function esAsesorWhatsApp(){
 function aplicarBloqueoTemporalVentaWhatsApp(){
   const selector=document.getElementById("cotVenta");
   if(!selector)return;
-  const bloquear=BLOQUEO_TEMPORAL_VENTA_WHATSAPP&&esAsesorWhatsApp();
-  const modoExistente=cotizacionEditandoId?selector.value:"";
-  Array.from(selector.options).forEach(opcion=>{
-    if(!bloquear){opcion.hidden=false;return;}
-    opcion.hidden=opcion.value==="MUESTRA"||opcion.value==="PRODUCCIÓN";
-    if(cotizacionEditandoId&&opcion.value!==""&&opcion.value!==modoExistente)opcion.hidden=true;
-  });
+  Array.from(selector.options).forEach(opcion=>{opcion.hidden=false;});
   selector.disabled=false;
 }
 let tokenListenerReporteCaja=0;
@@ -1956,6 +1950,9 @@ async function cargarCierreCaja(confirmarReemplazo=false){
     document.getElementById("cierreCajaCantidadDocumentos").textContent=String(documentosIncluidos);
     document.getElementById("cierreCajaHoraApertura").textContent=apertura?.created_at?formatearHoraCierre(apertura.created_at):"—";
     if(cierreCajaResumenActual.cierre){
+      if(!cierreCajaResumenActual.cierre.datos?.horaApertura&&apertura?.created_at){
+        cierreCajaResumenActual.cierre.datos={...(cierreCajaResumenActual.cierre.datos||{}),horaApertura:apertura.created_at};
+      }
       estado.textContent="CERRADO";
       document.getElementById("cierreCajaApertura").classList.add("hidden");
       document.getElementById("cierreCajaFormulario").classList.add("hidden");
@@ -2155,7 +2152,9 @@ async function crearCierreCaja(){
   const boton=document.getElementById("btnCrearCierreCaja");
   boton.disabled=true;boton.textContent="Guardando cierre…";
   try{
-    const {data,error}=await supabaseClient.rpc("crear_cierre_caja",{p_base_inicial:base,p_conteos:conteos,p_observaciones:observaciones});
+    const horaApertura=cierreCajaResumenActual.apertura?.created_at;
+    if(!horaApertura)throw new Error("La apertura de caja no tiene una hora registrada. Actualiza la caja e intenta de nuevo.");
+    const {data,error}=await supabaseClient.rpc("crear_cierre_caja",{p_base_inicial:base,p_conteos:conteos,p_observaciones:observaciones,p_hora_apertura:horaApertura});
     if(error)throw error;
     if(data?.error)throw new Error(data.error);
     await cargarCierreCaja();
@@ -3504,11 +3503,6 @@ async function guardarCotizacion(){
   const ciudadPais=document.getElementById("cotCiudadPais").value.trim();
   const venta=document.getElementById("cotVenta").value;
   const tipoDocumentoVenta=document.getElementById("cotTipoDocumento").value||"Cotización";
-  if(BLOQUEO_TEMPORAL_VENTA_WHATSAPP&&esAsesorWhatsApp()&&!cotizacionEditandoId&&venta!=="Cotización"){
-    alert("Temporalmente, el área de WhatsApp solo puede crear cotizaciones.");
-    aplicarBloqueoTemporalVentaWhatsApp();
-    return;
-  }
   const ventaEsCotizacion=venta==="Cotización";
   const total=parseValorCOP(document.getElementById("cotTotalPedido").value);
   const materiales=[];
